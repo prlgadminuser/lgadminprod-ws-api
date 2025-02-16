@@ -12,7 +12,7 @@ const nicknameRegex = /^(?!.*[&<>\/\\\s:$.]).{4,16}$/;
 const usernameRegex = /^(?!.*[&<>\/\\\s:$.]).{4,16}$/;
 const passwordRegex = /^(?!.*[&<>\/\\\s:$.]).{4,20}$/;
 
-const badWords = ["undefined", "null", "liquem", "nigga", "nigger", "niga", "fuck", "ass", "bitch", "hure", "schlampe", "hitler", "whore"]; 
+const badWords = /\b(undefined|null|liquem|nigga|nigger|niga|fuck|ass|bitch|hure|schlampe|hitler|whore)\b/i;
 
 const uri = lgconnecturi
 

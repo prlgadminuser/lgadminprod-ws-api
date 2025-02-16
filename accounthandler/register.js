@@ -21,7 +21,8 @@ async function CreateAccount(username, password, user_country) {
             return { status: "Username not allowed" };
         }
 
-        const containsBadWords = badWords.some(badWord => username.toLowerCase().includes(badWord));
+        
+        const containsBadWords = badWordsPattern.test(username);
 
         if (containsBadWords) {
             return { status: "Name not allowed. Try another one" };
