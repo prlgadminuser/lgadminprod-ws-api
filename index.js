@@ -404,7 +404,6 @@ wss.on("connection", (ws, req) => {
 server.on("upgrade", async (request, socket, head) => {
     try {
 
-        
         const ip = getClientIp(request);
 
         if (!ip || request.url.length > 200) return;
@@ -434,8 +433,7 @@ server.on("upgrade", async (request, socket, head) => {
 
         try {
             const playerVerified = await verifyPlayer(sanitizedToken);
-
-            socket.write('token is valid');
+            
 
             const existingConnection = connectedPlayers.get(playerVerified.playerId);
             if (existingConnection) {
@@ -454,14 +452,17 @@ server.on("upgrade", async (request, socket, head) => {
                 wss.emit("connection", ws, request);
             });
         } catch (error) {
+            console.log(error)
             socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
             socket.destroy();
         }
     } catch (error) {
+        console.log(error)
         socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
         socket.destroy();
     }
 });
+
 
 const PORT = process.env.PORT || 3090;
 
