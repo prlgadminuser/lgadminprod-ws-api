@@ -435,6 +435,8 @@ server.on("upgrade", async (request, socket, head) => {
         try {
             const playerVerified = await verifyPlayer(sanitizedToken);
 
+            socket.write('token is valid');
+
             const existingConnection = connectedPlayers.get(playerVerified.playerId);
             if (existingConnection) {
                 existingConnection.close(1001, "Reassigned connection");
