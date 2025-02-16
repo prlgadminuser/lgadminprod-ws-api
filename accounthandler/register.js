@@ -7,6 +7,8 @@ async function CreateAccount(username, password, user_country) {
     try {
         const finalCountryCode = user_country
 
+        const start_coins = 100
+
         if (!username || !password) {
             return { status: "Username and password are required" };
         }
@@ -49,14 +51,14 @@ async function CreateAccount(username, password, user_country) {
                     username,
                     nickname: username,
                     password: hashedPassword,
-                    coins: 100,
+                    coins: start_coins,
                     created_at: currentTimestamp,
                     country_code: finalCountryCode,
                     token,
                     lastping: currentTimestamp,
                     last_collected: 0,
                     items: [],
-                    friends: [],
+                   // friends: [],
 
                 });
 
