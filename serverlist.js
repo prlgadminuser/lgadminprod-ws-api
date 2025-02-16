@@ -1,19 +1,18 @@
 
 
-const serverlist = {
-    EU: {
-      server1: "France",
-      server2: "Germany",
-      server3: "Spain",
-      // add more EU servers as needed
-    },
-    US: {
-      server1: "California",
-      server2: "New York",
-      server3: "Texas",
-      // add more US servers as needed
-    }
-  };
+    const serverlist = {  // available server adresses - is send with the inventory when the player logs in
+        EU: [
+          "s1-eu-sdgame.onrender.com"
+        ],
+        US: [
+          "s1-us-sdgame.onrender.com",     
+        ]
+      };
+      
+      module.exports = {
+        serverlist
+      };
+      
 
   module.exports = {
     serverlist
