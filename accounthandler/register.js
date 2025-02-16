@@ -22,7 +22,7 @@ async function CreateAccount(username, password, user_country) {
         }
 
         
-        const containsBadWords = badWordsPattern.test(username);
+        const containsBadWords = badWords.test(username);
 
         if (containsBadWords) {
             return { status: "Name not allowed. Try another one" };
