@@ -9,6 +9,11 @@ const pingInterval = 60000;
 const maxClients = 20; // max connected players for websocket
 let maintenanceMode = false;
 
+const WS_MSG_SIZE_LIMIT = {
+  max_key_length: 15,
+  max_value_length: 20
+}
+
 
 function createRateLimiter() { // connected sending message rate limit
   const rate = 5;
@@ -85,4 +90,5 @@ module.exports = {
   pingInterval,
   allowedOrigins,
   friendUpdatesTime,
+  WS_MSG_SIZE_LIMIT
 }

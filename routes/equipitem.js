@@ -32,11 +32,13 @@ async function equipItem(username, type, itemid) {
 
     try {
         // Check if the user has the item
-        const user = await userCollection.findOne(
-            { username, items: { $elemMatch: { $eq: itemid } } }
-        );
+        //const user = await userCollection.findOne(
+       //     { username, items: { $elemMatch: { $eq: itemid } } }  // this might be unecessary cause its used for checking if multiple fields exist
+       // );
 
-        if (!user) {
+       const ItemIsOwned = await userCollection.findOne({ username, items: itemid });
+
+        if (!ItemIsOwned) {
             throw new Error("Item is not valid");
         }
 

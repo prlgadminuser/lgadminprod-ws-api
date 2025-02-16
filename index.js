@@ -29,7 +29,7 @@ const { getUserProfile } = require('./routes/getprofile');
 const { GetFriendsDataLocal, UpdateSelfPingTime } = require('./routes/FriendsOnlineSystem');
 const { setupHighscores, gethighscores } = require('./routes/leaderboard');
 const { createRateLimiter, ConnectionOptionsRateLimit, apiRateLimiter, AccountRateLimiter, 
-        getClientIp, getClientCountry, ws_message_size_limit, api_message_size_limit, maxClients, maintenanceMode, pingInterval, allowedOrigins, friendUpdatesTime } = require("./limitconfig");
+        getClientIp, getClientCountry, ws_message_size_limit, api_message_size_limit, WS_MSG_SIZE_LIMIT, maxClients, maintenanceMode, pingInterval, allowedOrigins, friendUpdatesTime } = require("./limitconfig");
 const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
 const { setUserOnlineStatus } = require('./routes/redisHandler')
@@ -237,6 +237,38 @@ async function handleMessage(ws, message, playerVerified) {
         //const escapedMessage = escapeInput(message.toString());
         const data = JSON.parse(escapedMessage);
 
+        const checkSizeLimits = (data) => {
+            for (const [key, value] of Object.entries(data)) {
+                // Check key length
+                if (key.length > WS_MSG_SIZE_LIMIT.max_key_length) {
+                    return { error: `Key "${key}" is too long.` };
+                }
+        
+                // Check value length if it's a string
+                if (typeof value === 'string' && value.length > WS_MSG_SIZE_LIMIT.max_value_length) {
+                    return { error: `Value for "${key}" is too long.` };
+                }
+        
+                // Recursively check if the value is an object (e.g., nested data)
+                if (typeof value === 'object' && value !== null) {
+                    const nestedCheck = checkSizeLimits(value);
+                    if (nestedCheck && nestedCheck.error) {
+                        return nestedCheck; // Propagate the error
+                    }
+                }
+            }
+            return null; // No issues found
+        };
+        
+
+        // Validate the incoming message's size constraints
+        const MessageValid = checkSizeLimits(data);
+        if (MessageValid && MessageValid.error) {
+            // Send error response and close WebSocket connection if validation fails
+            ws.close(1007, "Message invalid.");
+            return;
+        }
+
         let response;
 
         switch (data.id) {
@@ -355,9 +387,10 @@ wss.on("connection", (ws, req) => {
 
 
     ws.on("message", async (message) => {
+
         try {
-            if (!playerVerified.rateLimiter.tryRemoveTokens(1)) {
-                ws.close(1007);
+            if (!playerVerified.rateLimiter.tryRemoveTokens(1) || message.length > ws_message_size_limit) {
+                ws.close(1007, "error");
                 return;
             }
 
