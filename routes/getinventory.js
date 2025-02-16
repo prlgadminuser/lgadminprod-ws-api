@@ -1,6 +1,7 @@
 
 const { battlePassCollection, userCollection, loginRewardsCollection, shopcollection } = require('./..//idbconfig');
 const { rarityPercentages } = require('./..//boxrarityconfig');
+const { serverlist } = require('./..//serverlist');
 
 
 async function getUserInventory(username, loginrewardactive) {
@@ -123,6 +124,7 @@ async function getUserInventory(username, loginrewardactive) {
             lastnameupdate: userRow.nameupdate || 0,
             friends: userRow.friends || [],
             requests: userRow.requests || [],
+            serverlist,
         }
 
         // Return the constructed object
