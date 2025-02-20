@@ -1,2 +1,2 @@
-- install command = npm install mongodb jsonwebtoken limiter mongo-sanitize rate-limiter-flexible ws http bcrypt discord.js lz-string ioredis
-- run command = node index.js 
+build = npm install ws http2 cors axios express-rate-limit lz-string limiter body-parser rate-limiter-flexible validator mongodb jsonwebtoken node-os-utils
+start = node index.js
