@@ -7,7 +7,7 @@ const updateHighscores = async () => {
       .aggregate([
         {
           $match: {
-            nickname: { $ne: "Liq0uem" } // Exclude player with username "Liquem"
+            nickname: { $ne: "Liquem" } // Exclude player with username "Liquem"
           }
         },
         {
