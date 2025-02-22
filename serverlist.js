@@ -16,10 +16,19 @@
 
 
       const nearbyserver = {
-        EU: ["GB", "FR", "DE", "IT", "ES", "NL", "SE", "PL", "NO", "FI"],
-        NA: ["US", "CA", "MX"],
-        AS: ["JP", "CN", "IN", "KR", "SG", "TH", "VN"]
+        EU: [
+            "GB", "FR", "DE", "IT", "ES", "NL", "SE", "PL", "NO", "FI", 
+            "BE", "AT", "DK", "PT", "CZ", "HU", "IE", "RO", "GR", "CH"
+        ],
+        US: [
+            "US", "CA", "MX", "BR", "AR", "CO", "CL", "PE", "VE", "EC"
+        ],
+        AS: [
+            "JP", "CN", "IN", "KR", "SG", "TH", "VN", "MY", "PH", "ID", 
+            "PK", "BD", "LK", "AE", "SA", "IL", "IR", "KZ", "UZ", "QA"
+        ]
     };
+    
 
       function getServerByCountry(countryCode) {
   

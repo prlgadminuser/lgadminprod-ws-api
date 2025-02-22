@@ -23,7 +23,7 @@ async function setUserOnlineStatus(username, activity) {
     const expireResult = await redis.expire(`user:${username}`, 20); // Logs if the expiration was set
 
   } catch (error) {
-    console.error("Error setting online status and activity:", error);
+    //console.error("Error setting online status and activity:", error);
   }
 }
 
@@ -58,7 +58,7 @@ async function getOnlineFriends(friends) {
 
     return onlineFriendsStatus;
   } catch (error) {
-    console.error("Error retrieving online friends and their activity:", error);
+  //  console.error("Error retrieving online friends and their activity:", error);
     return [];
   }
 }

@@ -95,7 +95,7 @@ async function buyItem(username, offerKey) {
         message: `You have purchased ${selectedOffer.offertext} using ${currency}.`,
       };
     } catch (error) {
-      console.error("Error during purchase:", error);
+     // console.error("Error during purchase:", error);
       throw new Error(error.message || "An error occurred while processing your request.");
     }
   }

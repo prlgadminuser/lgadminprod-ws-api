@@ -402,10 +402,10 @@ wss.on("connection", (ws, req) => {
 
     ws.on("error", (error) => {
         if (error.message.includes('payload size')) {
-            console.error('Payload size exceeded:', error.message);
+          //  console.error('Payload size exceeded:', error.message);
             ws.close(1009, "Payload size exceeded");
         } else {
-            console.error('WebSocket error:', error);
+           // console.error('WebSocket error:', error);
         }
     });
 
@@ -485,12 +485,12 @@ server.on("upgrade", async (request, socket, head) => {
                 wss.emit("connection", ws, request);
             });
         } catch (error) {
-            console.log(error)
+           // console.log(error)
             socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
             socket.destroy();
         }
     } catch (error) {
-        console.log(error)
+       // console.log(error)
         socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
         socket.destroy();
     }
@@ -524,7 +524,7 @@ function watchItemShop() {
         });
 
         changeStream.on("error", (err) => {
-            console.error("Change stream error:", err);
+            //console.error("Change stream error:", err);
             setTimeout(startChangeStream, 5000); // Retry after delay
         });
     };
