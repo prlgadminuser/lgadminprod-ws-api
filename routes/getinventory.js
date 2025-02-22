@@ -126,7 +126,7 @@ async function getUserInventory(username, loginrewardactive) {
             friends: userRow.friends || [],
             requests: userRow.requests || [],
             serverlist,
-            nearbyServerRegion: getServerByCountry(userRow.country_code || "Unknown")
+            nearestRegion: getServerByCountry(userRow.country_code || "Unknown")
         }
 
         // Return the constructed object

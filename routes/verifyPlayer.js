@@ -27,6 +27,7 @@ async function verifyPlayer(token) {
 
 
     } catch (error) {
+        console.log(error)
         throw new Error("Token verification failed");
     }
 }

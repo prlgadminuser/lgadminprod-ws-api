@@ -23,7 +23,7 @@
 
       function getServerByCountry(countryCode) {
   
-        const fallback = US
+        const fallback = "US"
     
         if (countryCode === "Unknown") return fallback; // Handle empty or undefined input
     
@@ -31,7 +31,7 @@
     
         for (const [region, countries] of Object.entries(nearbyserver)) {
             if (countries.includes(countryCode)) {
-                return `${region} Server`;
+                return `${region}`;
             }
         }
     
