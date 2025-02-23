@@ -6,10 +6,10 @@
           "wss://s1-eu-sdgame.onrender.com"
         ],
         AS: [
-          "wss://s1-us-sdgame.onrender.com",     
+          "wss://s1-as-sdgame.onrender.com",     
         ],
         US: [
-          "wss://s1-as-sdgame.onrender.com",     
+          "wss://s1-us-sdgame.onrender.com",     
         ],
       };
       
