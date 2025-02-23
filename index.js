@@ -517,7 +517,7 @@ function watchItemShop() {
             if (docId === "dailyItems") {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
-                maintenanceMode = change.fullDocument.status === "true";
+                maintenanceMode = change.fullDocument.status === true;
                 broadcast("maintenanceupdate");
                 if (maintenanceMode) closeAllClients(4001, "maintenance");
             }
