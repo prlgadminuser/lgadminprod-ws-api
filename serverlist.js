@@ -5,7 +5,7 @@
         EU: [
           "wss://s1-eu-sdgame.onrender.com"
         ],
-        US: [
+        AS: [
           "wss://s1-us-sdgame.onrender.com",     
         ],
         US: [
