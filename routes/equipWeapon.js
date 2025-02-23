@@ -1,15 +1,10 @@
 
 const { userCollection } = require('./..//idbconfig');
 
-async function equipItem(username, type, itemid) {
-
-
+async function equipWeapon(username, type, itemid) {
 
     const itemTypeMap = {
-        a: "hat",
-        b: "top",
-        i: "banner",
-        p: "pose",
+        w: "weapon",
     };
 
     const itemType = itemTypeMap[type.toLowerCase()];
@@ -17,32 +12,16 @@ async function equipItem(username, type, itemid) {
     if (!itemType) {
         throw new Error("Invalid item type");
     }
-
-    // Allow itemid "0" to always be equipped
-    if (itemid === "0") {
-        try {
-            await userCollection.updateOne(
-                { username },
-                { $set: { [itemType]: itemid } }
-            );
-            return { message: "Success" };
-        } catch (error) {
-            throw new Error("Error while equipping item");
-        }
-    }
+   
 
     try {
-        // Check if the user has the item
-        //const user = await userCollection.findOne(
-       //     { username, items: { $elemMatch: { $eq: itemid } } }  // this might be unecessary cause its used for checking if multiple fields exist
-       // );
 
        const firstLetter = itemid[0].toLowerCase();
         if (firstLetter !== type.toLowerCase()) {
         throw new Error("Item type does not match itemid");
         }
 
-        const ItemIsOwned = await userCollection.findOne({ username, items: { $elemMatch: { $eq: itemid } }});
+       const ItemIsOwned = await userCollection.findOne({ username, items: { $elemMatch: { $eq: itemid } }});
 
         if (!ItemIsOwned) {
             throw new Error("Item is not valid");
@@ -66,5 +45,5 @@ async function equipItem(username, type, itemid) {
 }
 
 module.exports = {
-    equipItem,
+    equipWeapon,
 };
