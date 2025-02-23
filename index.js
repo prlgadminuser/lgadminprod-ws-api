@@ -62,6 +62,12 @@ const server = http.createServer(async (req, res) => {
             return res.end("Unauthorized");
         }
 
+        if (maintenanceMode) {
+            res.writeHead(429, { 'Content-Type': 'text/plain' });
+            return res.end("Quick Maintenance. Be back soon");
+        }
+    
+
         // Security Headers
         //res.setHeader("X-Frame-Options", "DENY");
        // res.setHeader("X-Content-Type-Options", "nosniff");
@@ -517,14 +523,14 @@ function watchItemShop() {
             if (docId === "dailyItems") {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
-                maintenanceMode = change.fullDocument.status === true;
+                maintenanceMode = change.fullDocument.status === "true";
                 broadcast("maintenanceupdate");
                 if (maintenanceMode) closeAllClients(4001, "maintenance");
             }
         });
 
         changeStream.on("error", (err) => {
-            //console.error("Change stream error:", err);
+            console.error("Change stream error:", err);
             setTimeout(startChangeStream, 5000); // Retry after delay
         });
     };

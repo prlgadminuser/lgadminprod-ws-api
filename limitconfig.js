@@ -7,6 +7,7 @@ const ws_message_size_limit = 50
 const api_message_size_limit = 120
 const pingInterval = 60000;
 const maxClients = 20; // max connected players for websocket
+
 let maintenanceMode = false;
 
 const WS_MSG_SIZE_LIMIT = {
