@@ -5,6 +5,8 @@ const connectedPlayers = new Map();
 
 let connectedClientsCount = 0;
 
+let maintenanceMode = false;
+
 const jwt = require("jsonwebtoken");
 const Limiter = require("limiter").RateLimiter;
 const bcrypt = require("bcrypt");
@@ -29,7 +31,7 @@ const { getUserProfile } = require('./routes/getprofile');
 const { GetFriendsDataLocal, UpdateSelfPingTime } = require('./routes/FriendsOnlineSystem');
 const { setupHighscores, gethighscores } = require('./routes/leaderboard');
 const { createRateLimiter, ConnectionOptionsRateLimit, apiRateLimiter, AccountRateLimiter, 
-        getClientIp, getClientCountry, ws_message_size_limit, api_message_size_limit, WS_MSG_SIZE_LIMIT, maxClients, maintenanceMode, pingInterval, allowedOrigins, friendUpdatesTime } = require("./limitconfig");
+        getClientIp, getClientCountry, ws_message_size_limit, api_message_size_limit, WS_MSG_SIZE_LIMIT, maxClients, pingInterval, allowedOrigins, friendUpdatesTime } = require("./limitconfig");
 const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
 const { setUserOnlineStatus } = require('./routes/redisHandler')

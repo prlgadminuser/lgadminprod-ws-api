@@ -8,7 +8,6 @@ const api_message_size_limit = 120
 const pingInterval = 60000;
 const maxClients = 20; // max connected players for websocket
 
-let maintenanceMode = false;
 
 const WS_MSG_SIZE_LIMIT = {
   max_key_length: 15,
@@ -87,7 +86,6 @@ module.exports = {
   ws_message_size_limit,
   api_message_size_limit,
   maxClients,
-  maintenanceMode,
   pingInterval,
   allowedOrigins,
   friendUpdatesTime,
