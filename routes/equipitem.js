@@ -42,7 +42,7 @@ async function equipItem(username, type, itemid) {
         throw new Error("Item type does not match itemid");
         }
 
-        const ItemIsOwned = await userCollection.findOne({ username, items: { $elemMatch: { $eq: itemid } }});
+        const ItemIsOwned = await userCollection.findOne({ username, items: { $in: [itemid] } });
 
         if (!ItemIsOwned) {
             throw new Error("Item is not valid");
