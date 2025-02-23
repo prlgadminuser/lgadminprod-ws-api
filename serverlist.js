@@ -7,7 +7,10 @@
         ],
         US: [
           "wss://s1-us-sdgame.onrender.com",     
-        ]
+        ],
+        US: [
+          "wss://s1-as-sdgame.onrender.com",     
+        ],
       };
       
       module.exports = {
