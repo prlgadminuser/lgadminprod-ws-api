@@ -1,48 +1,37 @@
 
 const { userCollection } = require('./..//idbconfig');
 
-async function equipWeapon(username, type, itemid) {
-
-    const itemTypeMap = {
-        w: "weapon",
-    };
-
-    const itemType = itemTypeMap[type.toLowerCase()];
-
-    if (!itemType) {
-        throw new Error("Invalid item type");
-    }
-   
-
+async function equipWeapon(username, key, weaponid) {
     try {
 
-       const firstLetter = itemid[0].toLowerCase();
-        if (firstLetter !== type.toLowerCase()) {
-        throw new Error("Item type does not match itemid");
-        }
+    if (!key || !weaponid || ![1, 2, 3].includes(key)) {
+        throw new Error("invalid position in loadout");
+    }
+    
+    if (weaponid.length > 5) {
+        throw new Error("weaponid is too large");
+    }
 
-       const ItemIsOwned = await userCollection.findOne({ username, items: { $elemMatch: { $eq: itemid } }});
+
+      const ItemIsOwned = await userCollection.findOne({ username, items: { $in: [weaponid] } });
 
         if (!ItemIsOwned) {
             throw new Error("Item is not valid");
         }
 
-        if (!itemType) {
-            throw new Error("Invalid item type");
-        }
 
-        // Equip the item by updating the corresponding field
         await userCollection.updateOne(
-            { username },
-            { $set: { [itemType]: itemid } }
+            { username }, // Filter by username
+            { $set: { [`loadout.${key}`]: weaponid } } // Dynamically update the correct loadout key
         );
 
-        return { id: itemid };
+        return { id: weaponid };
+
     } catch (error) {
         throw new Error("Error equipping item");
-    }
-
+  }
 }
+
 
 module.exports = {
     equipWeapon,

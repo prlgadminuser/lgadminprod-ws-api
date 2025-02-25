@@ -26,6 +26,7 @@ const { equipItem } = require('./routes/equipitem');
 const { equipColor } = require("./routes/equipcolor");
 const { getdailyreward } = require('./routes/dailyreward');
 const { buyItem } = require('./routes/buyitem');
+const { equipWeapon } = require('./routes/updateLoadout');
 const { buyRarityBox } = require('./routes/buyraritybox');
 const { getUserProfile } = require('./routes/getprofile');
 const { GetFriendsDataLocal, UpdateSelfPingTime } = require('./routes/FriendsOnlineSystem');
@@ -288,6 +289,11 @@ async function handleMessage(ws, message, playerVerified) {
                 response = await equipItem(playerVerified.playerId, data.type, data.itemid);
                 ws.send(JSON.stringify({ type: "equipitem", data: response }));
                 break;
+
+            case "equip_weapon":
+                response = await equipWeapon(playerVerified.playerId, data.type, data.wid);
+                ws.send(JSON.stringify({ type: "equipweapon", data: response }));
+                break;    
 
             case "equip_color":
                 response = await equipColor(playerVerified.playerId, data.type, data.color);
