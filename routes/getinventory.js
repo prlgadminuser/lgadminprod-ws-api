@@ -22,6 +22,8 @@ async function getUserInventory(username, loginrewardactive) {
                 {
                     projection: {
                         nickname: 1,
+                        loadout: 1,
+                        weapons: 1,
                         coins: 1,
                         boxes: 1,
                         sp: 1,
