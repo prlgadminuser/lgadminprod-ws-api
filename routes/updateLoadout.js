@@ -1,10 +1,10 @@
 
 const { userCollection } = require('./..//idbconfig');
 
-async function equipWeapon(username, key, weaponid) {
+async function equipWeapon(username, slot, weaponid) {
     try {
 
-    if (!key || !weaponid || ![1, 2, 3].includes(key)) {
+    if (!slot || !weaponid || ![1, 2, 3].includes(slot)) {
         throw new Error("invalid position in loadout");
     }
     
@@ -22,7 +22,7 @@ async function equipWeapon(username, key, weaponid) {
 
         await userCollection.updateOne(
             { username }, // Filter by username
-            { $set: { [`loadout.${key}`]: weaponid } } // Dynamically update the correct loadout key
+            { $set: { [`loadout.${slot}`]: weaponid } } // Dynamically update the correct loadout key
         );
 
         return { id: weaponid };

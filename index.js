@@ -291,7 +291,7 @@ async function handleMessage(ws, message, playerVerified) {
                 break;
 
             case "equip_weapon":
-                response = await equipWeapon(playerVerified.playerId, data.type, data.wid);
+                response = await equipWeapon(playerVerified.playerId, data.slot, data.wid);
                 ws.send(JSON.stringify({ type: "equipweapon", data: response }));
                 break;    
 
