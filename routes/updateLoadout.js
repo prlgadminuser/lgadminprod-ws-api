@@ -4,7 +4,7 @@ const { userCollection } = require('./..//idbconfig');
 async function equipWeapon(username, slot, weaponid) {
     try {
 
-    if (!slot || !weaponid || ![1, 2, 3].includes(slot)) {
+    if (!slot || !weaponid || !(slot >= 1 && slot <= 3)) {
         throw new Error("invalid position in loadout");
     }
     
@@ -12,13 +12,11 @@ async function equipWeapon(username, slot, weaponid) {
         throw new Error("weaponid is too large");
     }
 
-
-      const ItemIsOwned = await userCollection.findOne({ username, items: { $in: [weaponid] } });
+      const ItemIsOwned = await userCollection.findOne({ username, weapons: { $in: [weaponid] } });
 
         if (!ItemIsOwned) {
             throw new Error("Item is not valid");
         }
-
 
         await userCollection.updateOne(
             { username }, // Filter by username
@@ -29,6 +27,7 @@ async function equipWeapon(username, slot, weaponid) {
 
     } catch (error) {
         throw new Error("Error equipping item");
+       
   }
 }
 
