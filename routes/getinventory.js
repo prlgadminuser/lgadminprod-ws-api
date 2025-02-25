@@ -103,6 +103,8 @@ async function getUserInventory(username, loginrewardactive) {
             boxes: userRow.boxes || 0,
             sp: userRow.sp || 0,
             items: userRow.items || [],
+            weapons: userRow.weapons || [],
+            loadout: userRow.loadout || [],
             slpasstier,
             season_coins,
             bonusitem_damage,

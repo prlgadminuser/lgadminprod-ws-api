@@ -49,18 +49,19 @@ async function CreateAccount(username, password, user_country) {
             try {
 
                 await userCollection.insertOne({
-                    username,
+                    username: username,
                     nickname: username,
                     password: hashedPassword,
-                    coins: start_coins,
-                    created_at: currentTimestamp,
                     country_code: finalCountryCode,
-                    token,
+                    token: token,
                     lastping: currentTimestamp,
+                    created_at: currentTimestamp,
                     last_collected: 0,
+                    coins: start_coins,
                     items: [],
+                    weapons: ["1", "2", "3"],
+                    loadout: { 1: "1", 2: "2", 3: "3" },
                    // friends: [],
-
                 });
 
 
