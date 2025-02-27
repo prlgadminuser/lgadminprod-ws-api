@@ -25,6 +25,8 @@ async function equipWeapon(username, slot, weaponid) {
 
         return { id: weaponid };
 
+       
+
     } catch (error) {
         throw new Error("Error equipping item");
        
