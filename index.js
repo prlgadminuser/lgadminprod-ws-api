@@ -517,7 +517,9 @@ server.on("upgrade", async (request, socket, head) => {
 });
 
 
-const PORT = process.env.PORT || 3090;
+//const PORT = process.env.PORT || 8080;
+
+const PORT = 8080;
 
 startMongoDB().then(() => {
     server.listen(PORT, () => {
