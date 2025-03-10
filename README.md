@@ -1,2 +1,2 @@
-build = npm install ws http2 bcrypt discord.js cors axios express-rate-limit lz-string limiter body-parser rate-limiter-flexible validator mongodb jsonwebtoken node-os-utils
+build = npm install mongo-sanitize express morgan path node-cron body-parser sqlite3 cors helmet axios validator bcrypt express-rate-limit jsonwebtoken fs readline dotenv discord.js dompurify mongodb connect-timeout node-mailjet events express-mongo-sanitize http compression crypto argon2 profanity-check ws ioredis
 start = node index.js
