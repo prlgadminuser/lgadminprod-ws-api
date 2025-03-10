@@ -9,7 +9,7 @@ let maintenanceMode = false;
 
 const jwt = require("jsonwebtoken");
 const Limiter = require("limiter").RateLimiter;
-const bcrypt = require("bcrypt");
+//const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers };
