@@ -38,13 +38,11 @@ const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
 const { setUserOnlineStatus } = require('./routes/redisHandler')
 
-function CompressAndSend (ws, type, message) {
-
-    //const json_message = JSON.stringify({ type: type, data: message })
-   const json_message = { type: type, data: message }
-   const finalmessage = LZString.compress(json_message)
-   ws.send(finalmessage);
-
+function CompressAndSend(ws, type, message) {
+    
+    const json_message = JSON.stringify({ type: type, data: message });
+    const finalmessage = LZString.compressToBase64(json_message); // or compressToBase64 for safer transmission
+    ws.send(finalmessage);
 }
 
 //setUserOnlineStatus("agag", "agg")
@@ -297,57 +295,57 @@ async function handleMessage(ws, message, playerVerified) {
 
             case "equip_item":
                 response = await equipItem(playerVerified.playerId, data.type, data.itemid);
-                ws.send(JSON.stringify({ type: "equipitem", data: response }));
+                CompressAndSend(ws, "equipitem", response)
                 break;
 
             case "buy_weapon":
                 response = await buyWeapon(playerVerified.playerId, data.wid);
-                ws.send(JSON.stringify({ type: "buyweapon", data: response }));
+                CompressAndSend(ws, "buyweapon", response)
                 break;
                 
             case "equip_weapon":
                 response = await equipWeapon(playerVerified.playerId, data.slot, data.wid);
-                ws.send(JSON.stringify({ type: "equipweapon", data: response }));
+                CompressAndSend(ws, "equipweapon", response)
                 break;    
 
             case "equip_color":
                 response = await equipColor(playerVerified.playerId, data.type, data.color);
-                ws.send(JSON.stringify({ type: "equipcolor", data: response }));
+                CompressAndSend(ws, "equipcolor", response)
                 break;
 
             case "dailyreward":
                 response = await getdailyreward(playerVerified.playerId);
-                ws.send(JSON.stringify({ type: "dailyreward", data: response }));
+                CompressAndSend(ws, "dailyreward", response)
                 break;
 
             case "change_name":
                 response = await updateNickname(playerVerified.playerId, data.new);
-                ws.send(JSON.stringify({ type: "nickname", data: response }));
+                CompressAndSend(ws, "nickname", response)
                 break;
 
             case "shopdata":
                 response = await getshopdata();
-                ws.send(JSON.stringify({ type: "shopdata", data: response }));
+                CompressAndSend(ws, "shopdata", response)
                 break;
 
             case "buyitem":
                 response = await buyItem(playerVerified.playerId, data.buyid);
-                ws.send(JSON.stringify({ type: "buyitem", data: response }));
+                CompressAndSend(ws, "buyitem", response)
                 break;
 
             case "profile":
                 response = await getUserProfile(data.pid, playerVerified.playerId);
-                ws.send(JSON.stringify({ type: "profile", data: response }));
+                CompressAndSend(ws, "profile", response)
                 break;
 
             case "openbox":
                 response = await buyRarityBox(playerVerified.playerId);
-                ws.send(JSON.stringify({ type: "openbox", data: response }));
+                CompressAndSend(ws, "openbox", response)
                 break;
 
             case "highscore":
                 response = await gethighscores();
-                ws.send(JSON.stringify({ type: "highscores", data: response }));
+                CompressAndSend(ws, "highscore", response)
                 break;
 
             default:
