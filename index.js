@@ -39,7 +39,7 @@ const { Login } = require('./accounthandler/login');
 const { setUserOnlineStatus } = require('./routes/redisHandler')
 
 function CompressAndSend(ws, type, message) {
-    
+
     const json_message = JSON.stringify({ type: type, data: message });
     const finalmessage = LZString.compressToBase64(json_message); // or compressToBase64 for safer transmission
     ws.send(finalmessage);
@@ -295,7 +295,7 @@ async function handleMessage(ws, message, playerVerified) {
 
             case "equip_item":
                 response = await equipItem(playerVerified.playerId, data.type, data.itemid);
-                CompressAndSend(ws, "equipitem", response)
+                //CompressAndSend(ws, "equipitem", response)
                 break;
 
             case "buy_weapon":
@@ -305,7 +305,7 @@ async function handleMessage(ws, message, playerVerified) {
                 
             case "equip_weapon":
                 response = await equipWeapon(playerVerified.playerId, data.slot, data.wid);
-                CompressAndSend(ws, "equipweapon", response)
+               // CompressAndSend(ws, "equipweapon", response)
                 break;    
 
             case "equip_color":
