@@ -38,6 +38,15 @@ const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
 const { setUserOnlineStatus } = require('./routes/redisHandler')
 
+function CompressAndSend (ws, type, message) {
+
+    //const json_message = JSON.stringify({ type: type, data: message })
+   const json_message = { type: type, data: message }
+   const finalmessage = LZString.compress(json_message)
+   ws.send(finalmessage);
+
+}
+
 //setUserOnlineStatus("agag", "agg")
 
 const server = http.createServer(async (req, res) => {
@@ -363,7 +372,7 @@ wss.on("connection", (ws, req) => {
 
     //console.log(playerVerified.playerId, "connected");
 
-    ws.send(JSON.stringify({ type: "connection_success", accdata: playerVerified.inventory }));
+    CompressAndSend(ws, "connection_success", playerVerified.inventory)
 
     const pingIntervalId = setInterval(() => {
         if (!ws || playerVerified.lastPongTime <= Date.now() - 50000) {
@@ -517,9 +526,7 @@ server.on("upgrade", async (request, socket, head) => {
 });
 
 
-//const PORT = process.env.PORT || 8080;
-
-const PORT = 8080;
+const PORT = process.env.PORT || 3090;
 
 startMongoDB().then(() => {
     server.listen(PORT, () => {
