@@ -42,7 +42,7 @@ function CompressAndSend(ws, type, message) {
 
     const json_message = JSON.stringify({ type: type, data: message });
     const finalmessage = LZString.compressToBase64(json_message); // or compressToBase64 for safer transmission
-    ws.send(finalmessage);
+    ws.send(finalmessage, { binary: true });
 }
 
 //setUserOnlineStatus("agag", "agg")
