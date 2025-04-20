@@ -51,7 +51,7 @@ const apiRateLimiter = new RateLimiterMemory({
 });
 
 const AccountRateLimiter = new RateLimiterMemory({
-  points: 1,  // 10 requests per second
+  points: 3,  // 10 requests per second
   duration: 86400,
 });
 
