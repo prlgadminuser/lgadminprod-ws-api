@@ -23,17 +23,6 @@ async function updateNickname(username, newName) {
             return { status: "not allowed" };
         }
 
-        // Check if the new nickname is already taken by another user
-        const nicknameExists = await userCollection.findOne(
-            { nickname: { $regex: new RegExp(`^${newNickname}$`, "i") } },
-            { projection: { _id: 1 } } // Only check if the nickname exists (no need to return full user)
-        );
-
-        if (nicknameExists) {
-            return { status: "taken" };
-        }
-
-        // Fetch the user's current nicknameUpdatedAt timestamp
         const user = await userCollection.findOne(
             { username },
             { projection: { nameupdate: 1 } } // Only return the nicknameUpdatedAt field
@@ -53,6 +42,19 @@ async function updateNickname(username, newName) {
             return { status: "cooldown" };
         }
 
+
+        // Check if the new nickname is already taken by another user
+        const nicknameExists = await userCollection.findOne(
+            { nickname: { $regex: new RegExp(`^${newNickname}$`, "i") } },
+            { projection: { _id: 1 } } // Only check if the nickname exists (no need to return full user)
+        );
+
+        if (nicknameExists) {
+            return { status: "taken" };
+        }
+
+        // Fetch the user's current nicknameUpdatedAt timestamp
+       
         // Update the nickname and the timestamp in the database
         await userCollection.updateOne(
             { username },
