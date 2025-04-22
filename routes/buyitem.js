@@ -92,7 +92,7 @@ async function buyItem(username, offerKey) {
       await userCollection.updateOne({ username }, updateFields);
   
       return {
-        message: `You have purchased ${selectedOffer.offertext} using ${currency}.`,
+        message: `offer bought.`,
       };
     } catch (error) {
      // console.error("Error during purchase:", error);
