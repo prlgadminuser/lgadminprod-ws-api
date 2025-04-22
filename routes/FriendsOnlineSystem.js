@@ -6,12 +6,12 @@ const { friendUpdatesTime } = require("../limitconfig");
 
 async function GetFriendsDataLocal(username) {
   try {
-    const maxAgeOfPing = friendUpdatesTime + 5000; // 20 seconds in milliseconds
+    const maxAgeOfPing = friendUpdatesTime + 5000;
     const recentPingThreshold = Date.now() - maxAgeOfPing;
 
     const result = await userCollection.aggregate([
       {
-        $match: { username } // Find the user
+        $match: { username }
       },
       {
         $lookup: {
@@ -20,10 +20,10 @@ async function GetFriendsDataLocal(username) {
           foreignField: "username",
           pipeline: [
             {
-              $match: { lastping: { $gt: recentPingThreshold } } // Only fetch online friends
+              $match: { lastping: { $gt: recentPingThreshold } }
             },
             {
-              $project: { _id: 0, nickname: 1, username: 1, sp: 1 } // Return only necessary fields
+              $project: { _id: 0, nickname: 1, username: 1, sp: 1, lastping: 1 }
             }
           ],
           as: "friendsOnline"
@@ -40,16 +40,17 @@ async function GetFriendsDataLocal(username) {
 
     const onlineFriends = result[0].friendsOnline || [];
 
+    // Sort by lastping descending (most recent first)
+    onlineFriends.sort((a, b) => b.lastping - a.lastping);
+
     return {
-          friendsOnline: onlineFriends.map(friend => ({
-          id: friend.username,
-          nick: friend.nickname,
-          sp: friend.sp || 0,
-        }))
-      
+      friendsOnline: onlineFriends.map(friend => ({
+        id: friend.username,
+        nick: friend.nickname,
+        sp: friend.sp || 0
+      }))
     };
   } catch (error) {
-   // console.error("Error fetching friends data:", error);
     return { success: false, message: "none" };
   }
 }

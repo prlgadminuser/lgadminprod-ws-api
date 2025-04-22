@@ -380,7 +380,7 @@ wss.on("connection", (ws, req) => {
 
 
     
-    getfrienddata(playerVerified.playerId, ws)
+    /* getfrienddata(playerVerified.playerId, ws)
 
     
     async function getfrienddata(username, ws) {
@@ -408,7 +408,7 @@ wss.on("connection", (ws, req) => {
           }
       }, friendUpdatesTime);
 
-    
+    */
 
     ws.on("message", async (message) => {
 
