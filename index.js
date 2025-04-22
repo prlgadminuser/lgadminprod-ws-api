@@ -379,15 +379,15 @@ wss.on("connection", (ws, req) => {
     }, pingInterval);
 
 
-    /*
+    
     getfrienddata(playerVerified.playerId, ws)
 
     
     async function getfrienddata(username, ws) {
 
     try {
-        const friendsdata = await GetFriendsDataLocal(username);
         UpdateSelfPingTime(username)
+        const friendsdata = await GetFriendsDataLocal(username);
         ws.send(JSON.stringify({ type: "friendsup", data: friendsdata }));
    
        } catch (error) {
@@ -404,14 +404,11 @@ wss.on("connection", (ws, req) => {
               } catch (error) {
   
                   clearInterval(FriendRealtimeDataInterval)
-                  console.error("Error fetching friends' data:", error);
               }
           }
       }, friendUpdatesTime);
 
-      */
     
-
 
     ws.on("message", async (message) => {
 
