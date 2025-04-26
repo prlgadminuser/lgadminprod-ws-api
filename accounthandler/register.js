@@ -48,20 +48,54 @@ async function CreateAccount(username, password, user_country) {
 
             try {
 
-                await userCollection.insertOne({
+                const account = {
                     username: username,
                     nickname: username,
                     password: hashedPassword,
-                    country_code: finalCountryCode,
                     token: token,
-                    lastping: currentTimestamp,
+                    country_code: finalCountryCode,
                     created_at: currentTimestamp,
-                    last_collected: 0,
+                    last_login: currentTimestamp,
+                    lastping: currentTimestamp,
+                    type: "user",
+                }
+
+                const currency = {
                     coins: start_coins,
+                    boxes: 0,      
+                }
+
+                const inventory = {
                     items: [],
-                    weapons: ["1", "2", "3"],
-                    loadout: { 1: "1", 2: "2", 3: "3" },
-                   // friends: [],
+                    weapons: ["1","2","3"],
+                    loadout: { "1": "1","2": "2", "3": "3"},
+                    last_collected: 0,
+                    nameupdate: 0,
+                }
+
+                const equipped = {
+                    hat: "0",
+                    top: "0",
+                    banner: "0",
+                    hat_color: 0,
+                    top_color: 0,
+                    banner_color: 0,
+
+                }
+
+                const stats = {
+                    sp: 0,
+                    wins: 0,
+                    kills: 0,
+                    damage: 0,
+                }
+
+                await userCollection.insertOne({
+                    account,
+                    currency,
+                    inventory,
+                    equipped,
+                    stats,
                 });
 
 

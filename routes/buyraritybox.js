@@ -6,32 +6,24 @@ async function buyRarityBox(username) {
         // Fetch user details
         const user = await getUserDetails(username);
 
-        // Validate user and box count
-        if (!user) {
-            throw new Error("User not found");
-        }
-        if (user.boxes < 1) {
-            throw new Error("No boxes left");
-        }
-
         // Determine rarity and rewards
         const rarityType = rollForRarity();
         const rarity = determineRarity(rarityType);
-        const rewards = generateRewards(rarity, user.items);
+        const rewards = generateRewards(rarity, user.inventory.items);
 
         // Decrement box count by 1 (user buys a rarity box)
-        const updatedBoxes = user.boxes - 1;
+        const updatedBoxes = user.currency.boxes - 1;
 
         // Update user fields in a single database operation
         await updateUserFields(username, {
-            boxes: updatedBoxes, // Decrement boxes by 1 (no type change)
-            items: rewards.items, // Add new items to the set without replacing existing ones
-            coins: rewards.coins // Increment coins safely
+            "currency.boxes": updatedBoxes, // Decrement boxes by 1
+            "inventory.items": rewards.items, // Add new items to the set
+            "currency.coins": rewards.coins // Increment coins safely
         });
 
         // Return rewards
         return rewards;
-    } catch (error) { // Logging error for debugging
+    } catch (error) {
         throw new Error("An error occurred during the transaction");
     }
 }
@@ -105,41 +97,30 @@ function rollForRarity() {
 }
 
 // Function to update all user fields in a single database operation
-async function updateUserFields(username, { boxes, items, coins }) {
+async function updateUserFields(username, updateFields) {
     const updateData = {};
 
-    // Ensure 'boxes' is a number and set it explicitly (avoid replacing type)
-    if (typeof boxes !== 'undefined') {
-        if (typeof boxes !== 'number') {
-            throw new Error("The 'boxes' field must be a number.");
-        }
+    // Decrement boxes, add new items, and increment coins
+    if (updateFields["currency.boxes"] !== undefined) {
         updateData.$set = updateData.$set || {}; // Ensure $set exists
-        updateData.$set.boxes = boxes; // Set boxes to the new value (not incrementing here)
+        updateData.$set["currency.boxes"] = updateFields["currency.boxes"]; // Set boxes to the new value
     }
 
-    // Ensure 'items' is an array and add it to the set if it's passed
-    if (Array.isArray(items) && items.length > 0) {
-        if (!items.every(item => typeof item === 'string')) {
-            throw new Error("Each item in 'items' must be a string.");
-        }
+    if (Array.isArray(updateFields["inventory.items"]) && updateFields["inventory.items"].length > 0) {
         updateData.$addToSet = updateData.$addToSet || {}; // Ensure $addToSet exists
-        updateData.$addToSet.items = { $each: items }; // Add new items to the existing set
+        updateData.$addToSet["inventory.items"] = { $each: updateFields["inventory.items"] }; // Add new items to the existing set
     }
 
-    // Ensure 'coins' is an array of numbers and increment the coin count safely
-    if (Array.isArray(coins) && coins.length > 0) {
-        if (!coins.every(coin => typeof coin === 'number')) {
-            throw new Error("Each coin in 'coins' must be a number.");
-        }
-        const coinSum = coins.reduce((sum, coin) => sum + coin, 0);
+    if (Array.isArray(updateFields["currency.coins"]) && updateFields["currency.coins"].length > 0) {
+        const coinSum = updateFields["currency.coins"].reduce((sum, coin) => sum + coin, 0);
         updateData.$inc = updateData.$inc || {}; // Ensure $inc exists
-        updateData.$inc.coins = coinSum; // Increment the coin count by the total sum of coins
+        updateData.$inc["currency.coins"] = coinSum; // Increment the coin count by the total sum of coins
     }
 
-    // Ensure we're updating the database with a valid query
+    // Update the database if there are changes
     if (Object.keys(updateData).length > 0) {
         await userCollection.updateOne(
-            { username },
+            { "account.username": username },  // Search by account.username
             updateData
         );
     }
@@ -148,8 +129,8 @@ async function updateUserFields(username, { boxes, items, coins }) {
 // Function to get user details from the database
 async function getUserDetails(username) {
     return await userCollection.findOne(
-        { username },
-        { projection: { username: 1, boxes: 1, items: 1, coins: 1 } }
+        { "account.username": username }, // Search by account.username
+        { projection: { "account.username": 1, "currency.boxes": 1, "inventory.items": 1, "currency.coins": 1 } }
     );
 }
 

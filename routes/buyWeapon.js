@@ -1,4 +1,4 @@
-const { userCollection } = require('./..//idbconfig');
+const { userCollection } = require('./../idbconfig');
 
 const WeaponsToBuy = {
     "4": 500,
@@ -6,7 +6,6 @@ const WeaponsToBuy = {
 
 async function buyWeapon(username, weaponid) {
     try {
-
         if (!WeaponsToBuy.hasOwnProperty(weaponid)) {
             throw new Error("Invalid weapon ID.");
         }
@@ -15,35 +14,38 @@ async function buyWeapon(username, weaponid) {
         const currency = "coins"; // Assuming balance is stored under this key
 
         // Check if the user already owns the weapon
-        const ItemIsOwned = await userCollection.findOne({ username, weapons: { $in: [weaponid] } });
+        const ItemIsOwned = await userCollection.findOne({ 
+            "account.username": username, 
+            "inventory.weapons": { $in: [weaponid] } 
+        });
         if (ItemIsOwned) {
             throw new Error("You already own this weapon.");
         }
 
         // Fetch the user's balance
         const userRow = await userCollection.findOne(
-            { username },
-            { projection: { [currency]: 1 } } 
+            { "account.username": username },
+            { projection: { [`currency.${currency}`]: 1 } } // Dynamically fetch the user's balance in the specified currency
         );
 
         if (!userRow) {
             throw new Error("User not found.");
         }
 
-        if ((userRow[currency] || 0) < price) {
+        if ((userRow.currency[currency] || 0) < price) {
             throw new Error(`Not enough ${currency} to buy the offer.`);
         }
 
-        // Update the user's balance and add the weapon
-        let updateFields = {
-            $addToSet: { weapons: weaponid }, 
-            $inc: { [currency]: -price }
+        // Update the user's balance and add the weapon to their inventory
+        const updateFields = {
+            $addToSet: { "inventory.weapons": weaponid }, 
+            $inc: { [`currency.${currency}`]: -price } // Deduct the coins
         };
 
-        await userCollection.updateOne({ username }, updateFields);
+        await userCollection.updateOne({ "account.username": username }, updateFields);
 
         return {
-            message: "success",
+            message: "Weapon purchased successfully.",
         };
     } catch (error) {
         throw new Error(error.message || "An error occurred while processing your request.");

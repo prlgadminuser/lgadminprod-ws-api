@@ -1,10 +1,8 @@
-
-const { userCollection, nicknameRegex, badWords } = require('./..//idbconfig');
+const { userCollection, nicknameRegex, badWords } = require('./..//idbconfig'); 
 
 async function updateNickname(username, newName) {
-
     try {
-        const newNickname = newName
+        const newNickname = newName;
 
         // Validate the newNickname parameter
         if (!newNickname) {
@@ -17,20 +15,19 @@ async function updateNickname(username, newName) {
         }
 
         // Check if the new nickname contains any prohibited words
-        
         const containsBadWords = badWords.test(newNickname);
         if (containsBadWords) {
             return { status: "not allowed" };
         }
 
         const user = await userCollection.findOne(
-            { username },
-            { projection: { nameupdate: 1 } } // Only return the nicknameUpdatedAt field
+            { "account.username": username },
+            { projection: { "account.nameupdate": 1 } } // Only return the nicknameUpdatedAt field
         );
 
         // Check if the nickname can be updated based on the cooldown
         const now = Date.now();
-        const lastUpdated = user?.nameupdate || 0; // Default to epoch if no timestamp exists
+        const lastUpdated = user?.account?.nameupdate || 0; // Default to epoch if no timestamp exists
         const timeDiff = now - lastUpdated; // Difference in milliseconds
 
         const cooldownPeriod = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
@@ -42,10 +39,9 @@ async function updateNickname(username, newName) {
             return { status: "cooldown" };
         }
 
-
         // Check if the new nickname is already taken by another user
         const nicknameExists = await userCollection.findOne(
-            { nickname: { $regex: new RegExp(`^${newNickname}$`, "i") } },
+            { "account.nickname": { $regex: new RegExp(`^${newNickname}$`, "i") } },
             { projection: { _id: 1 } } // Only check if the nickname exists (no need to return full user)
         );
 
@@ -53,27 +49,23 @@ async function updateNickname(username, newName) {
             return { status: "taken" };
         }
 
-        // Fetch the user's current nicknameUpdatedAt timestamp
-       
         // Update the nickname and the timestamp in the database
         await userCollection.updateOne(
-            { username },
+            { "account.username": username },
             { 
                 $set: { 
-                    nickname: newNickname, 
-                    nameupdate: Date.now() // Set current timestamp as nicknameUpdatedAt 
+                    "account.nickname": newNickname, 
+                    "account.nameupdate": Date.now() // Set current timestamp as nicknameUpdatedAt 
                 } 
             }
         );
 
-        return { status: "success", t: Date.now()};
+        return { status: "success", t: Date.now() };
     } catch (error) {
-
         throw new Error("Err");
     }
 }
 
-
 module.exports = {
-   updateNickname
+    updateNickname
 };

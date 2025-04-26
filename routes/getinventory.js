@@ -1,53 +1,47 @@
-
-const { battlePassCollection, userCollection, loginRewardsCollection, shopcollection } = require('./..//idbconfig');
-const { rarityPercentages } = require('./..//boxrarityconfig');
-const { serverlist, getServerByCountry } = require('./..//serverlist');
+const { battlePassCollection, userCollection, loginRewardsCollection, shopcollection } = require('./../idbconfig');
+const { rarityPercentages } = require('./../boxrarityconfig');
+const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');
-
 
 async function getUserInventory(username, loginrewardactive) {
     try {
         // Update the last_login field
         await userCollection.updateOne(
-            { username },
-            {
-                $set: { last_login: //Date.now() 
-                    Date.now() }
-            }
+            { "account.username": username },
+            { $set: { "account.last_login": Date.now() } }
         );
 
         // Prepare promises for parallel execution
         const promises = [
             userCollection.findOne(
-                { username },
+                { "account.username": username },
                 {
                     projection: {
-                        nickname: 1,
-                        loadout: 1,
-                        weapons: 1,
-                        coins: 1,
-                        boxes: 1,
-                        sp: 1,
-                        items: 1,
-                        last_collected: 1,
-                        coinsnext: 1,
-                        hat: 1,
-                        top: 1,
-                        banner: 1,
-                        pose: 1,
-                        color: 1,
-                        hat_color: 1,
-                        top_color: 1,
-                        banner_color: 1,
-                        gadget: 1,
-                        nameupdate: 1,
-                        friends: 1,
-                        country_code: 1,
+                        "account.nickname": 1,
+                        "account.loadout": 1,
+                        "account.weapons": 1,
+                        "account.coins": 1,
+                        "account.boxes": 1,
+                        "account.sp": 1,
+                        "account.items": 1,
+                        "account.last_collected": 1,
+                        "account.coinsnext": 1,
+                        "equipped.hat": 1,
+                        "equipped.top": 1,
+                        "equipped.banner": 1,
+                        "equipped.pose": 1,
+                        "equipped.color": 1,
+                        "equipped.hat_color": 1,
+                        "equipped.top_color": 1,
+                        "equipped.banner_color": 1,
+                        "account.gadget": 1,
+                        "account.nameupdate": 1,
+                        "account.country_code": 1,
                     }
                 }
             ),
             battlePassCollection.findOne(
-                { username },
+                { "account.username": username },
                 {
                     projection: {
                         currentTier: 1,
@@ -61,7 +55,7 @@ async function getUserInventory(username, loginrewardactive) {
         if (loginrewardactive) {
             promises.push(
                 loginRewardsCollection.findOne(
-                    { username },
+                    { "account.username": username },
                     {
                         projection: {
                             username: 1
@@ -100,40 +94,40 @@ async function getUserInventory(username, loginrewardactive) {
         const bonusitem_damage = bpuserRow ? bpuserRow.bonusitem_damage || 0 : 0;
 
         const inventory = {
-            nickname: userRow.nickname || 0,
+            nickname: userRow.account.nickname || 0,
             username: username,
-            coins: userRow.coins || 0,
-            boxes: userRow.boxes || 0,
-            sp: userRow.sp || 0,
-            items: userRow.items || [],
-            weapons: userRow.weapons || [],
-            loadout: userRow.loadout || [],
+            coins: userRow.account.coins || 0,
+            boxes: userRow.account.boxes || 0,
+            sp: userRow.account.sp || 0,
+            items: userRow.account.items || [],
+            weapons: userRow.account.weapons || [],
+            loadout: userRow.account.loadout || [],
             slpasstier,
             season_coins,
             bonusitem_damage,
-            last_collected: userRow.last_collected || 0,
-            hat: userRow.hat || 0,
-            top: userRow.top || 0,
-            banner: userRow.banner || 0,
-            pose: userRow.pose || 0,
-            color: userRow.color || 0,
-            hat_color: userRow.hat_color || 0,
-            top_color: userRow.top_color || 0,
-            banner_color: userRow.banner_color || 0,
-            gadget: userRow.gadget || 1,
+            last_collected: userRow.account.last_collected || 0,
+            hat: userRow.equipped.hat || 0,
+            top: userRow.equipped.top || 0,
+            banner: userRow.equipped.banner || 0,
+            pose: userRow.equipped.pose || 0,
+            color: userRow.equipped.color || 0,
+            hat_color: userRow.equipped.hat_color,
+            top_color: userRow.equipped.top_color,
+            banner_color: userRow.equipped.banner_color,
+            gadget: userRow.account.gadget || 1,
             server_timestamp: currentTimestampInGMT,
             server_nexttime: currentTimestamp0am,
             lbtheme: configrow ? configrow.lobbytheme : null,
             season_end: configrow ? configrow.season_end : null,
             onetimereward,
             boxrarities: rarityPercentages,
-            lastnameupdate: userRow.nameupdate || 0,
-            friends: userRow.friends || [],
-            requests: userRow.requests || [],
+            lastnameupdate: userRow.account.nameupdate || 0,
+          //  friends: userRow.social.friends || [],
+           // requests: userRow.social.requests || [],
             serverlist,
-            nearestRegion: getServerByCountry(userRow.country_code || "Unknown"),
+            nearestRegion: getServerByCountry(userRow.account.country_code || "Unknown"),
             weaponcatalog: WeaponsToBuy,
-        }
+        };
 
         // Return the constructed object
         return inventory;
@@ -142,7 +136,6 @@ async function getUserInventory(username, loginrewardactive) {
         throw new Error(`Failed to get user inventory: ${error.message}`);
     }
 }
-
 
 module.exports = {
     getUserInventory,

@@ -36,7 +36,6 @@ const { createRateLimiter, ConnectionOptionsRateLimit, apiRateLimiter, AccountRa
         getClientIp, getClientCountry, ws_message_size_limit, api_message_size_limit, WS_MSG_SIZE_LIMIT, maxClients, pingInterval, allowedOrigins, friendUpdatesTime } = require("./limitconfig");
 const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
-const { setUserOnlineStatus } = require('./routes/redisHandler')
 
 function CompressAndSend(ws, type, message) {
 

@@ -1,33 +1,30 @@
-
-const { shopcollection } = require('./..//idbconfig');
+const { shopcollection } = require('./../idbconfig');
 
 async function getshopdata() {
-
   const currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
+  currentDate.setHours(0, 0, 0, 0); // Reset time to 00:00:00 for consistency
   const t0am = currentDate.getTime();
 
   try {
-    // Find the daily items in the shop
-    const dailyItems = "dailyItems";
-    const itemshop = await shopcollection.findOne({ _id: dailyItems });
+    // Fetch the shop data for the daily items
+    const dailyItemsConfig = "dailyItems";
+    const itemshop = await shopcollection.findOne({ _id: dailyItemsConfig });
 
     if (!itemshop) {
-      throw new Error("error");
+      throw new Error("Shop configuration not found");
     }
 
-    return ({
-      dailyItems: itemshop.items, // Or items directly if you don't need an array
-      shoptheme: itemshop.theme,
-      server_nexttime: t0am
-    });
+    return {
+      dailyItems: itemshop.items || [], // Return the daily items, ensuring there's a default empty array if not found
+      shoptheme: itemshop.theme || null,  // Return shop theme, defaulting to null if not found
+      server_nexttime: t0am  // Server's next reset time
+    };
   } catch (error) {
-    // console.error("Error fetching daily items:", error);
-    throw new Error("error");
+    // Log error if necessary, but for now throw the error to propagate it
+    throw new Error(`Error fetching shop data: ${error.message}`);
   }
 }
 
-
 module.exports = {
-    getshopdata,
- };
+  getshopdata,
+};

@@ -1,39 +1,35 @@
-
 const { userCollection } = require('./..//idbconfig');
 
 async function equipWeapon(username, slot, weaponid) {
-    try {
-
-    if (!slot || !weaponid || !(slot >= 1 && slot <= 3)) {
-        throw new Error("invalid position in loadout");
-    }
-    
-    if (weaponid.length > 5) {
-        throw new Error("weaponid is too large");
+  try {
+    // Validate the slot and weaponid
+    if (!slot || !(slot >= 1 && slot <= 3)) {
+      throw new Error("Invalid position in loadout. Slot must be between 1 and 3.");
     }
 
-      const ItemIsOwned = await userCollection.findOne({ username, weapons: { $in: [weaponid] } });
+    if (!weaponid || weaponid.length > 5) {
+      throw new Error("Invalid weapon ID. Weapon ID should not exceed 5 characters.");
+    }
 
-        if (!ItemIsOwned) {
-            throw new Error("Item is not valid");
-        }
+    // Check if the user owns the weapon
+    const ItemIsOwned = await userCollection.findOne({ username, weapons: { $in: [weaponid] } });
 
-        await userCollection.updateOne(
-            { username }, // Filter by username
-            { $set: { [`loadout.${slot}`]: weaponid } } // Dynamically update the correct loadout key
-        );
+    if (!ItemIsOwned) {
+      throw new Error("Item is not valid. User does not own the specified weapon.");
+    }
 
-        return { id: weaponid };
+    // Update the user's loadout with the new weapon in the specified slot
+    await userCollection.updateOne(
+      { username }, // Filter by username
+      { $set: { [`loadout.${slot}`]: weaponid } } // Dynamically update the correct loadout slot
+    );
 
-       
-
-    } catch (error) {
-        throw new Error("Error equipping item");
-       
+    return { message: "Weapon equipped successfully.", weaponid }; // Return success message with the weapon ID
+  } catch (error) {
+    throw new Error(`Error equipping weapon: ${error.message || error}`);
   }
 }
 
-
 module.exports = {
-    equipWeapon,
+  equipWeapon,
 };
