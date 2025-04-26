@@ -1,9 +1,11 @@
 const { userCollection, shopcollection } = require('./../idbconfig');
 
 function canCollectCoins(lastCollected) {
-    const hoursPassed = (Date.now() - lastCollected) / (1000 * 60 * 60);
+
+    const hoursPassed = (Date.now() / 1000 - lastCollected) / (60 * 60);
     return hoursPassed >= 24;
 }
+
 
 function generateRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -14,7 +16,7 @@ async function getdailyreward(username) {
         // Check if the user exists in the database
         const user = await userCollection.findOne(
             { "account.username": username },
-            { projection: { _id: 0, "account.username": 1, "account.last_collected": 1 } }
+            { projection: { _id: 0, "account.username": 1, "inventory.last_collected": 1 } }
         );
 
         if (!user) {
@@ -22,7 +24,7 @@ async function getdailyreward(username) {
         }
 
         // Check if enough time has passed since the last coin collection
-        const lastCollected = user.account.last_collected;
+        const lastCollected = user.inventory.last_collected;
 
         if (!canCollectCoins(lastCollected)) {
             throw new Error("You can only collect coins once every 24 hours.");
@@ -45,8 +47,8 @@ async function getdailyreward(username) {
         await userCollection.updateOne(
             { "account.username": username },
             {
-                $inc: { "currency.coins": coinsToAdd },
-                $set: { "account.last_collected": Date.now() },
+                $inc: { "currency.coins": parseInt(coinsToAdd) },
+                $set: { "inventory.last_collected": Date.now() },
             }
         );
 
@@ -57,6 +59,7 @@ async function getdailyreward(username) {
         };
 
     } catch (error) {
+        console.log(JSON.stringify(error))
         throw new Error(error.message || "An error occurred while processing your request.");
     }
 }

@@ -1,5 +1,6 @@
 const { userCollection } = require('./../idbconfig');
 const { rarityConfig } = require('./../boxrarityconfig');
+const { Discord } = require('./../index');
 
 async function buyRarityBox(username) {
     try {
@@ -9,6 +10,15 @@ async function buyRarityBox(username) {
         // Determine rarity and rewards
         const rarityType = rollForRarity();
         const rarity = determineRarity(rarityType);
+
+        if (rarity === "normal") {
+        
+            const joinedMessage = `${username} has joined Skilldown from ${finalCountryCode}`;
+            webhook.send(joinedMessage);
+
+
+        }
+
         const rewards = generateRewards(rarity, user.inventory.items);
 
         // Decrement box count by 1 (user buys a rarity box)

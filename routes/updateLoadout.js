@@ -12,7 +12,7 @@ async function equipWeapon(username, slot, weaponid) {
     }
 
     // Check if the user owns the weapon
-    const ItemIsOwned = await userCollection.findOne({ username, weapons: { $in: [weaponid] } });
+    const ItemIsOwned = await userCollection.findOne({ "account.username": username, "inventory.weapons": { $in: [weaponid] } });
 
     if (!ItemIsOwned) {
       throw new Error("Item is not valid. User does not own the specified weapon.");
@@ -20,8 +20,8 @@ async function equipWeapon(username, slot, weaponid) {
 
     // Update the user's loadout with the new weapon in the specified slot
     await userCollection.updateOne(
-      { username }, // Filter by username
-      { $set: { [`loadout.${slot}`]: weaponid } } // Dynamically update the correct loadout slot
+      { "account.username": username }, // Filter by username
+      { $set: { [`inventory.loadout.${slot}`]: weaponid } } // Dynamically update the correct loadout slot
     );
 
     return { message: "Weapon equipped successfully.", weaponid }; // Return success message with the weapon ID

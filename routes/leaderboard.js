@@ -8,13 +8,13 @@ const updateHighscores = async () => {
       .aggregate([
         {
           $match: {
-            nickname: { $ne: "Liquem" }, // Exclude player with the nickname "Liquem"
-            sp: { $gt: 0 } // Ensure we only consider players with a positive score
+           // nickname: { $ne: "Liquem" }, // Exclude player with the nickname "Liquem"
+            "stats.sp": { $gt: 0 } // Ensure we only consider players with a positive score
           }
         },
         {
           $sort: {
-            sp: -1 // Sort by score (sp) in descending order
+            "stats.sp": -1 // Sort by score (sp) in descending order
           }
         },
         {
@@ -23,9 +23,9 @@ const updateHighscores = async () => {
         {
           $project: {
             _id: 0, // Exclude MongoDB _id field from the results
-            n: "$nickname", // Shorten "nickname" to "n"
-            u: "$username", // Shorten "username" to "u"
-            s: { $ifNull: ["$sp", 0] } // Use 0 as the default if "sp" (score) is null
+            n: "$account.nickname", // Shorten "nickname" to "n"
+            u: "$account.username", // Shorten "username" to "u"
+            s: { $ifNull: ["$stats.sp", 0] } // Use 0 as the default if "sp" (score) is null
           }
         }
       ])

@@ -17,26 +17,11 @@ async function getUserInventory(username, loginrewardactive) {
                 { "account.username": username },
                 {
                     projection: {
-                        "account.nickname": 1,
-                        "account.loadout": 1,
-                        "account.weapons": 1,
-                        "account.coins": 1,
-                        "account.boxes": 1,
-                        "account.sp": 1,
-                        "account.items": 1,
-                        "account.last_collected": 1,
-                        "account.coinsnext": 1,
-                        "equipped.hat": 1,
-                        "equipped.top": 1,
-                        "equipped.banner": 1,
-                        "equipped.pose": 1,
-                        "equipped.color": 1,
-                        "equipped.hat_color": 1,
-                        "equipped.top_color": 1,
-                        "equipped.banner_color": 1,
-                        "account.gadget": 1,
-                        "account.nameupdate": 1,
-                        "account.country_code": 1,
+                        "account": 1,
+                        "equipped": 1,
+                        "currency": 1,
+                        "inventory": 1,
+                        "stats.sp": 1,
                     }
                 }
             ),
@@ -94,18 +79,18 @@ async function getUserInventory(username, loginrewardactive) {
         const bonusitem_damage = bpuserRow ? bpuserRow.bonusitem_damage || 0 : 0;
 
         const inventory = {
-            nickname: userRow.account.nickname || 0,
+            nickname: userRow.account.nickname,
             username: username,
-            coins: userRow.account.coins || 0,
-            boxes: userRow.account.boxes || 0,
-            sp: userRow.account.sp || 0,
-            items: userRow.account.items || [],
-            weapons: userRow.account.weapons || [],
-            loadout: userRow.account.loadout || [],
+            coins: userRow.currency.coins,
+            boxes: userRow.currency.boxes,
+            sp: userRow.stats.sp,
+            items: userRow.inventory.items,
+            weapons: userRow.inventory.weapons ,
+            loadout: userRow.inventory.loadout,
             slpasstier,
             season_coins,
             bonusitem_damage,
-            last_collected: userRow.account.last_collected || 0,
+            last_collected: userRow.inventory.last_collected || 0,
             hat: userRow.equipped.hat || 0,
             top: userRow.equipped.top || 0,
             banner: userRow.equipped.banner || 0,
@@ -132,6 +117,7 @@ async function getUserInventory(username, loginrewardactive) {
         // Return the constructed object
         return inventory;
     } catch (error) {
+        console.log(error)
         // Catch and rethrow errors with additional context
         throw new Error(`Failed to get user inventory: ${error.message}`);
     }

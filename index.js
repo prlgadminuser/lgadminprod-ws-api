@@ -353,6 +353,7 @@ async function handleMessage(ws, message, playerVerified) {
         }
     } catch (error) {
         ws.close(1007, "error");
+        console.log(error)
     }
 }
 
