@@ -38,6 +38,8 @@ const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
 const { verifyToken } = require("./routes/verifyToken");
 
+
+
 function CompressAndSend(ws, type, message) {
 
     const json_message = JSON.stringify({ type: type, data: message });
@@ -610,3 +612,4 @@ process.on("uncaughtException", (error) => {
   process.on("unhandledRejection", (reason, promise) => {
     console.error("Unhandled Rejection:", reason, promise);
   });
+

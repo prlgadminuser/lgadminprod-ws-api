@@ -1,6 +1,6 @@
 const { userCollection } = require('./../idbconfig');
 const { rarityConfig } = require('./../boxrarityconfig');
-const { Discord } = require('./../index');
+const { webhook } = require('./..//discordwebhook');
 
 async function buyRarityBox(username) {
     try {
@@ -11,9 +11,9 @@ async function buyRarityBox(username) {
         const rarityType = rollForRarity();
         const rarity = determineRarity(rarityType);
 
-        if (rarity === "normal") {
+        if (rarity === "legendary") {
         
-            const joinedMessage = `${username} has joined Skilldown from ${finalCountryCode}`;
+            const joinedMessage = `${username} got the chrono rarity`;
             webhook.send(joinedMessage);
 
 
