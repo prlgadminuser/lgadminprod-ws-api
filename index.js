@@ -36,6 +36,7 @@ const { createRateLimiter, ConnectionOptionsRateLimit, apiRateLimiter, AccountRa
         getClientIp, getClientCountry, ws_message_size_limit, api_message_size_limit, WS_MSG_SIZE_LIMIT, maxClients, pingInterval, allowedOrigins, friendUpdatesTime } = require("./limitconfig");
 const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
+const { verifyToken } = require("./routes/verifyToken");
 
 function CompressAndSend(ws, type, message) {
 
@@ -122,7 +123,31 @@ const server = http.createServer(async (req, res) => {
                     }
                 }
 
+                console.log(requestData)
+
                 switch (req.url) {
+
+                    case '/token':
+                        if (req.method !== 'POST') break;
+                
+                        if (!requestData.token) {
+                            res.writeHead(400, { 'Content-Type': 'text/plain' });
+                            return res.end("Error: Missing token");
+                        }
+
+                        const response2 = await verifyToken(requestData.token)
+
+                        console.log(response2)
+
+                        if (response2 == "valid") {
+                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            return res.end("true");
+                        } else {
+                            res.writeHead(401, { 'Content-Type': 'text/plain' });
+                            return res.end("Error: Invalid credentials");
+                        }
+
+
                     case '/register':
                         if (req.method !== 'POST') break;
 
@@ -170,7 +195,6 @@ const server = http.createServer(async (req, res) => {
                             res.writeHead(401, { 'Content-Type': 'text/plain' });
                             return res.end("Error: Invalid credentials");
                         }
-                        break;
 
                     default:
                         res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -236,12 +260,12 @@ function escapeInput(input, isJwt = false) {
     if (typeof input === 'object') {
         return JSON.stringify(input, (key, value) => {
             if (typeof value === 'string') {
-                return value.replace(/[$.]/g, '');
+                return value.replace(/[$]/g, '');
             }
             return value;
         });
     }
-    return String(input).replace(/[$.]/g, '');
+    return String(input).replace(/[$]/g, '');
 }
 
 

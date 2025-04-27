@@ -62,6 +62,7 @@ async function updateNickname(username, newName) {
 
         return { status: "success", t: Date.now() };
     } catch (error) {
+        console.log(JSON.stringify(error))
         throw new Error("Err");
     }
 }
