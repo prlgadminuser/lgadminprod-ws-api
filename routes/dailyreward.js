@@ -59,7 +59,6 @@ async function getdailyreward(username) {
         };
 
     } catch (error) {
-        console.log(JSON.stringify(error))
         throw new Error(error.message || "An error occurred while processing your request.");
     }
 }

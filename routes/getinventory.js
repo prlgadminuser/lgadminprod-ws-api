@@ -117,7 +117,6 @@ async function getUserInventory(username, loginrewardactive) {
         // Return the constructed object
         return inventory;
     } catch (error) {
-        console.log(error)
         // Catch and rethrow errors with additional context
         throw new Error(`Failed to get user inventory: ${error.message}`);
     }

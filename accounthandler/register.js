@@ -48,7 +48,6 @@ async function CreateAccount(username, password, user_country) {
         const token = jwt.sign({ username }, tokenkey);
         const currentTimestamp = Date.now();  // Ensure this is an integer
 
-        console.log("bad")
         // Prepare account details
         const account = {
             username: String(username),  // Ensure username is a string
@@ -111,7 +110,6 @@ async function CreateAccount(username, password, user_country) {
             // If there's a validation error, catch and log it
             if (error.code === 121) {  // MongoDB validation error code
                 const failedProperties = error.errorResponse.errInfo.details;
-    console.log("Failed Properties:", JSON.stringify(failedProperties));
                 return { status: "Server validation error", error: error.errorResponse.errInfo.details };
             } else {
                 //console.error("Unexpected error: ", error);

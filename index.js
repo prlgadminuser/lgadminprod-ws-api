@@ -123,7 +123,7 @@ const server = http.createServer(async (req, res) => {
                     }
                 }
 
-                console.log(requestData)
+              
 
                 switch (req.url) {
 
@@ -137,7 +137,7 @@ const server = http.createServer(async (req, res) => {
 
                         const response2 = await verifyToken(requestData.token)
 
-                        console.log(response2)
+                     
 
                         if (response2 == "valid") {
                             res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -377,7 +377,6 @@ async function handleMessage(ws, message, playerVerified) {
         }
     } catch (error) {
         ws.close(1007, "error");
-        console.log(error)
     }
 }
 
