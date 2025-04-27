@@ -2,7 +2,7 @@ const { userCollection, badWords, usernameRegex, passwordRegex, tokenkey } = req
 const { jwt, bcrypt } = require('./..//index');
 const { webhook } = require('./..//discordwebhook');
 
-const allow_bad_words = true
+const allow_bad_words = false
 
 async function CreateAccount(username, password, user_country) {
     try {
