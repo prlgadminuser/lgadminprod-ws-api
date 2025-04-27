@@ -8,30 +8,30 @@ async function Login(username, password) {
   
     try {
       const user = await userCollection.findOne(
-        { username },
-        { projection: { username: 1, password: 1, token: 1, } },
+        { "account.username": username },
+        { projection: { "account.username": 1, "account.password": 1, "account.token": 1, } },
       );
   
       if (!user) {
         return { status: "Invalid username or password" };
       }
   
-      const passwordMatch = await bcrypt.compare(password, user.password);
+      const passwordMatch = await bcrypt.compare(password, user.account.password);
   
       if (!passwordMatch) {
         return { status: "Invalid username or password" };
       }
   
-      const token = GenerateNewToken ? jwt.sign({ username: user.username }, tokenkey) : user.token;
+      const token = GenerateNewToken ? jwt.sign({ username: user.account.username }, tokenkey) : user.account.token;
 
 
       if (GenerateNewToken) {
-        await userCollection.updateOne({ username }, { $set: { token } });
+        await userCollection.updateOne({ "account.username": username }, { $set: { token } });
       }
   
       return { token: token };
     } catch (error) {
-        return { status: "unexpected error r" };
+        return { status: "Unexpected error" };
     }
   };
    

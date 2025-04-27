@@ -12,20 +12,20 @@ async function CreateAccount(username, password, user_country) {
 
         // Validate input
         if (!username || !password) {
-            return { status: "Username and password are required" };
+            return { status: "Name and password are required" };
         }
 
         if (username === password) {
-            return { status: "Username and password cannot be the same" };
+            return { status: "Name and password cannot be the same" };
         }
 
         if (!usernameRegex.test(username)) {
-            return { status: "Username not allowed" };
+            return { status: "Name not allowed" };
         }
 
         if (!allow_bad_words) {
         if (badWords.test(username)) {
-            return { status: "Username contains inappropriate words" };
+            return { status: "Name contains inappropriate words" };
         }
        }
 
@@ -40,7 +40,7 @@ async function CreateAccount(username, password, user_country) {
         );
 
         if (existingUser) {
-            return { status: "Username already taken. Please choose another one." };
+            return { status: "Name already taken. Please choose another one." };
         }
 
         // Hash password and create token
