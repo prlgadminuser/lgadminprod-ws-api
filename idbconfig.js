@@ -3,9 +3,13 @@ const password = process.env.DB_KEY || "8RLj5Vr3F6DRBAYc"
 const encodedPassword = encodeURIComponent(password);
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
+const { maintenanceMode, UpdateMaintenance } = require("./index")
+
 const tokenkey = "d8ce40604d359eeb9f2bff31beca4b4b"
 const webhookURL = "https://discord.com/api/webhooks/1320922981161107528/KQ_m66iOVDJeXCfSgXX1El9qcsTNC2EKj5d1HZZXiD5pLfPofF5Rb0-QV3MoWgDIaK8_"
 const lgconnecturi = `mongodb+srv://Liquem:${encodedPassword}@cluster0.ed4zami.mongodb.net/?retryWrites=true&w=majority`;
+
+
 
 
 const nicknameRegex = /^(?!.*[&<>\/\\\s:$.]).{4,16}$/;
@@ -24,17 +28,24 @@ const client = new MongoClient(uri, {
     },
   });
 
+  
+
+
+
 async function startMongoDB() {
     try {
         await client.connect();
-       ("Connected to MongoDB")
+       console.log("Connected to MongoDB")
 
-       const ItemIsOwned = await userCollection.find({
-        "account.username": "Liquem",
-        "inventory.items": { $elemMatch: { $eq: "A001" } }
-      })
+       const result = await shopcollection.findOne(
+        { _id: "maintenance" },
+        { projection: { status: 1 } } // Only retrieve the maintenanceStatus field
+      );
 
-    
+      console.log(result.status)
+      UpdateMaintenance(result.status)
+
+
 
     } catch (error) {
         console.error("Error connecting to MongoDB:", error);

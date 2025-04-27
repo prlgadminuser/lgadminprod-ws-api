@@ -5,14 +5,19 @@ const connectedPlayers = new Map();
 
 let connectedClientsCount = 0;
 
-let maintenanceMode = false;
+let maintenanceMode = false
+
+function UpdateMaintenance(change) {
+    maintenanceMode = change
+  }
+
 
 const jwt = require("jsonwebtoken");
 const Limiter = require("limiter").RateLimiter;
 const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require('rate-limiter-flexible');
-module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers };
+module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers, maintenanceMode, UpdateMaintenance };
 const { startMongoDB, shopcollection } = require("./idbconfig");
 var sanitize = require('mongo-sanitize');
 const WebSocket = require("ws");
@@ -65,20 +70,20 @@ const server = http.createServer(async (req, res) => {
         try {
             await apiRateLimiter.consume(ip);
         } catch {
-            res.writeHead(429, { 'Content-Type': 'text/plain' });
+            res.writeHead(400, { 'Content-Type': 'text/plain' });
             return res.end("Too many requests. Try again later");
         }
 
         const origin = req.headers.origin;
 
         if (!origin || origin.length > 50 || !allowedOrigins.includes(origin)) {
-            res.writeHead(429, { 'Content-Type': 'text/plain' });
+            res.writeHead(400, { 'Content-Type': 'text/plain' });
             return res.end("Unauthorized");
         }
 
         if (maintenanceMode) {
-            res.writeHead(429, { 'Content-Type': 'text/plain' });
-            return res.end("Quick Maintenance. Be back soon");
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify( "maintenance" ));
         }
     
 
@@ -411,9 +416,10 @@ async function handleMessage(ws, message, playerVerified) {
 const rateLimiterConnection = new RateLimiterMemory(ConnectionOptionsRateLimit);
 
 wss.on("connection", (ws, req) => {
-    if (maintenanceMode) {
+
+    if (maintenanceMode === "true") {
         ws.close(4000, "maintenance");
-        return;
+        
     }
 
     const playerVerified = ws.playerVerified;
@@ -589,14 +595,15 @@ function watchItemShop() {
     const startChangeStream = () => {
         changeStream = shopcollection.watch(pipeline, { fullDocument: "updateLookup" });
 
+       
+
         changeStream.on("change", (change) => {
             const docId = change.fullDocument._id;
             if (docId === "dailyItems") {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
-                maintenanceMode = change.fullDocument.status === "true";
-                broadcast("maintenanceupdate");
-                if (maintenanceMode) closeAllClients(4001, "maintenance");
+                UpdateMaintenance(change.fullDocument.status)
+                if (maintenanceMode) closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
             }
         });
 
