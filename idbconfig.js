@@ -27,14 +27,13 @@ const client = new MongoClient(uri, {
 async function startMongoDB() {
     try {
         await client.connect();
-       console.log("Connected to MongoDB")
+       ("Connected to MongoDB")
 
        const ItemIsOwned = await userCollection.find({
         "account.username": "Liquem",
         "inventory.items": { $elemMatch: { $eq: "A001" } }
-      }).explain("allPlansExecution");
-      
-      console.log(JSON.stringify(ItemIsOwned));
+      })
+
     
 
     } catch (error) {

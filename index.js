@@ -37,6 +37,7 @@ const { createRateLimiter, ConnectionOptionsRateLimit, apiRateLimiter, AccountRa
 const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
 const { verifyToken } = require("./routes/verifyToken");
+const { addPlayerToChat, removePlayerFromChat, sendMessage } = require("./playerchat/chat")
 
 
 
@@ -373,12 +374,37 @@ async function handleMessage(ws, message, playerVerified) {
                 CompressAndSend(ws, "highscore", response)
                 break;
 
+
+            // chat functions
+
+            case "joinchat":
+                response = await addPlayerToChat(playerVerified.nickname, ws);
+                CompressAndSend(ws, "joinchat", response)
+                break;
+
+            case "leavechat":
+                response = await removePlayerFromChat(playerVerified.nickname);
+                CompressAndSend(ws, "leavechat", response)
+                break;
+
+            case "sendchatmsg":
+                    response = await sendMessage(playerVerified.nickname, data.msg);
+                  //  CompressAndSend(ws, "sendchatmsg", response)
+                    break;
+    
+
+
+
+
+
             default:
                 ws.close(1007, "error");
+              //  console.log(error)
                 break;
         }
     } catch (error) {
         ws.close(1007, "error");
+       // console.log(error)
     }
 }
 
@@ -466,6 +492,8 @@ wss.on("connection", (ws, req) => {
         if (typeof FriendOnlineInterval !== "undefined" && FriendOnlineInterval) {
             clearInterval(FriendOnlineInterval);
         }
+
+        removePlayerFromChat(ws.playerVerified.nickname)
         
 
         const playerId = ws.playerVerified?.playerId;

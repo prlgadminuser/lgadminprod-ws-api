@@ -15,6 +15,7 @@ async function verifyPlayer(token) {
             {
                 projection: {
                     "account.username": 1,
+                    "account.nickname": 1,
                     "account.token": 1,
                     "account.coins": 1
                 }
@@ -31,6 +32,7 @@ async function verifyPlayer(token) {
 
         return {
             playerId: userInformation.account.username,
+            nickname: userInformation.account.nickname,
             inventory: inventory
         };
 
