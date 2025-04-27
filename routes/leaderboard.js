@@ -8,8 +8,8 @@ const updateHighscores = async () => {
       .aggregate([
         {
           $match: {
-           // nickname: { $ne: "Liquem" }, // Exclude player with the nickname "Liquem"
-            "stats.sp": { $gt: 0 } // Ensure we only consider players with a positive score
+           nickname: { $ne: "Liquem" }, // Exclude player with the nickname "Liquem"
+            //"stats.sp": { $gt: 0 } // Ensure we only consider players with a positive score
           }
         },
         {
