@@ -18,7 +18,7 @@ const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers, maintenanceMode, UpdateMaintenance };
-const { startMongoDB, shopcollection } = require("./idbconfig");
+const { startMongoDB, shopcollection, userCollection } = require("./idbconfig");
 var sanitize = require('mongo-sanitize');
 const WebSocket = require("ws");
 const http = require('http');
@@ -89,8 +89,6 @@ const server = http.createServer(async (req, res) => {
             return res.end(JSON.stringify( "maintenance" ));
         }
 
-        console.log("err")
-    
        
 
         // Security Headers

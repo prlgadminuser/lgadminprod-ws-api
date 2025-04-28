@@ -45,6 +45,9 @@ async function startMongoDB() {
       console.log(result.status)
       UpdateMaintenance(result.status)
 
+    //  const count = await userCollection.estimatedDocumentCount()
+
+//console.log(count)
 
 
     } catch (error) {
