@@ -607,7 +607,7 @@ function watchItemShop() {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
                 UpdateMaintenance(change.fullDocument.status)
-                if (maintenanceMode) closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
+                if (maintenanceMode === "true") closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
             }
         });
 

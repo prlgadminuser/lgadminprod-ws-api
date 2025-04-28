@@ -1,4 +1,5 @@
 
+
 const globalChatPlayers = new Map();
 const chatHistory = [];
 const maxMessages = 4;
@@ -68,7 +69,6 @@ async function sendMessage(playerId, message) {
   const user_roles = await getUserRoles(playerId)
 
   const newMessage = {
-    id: chatHistory.length + 1,
     t: timestamp,
     p: playerId,
     m: filteredMessage,
