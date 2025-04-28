@@ -66,6 +66,8 @@ const server = http.createServer(async (req, res) => {
             return res.end("Unauthorized");
         }
 
+      
+
         // Handle Rate Limiting - Ensure It Stops Execution on Failure
         try {
             await apiRateLimiter.consume(ip);
@@ -81,11 +83,15 @@ const server = http.createServer(async (req, res) => {
             return res.end("Unauthorized");
         }
 
-        if (maintenanceMode) {
+
+        if (maintenanceMode === "true") {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify( "maintenance" ));
         }
+
+        console.log("err")
     
+       
 
         // Security Headers
         //res.setHeader("X-Frame-Options", "DENY");
@@ -148,7 +154,7 @@ const server = http.createServer(async (req, res) => {
                      
 
                         if (response2 == "valid") {
-                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            res.writeHead(200, { 'Content-Type': 'text/plain'  });
                             return res.end("true");
                         } else {
                             res.writeHead(401, { 'Content-Type': 'text/plain' });
