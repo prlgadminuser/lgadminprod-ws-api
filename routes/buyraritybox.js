@@ -26,7 +26,7 @@ async function buyRarityBox(username, owned_items) {
 
         // Update user fields in a single database operation
         await updateUserFields(username, {
-            "currency.boxes": "-1", // Decrement boxes by 1
+            "currency.boxes": -1,
             "inventory.items": rewards.items, // Add new items to the set
             "currency.coins": rewards.coins // Increment coins safely
         });
@@ -34,6 +34,8 @@ async function buyRarityBox(username, owned_items) {
         // Return rewards
         return rewards;
     } catch (error) {
+
+     //   console.log(error)
         throw new Error("An error occurred during the transaction");
     }
 }
@@ -121,6 +123,7 @@ async function updateUserFields(username, updateFields) {
         updateData.$inc["currency.coins"] = coinSum; // Increment the coin count by the total sum of coins
     }
     
+    updateData.$inc = updateData.$inc || {};
     updateData.$inc["currency.boxes"] = -1;
 
 
