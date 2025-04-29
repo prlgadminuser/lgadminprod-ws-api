@@ -22,6 +22,8 @@ async function buyRarityBox(username, owned_items) {
 
         const rewards = generateRewards(rarity, owned_items);
 
+        rewards.items.forEach(item => owned_items.add(item));
+
         // Update user fields in a single database operation
         await updateUserFields(username, {
             "currency.boxes": "-1", // Decrement boxes by 1
@@ -72,7 +74,6 @@ function generateRewards(rarity, ownedItems) {
         if (unownedCustomItems.length >= 2) {
             // Reward the user with the missing custom items
             rewards.items = getRandomItems(unownedCustomItems, config.itemCount).map(item => item.id);
-            rewards.items.forEach(item => ownedItems.add(item));
         } else {
             // If the user owns 2 or more custom items, fallback to coins
             for (let i = 0; i < 2; i++) {
