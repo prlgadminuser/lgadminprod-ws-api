@@ -1,6 +1,6 @@
 const { userCollection, shopcollection } = require('./../idbconfig');
 
-async function buyItem(username, offerKey) {
+async function buyItem(username, offerKey, owneditems) {
   try {
     // Fetch shop data and the selected offer using offerKey
     const shopData = await shopcollection.findOne(
@@ -22,6 +22,8 @@ async function buyItem(username, offerKey) {
     const itemIds = Array.isArray(selectedOffer.itemId)
       ? selectedOffer.itemId
       : [selectedOffer.itemId];
+
+    itemIds.forEach(id => owneditems.add(id));
 
     // Check if the user already owns any item in the offer
     const user = await userCollection.findOne(

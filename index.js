@@ -362,9 +362,9 @@ async function handleMessage(ws, message, playerVerified) {
                 response = await getshopdata();
                 CompressAndSend(ws, "shopdata", response)
                 break;
-
+              
             case "buyitem":
-                response = await buyItem(playerVerified.playerId, data.buyid);
+                response = await buyItem(playerVerified.playerId, data.buyid, playerVerified.items);
                 CompressAndSend(ws, "buyitem", response)
                 break;
 
