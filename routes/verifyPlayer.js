@@ -33,7 +33,9 @@ async function verifyPlayer(token) {
         return {
             playerId: userInformation.account.username,
             nickname: userInformation.account.nickname,
-            inventory: inventory
+            inventory: inventory,
+            items: new Set(inventory.items),
+            itemsarray: inventory.items
         };
 
     } catch (error) {

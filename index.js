@@ -329,7 +329,7 @@ async function handleMessage(ws, message, playerVerified) {
                 break;
 
             case "equip_item":
-                response = await equipItem(playerVerified.playerId, data.type, data.itemid);
+                response = await equipItem(playerVerified.playerId, data.type, data.itemid, playerVerified.items);
                 //CompressAndSend(ws, "equipitem", response)
                 break;
 
@@ -374,7 +374,7 @@ async function handleMessage(ws, message, playerVerified) {
                 break;
 
             case "openbox":
-                response = await buyRarityBox(playerVerified.playerId);
+                response = await buyRarityBox(playerVerified.playerId, playerVerified.items);
                 CompressAndSend(ws, "openbox", response)
                 break;
 

@@ -1,6 +1,8 @@
 const { userCollection } = require('./../idbconfig');
 
-async function equipItem(username, type, itemid) {
+const item_own_check_local = true
+
+async function equipItem(username, type, itemid, owneditems) {
     const itemTypeMap = {
         a: "hat",
         b: "top",
@@ -29,10 +31,14 @@ async function equipItem(username, type, itemid) {
 
     try {
         // Check if the user owns the item (this assumes items are stored in 'items' array)
-        const ItemIsOwned = await userCollection.findOne({
-            "account.username": username,
-            "inventory.items": itemid  // Check if the item exists in the 'items' array under inventory
-        });
+   
+       // const ItemIsOwned = await userCollection.findOne({
+     //       "account.username": username,
+      //      "inventory.items": itemid  // Check if the item exists in the 'items' array under inventory
+     //   });
+
+      
+        const ItemIsOwned = owneditems.has(itemid) 
 
         if (!ItemIsOwned) {
             throw new Error("Item is not valid or not owned.");

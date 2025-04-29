@@ -2,10 +2,12 @@ const { userCollection } = require('./../idbconfig');
 const { rarityConfig } = require('./../boxrarityconfig');
 const { webhook } = require('./..//discordwebhook');
 
-async function buyRarityBox(username) {
+async function buyRarityBox(username, owned_items) {
     try {
         // Fetch user details
         const user = await getUserDetails(username);
+
+        if (1 > user.currency.boxes ) throw new Error("no boxes left")
 
         // Determine rarity and rewards
         const rarityType = rollForRarity();
@@ -16,17 +18,13 @@ async function buyRarityBox(username) {
             const joinedMessage = `${username} got the chrono rarity`;
             webhook.send(joinedMessage);
 
-
         }
 
-        const rewards = generateRewards(rarity, user.inventory.items);
-
-        // Decrement box count by 1 (user buys a rarity box)
-        const updatedBoxes = user.currency.boxes - 1;
+        const rewards = generateRewards(rarity, owned_items);
 
         // Update user fields in a single database operation
         await updateUserFields(username, {
-            "currency.boxes": updatedBoxes, // Decrement boxes by 1
+            "currency.boxes": "-1", // Decrement boxes by 1
             "inventory.items": rewards.items, // Add new items to the set
             "currency.coins": rewards.coins // Increment coins safely
         });
@@ -67,13 +65,14 @@ function generateRewards(rarity, ownedItems) {
     }
 
     // If rarity is not normal, handle item logic
-    const unownedCustomItems = config.customItems.filter(item => !ownedItems.includes(item.id));
+    const unownedCustomItems = config.customItems.filter(item => !ownedItems.has(item.id));
 
     if (rarity !== "normal") {
         // Check if the user owns at least 2 items from the custom items pool
         if (unownedCustomItems.length >= 2) {
             // Reward the user with the missing custom items
             rewards.items = getRandomItems(unownedCustomItems, config.itemCount).map(item => item.id);
+            rewards.items.forEach(item => ownedItems.add(item));
         } else {
             // If the user owns 2 or more custom items, fallback to coins
             for (let i = 0; i < 2; i++) {
@@ -110,12 +109,6 @@ function rollForRarity() {
 async function updateUserFields(username, updateFields) {
     const updateData = {};
 
-    // Decrement boxes, add new items, and increment coins
-    if (updateFields["currency.boxes"] !== undefined) {
-        updateData.$set = updateData.$set || {}; // Ensure $set exists
-        updateData.$set["currency.boxes"] = updateFields["currency.boxes"]; // Set boxes to the new value
-    }
-
     if (Array.isArray(updateFields["inventory.items"]) && updateFields["inventory.items"].length > 0) {
         updateData.$addToSet = updateData.$addToSet || {}; // Ensure $addToSet exists
         updateData.$addToSet["inventory.items"] = { $each: updateFields["inventory.items"] }; // Add new items to the existing set
@@ -126,6 +119,9 @@ async function updateUserFields(username, updateFields) {
         updateData.$inc = updateData.$inc || {}; // Ensure $inc exists
         updateData.$inc["currency.coins"] = coinSum; // Increment the coin count by the total sum of coins
     }
+    
+    updateData.$inc["currency.boxes"] = -1;
+
 
     // Update the database if there are changes
     if (Object.keys(updateData).length > 0) {
@@ -140,7 +136,7 @@ async function updateUserFields(username, updateFields) {
 async function getUserDetails(username) {
     return await userCollection.findOne(
         { "account.username": username }, // Search by account.username
-        { projection: { "account.username": 1, "currency.boxes": 1, "inventory.items": 1, "currency.coins": 1 } }
+        { projection: { "currency.boxes": 1, "currency.coins": 1 } }
     );
 }
 
