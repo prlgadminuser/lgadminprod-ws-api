@@ -23,15 +23,16 @@ async function buyItem(username, offerKey, owneditems) {
       ? selectedOffer.itemId
       : [selectedOffer.itemId];
 
-    itemIds.forEach(id => owneditems.add(id));
 
     // Check if the user already owns any item in the offer
-    const user = await userCollection.findOne(
-      {
-        "account.username": username,  // Search inside account.username
-        "inventory.items": { $exists: true, $in: itemIds },  // Check if user owns the item
-      }
-    );
+    //const user = await userCollection.findOne(
+   //   {
+     //   "account.username": username,  // Search inside account.username
+      //  "inventory.items": { $exists: true, $in: itemIds },  // Check if user owns the item
+     // }
+    //);
+
+    const user = itemIds.some(id => owneditems.has(id));
 
     if (user) {
       throw new Error("You already own an item from this offer.");
@@ -94,6 +95,8 @@ async function buyItem(username, offerKey, owneditems) {
       { "account.username": username },  // Search by account.username
       updateFields
     );
+
+    itemIds.forEach(id => owneditems.add(id));
 
     return {
       message: `Offer bought successfully.`,
