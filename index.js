@@ -84,7 +84,7 @@ const server = http.createServer(async (req, res) => {
         }
 
 
-        if (maintenanceMode === "true") {
+        if (maintenanceMode === true) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify( "maintenance" ));
         }
@@ -421,7 +421,7 @@ const rateLimiterConnection = new RateLimiterMemory(ConnectionOptionsRateLimit);
 
 wss.on("connection", (ws, req) => {
 
-    if (maintenanceMode === "true") {
+    if (maintenanceMode === true) {
         ws.close(4000, "maintenance");
         
     }
@@ -592,6 +592,19 @@ startMongoDB().then(() => {
     });
 });
 
+function broadcast(message) {
+    const msg = JSON.stringify({ update: message });
+    connectedPlayers.forEach((ws) => ws.readyState === WebSocket.OPEN && ws.send(msg));
+}
+
+function closeAllClients(code, reason) {
+    connectedPlayers.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.close(code, reason);
+        }
+    });
+}
+
 function watchItemShop() {
     const pipeline = [{ $match: { "fullDocument._id": { $in: ["dailyItems", "maintenance"] }, operationType: "update" } }];
     let changeStream;
@@ -603,11 +616,12 @@ function watchItemShop() {
 
         changeStream.on("change", (change) => {
             const docId = change.fullDocument._id;
+            console.log(docId)
             if (docId === "dailyItems") {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
                 UpdateMaintenance(change.fullDocument.status)
-                if (maintenanceMode === "true") closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
+                if (maintenanceMode === true) closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
             }
         });
 
@@ -626,18 +640,7 @@ watchItemShop();
 setupHighscores();
 
 
-function broadcast(message) {
-    const msg = JSON.stringify({ update: message });
-    connectedPlayers.forEach((ws) => ws.readyState === WebSocket.OPEN && ws.send(msg));
-}
 
-function closeAllClients(code, reason) {
-    connectedPlayers.forEach((ws) => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.close(code, reason);
-        }
-    });
-}
 
 process.on("SIGINT", () => {
     changeStream.close();
