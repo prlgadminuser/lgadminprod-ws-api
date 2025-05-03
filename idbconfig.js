@@ -3,7 +3,7 @@ const password = process.env.DB_KEY || "8RLj5Vr3F6DRBAYc"
 const encodedPassword = encodeURIComponent(password);
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
-const { maintenanceMode, UpdateMaintenance } = require("./index")
+const { UpdateMaintenance } = require("./maintenance")
 
 const tokenkey = "d8ce40604d359eeb9f2bff31beca4b4b"
 const webhookURL = "https://discord.com/api/webhooks/1320922981161107528/KQ_m66iOVDJeXCfSgXX1El9qcsTNC2EKj5d1HZZXiD5pLfPofF5Rb0-QV3MoWgDIaK8_"
@@ -42,7 +42,6 @@ async function startMongoDB() {
         { projection: { status: 1 } } // Only retrieve the maintenanceStatus field
       );
 
-      console.log(result.status)
       UpdateMaintenance(result.status)
 
     //  const count = await userCollection.estimatedDocumentCount()

@@ -5,11 +5,6 @@ const connectedPlayers = new Map();
 
 let connectedClientsCount = 0;
 
-let maintenanceMode = false
-
-function UpdateMaintenance(change) {
-    maintenanceMode = change
-  }
 
 
 const jwt = require("jsonwebtoken");
@@ -17,7 +12,7 @@ const Limiter = require("limiter").RateLimiter;
 const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require('rate-limiter-flexible');
-module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers, maintenanceMode, UpdateMaintenance };
+module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers };
 const { startMongoDB, shopcollection, userCollection } = require("./idbconfig");
 var sanitize = require('mongo-sanitize');
 const WebSocket = require("ws");
@@ -44,6 +39,7 @@ const { Login } = require('./accounthandler/login');
 const { verifyToken } = require("./routes/verifyToken");
 const { addPlayerToChat, removePlayerFromChat, sendMessage } = require("./playerchat/chat")
 
+const { UpdateMaintenance } = require("./maintenance")
 
 
 function CompressAndSend(ws, type, message) {
@@ -84,7 +80,7 @@ const server = http.createServer(async (req, res) => {
         }
 
 
-        if (maintenanceMode === true) {
+        if (maintenanceMode) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify( "maintenance" ));
         }
@@ -421,7 +417,7 @@ const rateLimiterConnection = new RateLimiterMemory(ConnectionOptionsRateLimit);
 
 wss.on("connection", (ws, req) => {
 
-    if (maintenanceMode === true) {
+    if (maintenanceMode) {
         ws.close(4000, "maintenance");
         
     }
@@ -620,8 +616,13 @@ function watchItemShop() {
             if (docId === "dailyItems") {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
-                UpdateMaintenance(change.fullDocument.status)
-                if (maintenanceMode === true) closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
+                if (change.fullDocument.status == "true") {
+                    UpdateMaintenance(true)
+                    closeAllClients(4001, "maintenance");  
+                    broadcast("maintenanceupdate"); 
+                } else {
+                    UpdateMaintenance(false)
+                }
             }
         });
 
