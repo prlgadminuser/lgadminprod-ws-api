@@ -5,6 +5,11 @@ const connectedPlayers = new Map();
 
 let connectedClientsCount = 0;
 
+let maintenanceMode = false
+
+function UpdateMaintenance(change) {
+    maintenanceMode = change
+  }
 
 
 const jwt = require("jsonwebtoken");
@@ -12,7 +17,7 @@ const Limiter = require("limiter").RateLimiter;
 const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require('rate-limiter-flexible');
-module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers };
+module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers, maintenanceMode, UpdateMaintenance };
 const { startMongoDB, shopcollection, userCollection } = require("./idbconfig");
 var sanitize = require('mongo-sanitize');
 const WebSocket = require("ws");
@@ -39,7 +44,6 @@ const { Login } = require('./accounthandler/login');
 const { verifyToken } = require("./routes/verifyToken");
 const { addPlayerToChat, removePlayerFromChat, sendMessage } = require("./playerchat/chat")
 
-const { UpdateMaintenance } = require("./maintenance")
 
 
 function CompressAndSend(ws, type, message) {
@@ -80,7 +84,7 @@ const server = http.createServer(async (req, res) => {
         }
 
 
-        if (maintenanceMode) {
+        if (maintenanceMode === "true") {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify( "maintenance" ));
         }
@@ -417,7 +421,7 @@ const rateLimiterConnection = new RateLimiterMemory(ConnectionOptionsRateLimit);
 
 wss.on("connection", (ws, req) => {
 
-    if (maintenanceMode) {
+    if (maintenanceMode === "true") {
         ws.close(4000, "maintenance");
         
     }
@@ -588,19 +592,6 @@ startMongoDB().then(() => {
     });
 });
 
-function broadcast(message) {
-    const msg = JSON.stringify({ update: message });
-    connectedPlayers.forEach((ws) => ws.readyState === WebSocket.OPEN && ws.send(msg));
-}
-
-function closeAllClients(code, reason) {
-    connectedPlayers.forEach((ws) => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.close(code, reason);
-        }
-    });
-}
-
 function watchItemShop() {
     const pipeline = [{ $match: { "fullDocument._id": { $in: ["dailyItems", "maintenance"] }, operationType: "update" } }];
     let changeStream;
@@ -612,17 +603,11 @@ function watchItemShop() {
 
         changeStream.on("change", (change) => {
             const docId = change.fullDocument._id;
-            console.log(docId)
             if (docId === "dailyItems") {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
-                if (change.fullDocument.status == "true") {
-                    UpdateMaintenance(true)
-                    closeAllClients(4001, "maintenance");  
-                    broadcast("maintenanceupdate"); 
-                } else {
-                    UpdateMaintenance(false)
-                }
+                UpdateMaintenance(change.fullDocument.status)
+                if (maintenanceMode === "true") closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
             }
         });
 
@@ -641,7 +626,18 @@ watchItemShop();
 setupHighscores();
 
 
+function broadcast(message) {
+    const msg = JSON.stringify({ update: message });
+    connectedPlayers.forEach((ws) => ws.readyState === WebSocket.OPEN && ws.send(msg));
+}
 
+function closeAllClients(code, reason) {
+    connectedPlayers.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.close(code, reason);
+        }
+    });
+}
 
 process.on("SIGINT", () => {
     changeStream.close();
