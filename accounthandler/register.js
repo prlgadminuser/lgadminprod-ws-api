@@ -86,7 +86,8 @@ async function CreateAccount(username, password, user_country) {
             hat_color: 0,  // Ensure hat_color is an integer
             top_color: 0,  // Ensure top_color is an integer
             banner_color: 0,  // Ensure banner_color is an integer
-            color: 0  // Ensure color is an integer
+            color: 0,
+            gadget: "1",  // Ensure color is an integer
         };
 
         const stats = {
