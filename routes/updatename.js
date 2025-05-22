@@ -1,5 +1,7 @@
 const { userCollection, nicknameRegex, badWords } = require('./..//idbconfig'); 
 
+const cooldownPeriod = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
 async function updateNickname(username, newName) {
     try {
         const newNickname = newName;
@@ -14,6 +16,8 @@ async function updateNickname(username, newName) {
             return { status: "not allowed" };
         }
 
+
+        console.log(newNickname)
         // Check if the new nickname contains any prohibited words
         const containsBadWords = badWords.test(newNickname);
         if (containsBadWords) {
@@ -30,11 +34,11 @@ async function updateNickname(username, newName) {
         const lastUpdated = user?.account?.nameupdate || 0; // Default to epoch if no timestamp exists
         const timeDiff = now - lastUpdated; // Difference in milliseconds
 
-        const cooldownPeriod = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      
         if (timeDiff < cooldownPeriod) { // Check if the cooldown is still in effect
-            const remainingTime = cooldownPeriod - timeDiff; // Remaining time in milliseconds
-            const remainingHours = Math.floor(remainingTime / (1000 * 60 * 60)); // Remaining hours
-            const remainingMinutes = Math.ceil((remainingTime % (1000 * 60 * 60)) / (1000 * 60)); // Remaining minutes
+           // const remainingTime = cooldownPeriod - timeDiff; // Remaining time in milliseconds
+           // const remainingHours = Math.floor(remainingTime / (1000 * 60 * 60)); // Remaining hours
+           // const remainingMinutes = Math.ceil((remainingTime % (1000 * 60 * 60)) / (1000 * 60)); // Remaining minutes
 
             return { status: "cooldown" };
         }

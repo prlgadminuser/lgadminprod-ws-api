@@ -8,7 +8,7 @@ let connectedClientsCount = 0;
 let maintenanceMode = false
 
 function UpdateMaintenance(change) {
-    maintenanceMode = change
+    global.maintenance = change
   }
 
 
@@ -55,20 +55,32 @@ function CompressAndSend(ws, type, message) {
 
 //setUserOnlineStatus("agag", "agg")
 
+async function setCommonHeaders(res, origin) {
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    res.setHeader("Permissions-Policy", "geolocation=(), microphone=()");
+    if (origin) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    }
+}
+
+
 const server = http.createServer(async (req, res) => {
+
+     const origin = req.headers.origin;
+    await setCommonHeaders(res, origin);
     try {
-
-       // if (req.headers.length)
         const ip = getClientIp(req);
-
         if (!ip) {
             res.writeHead(429, { 'Content-Type': 'text/plain' });
             return res.end("Unauthorized");
         }
 
-      
-
-        // Handle Rate Limiting - Ensure It Stops Execution on Failure
         try {
             await apiRateLimiter.consume(ip);
         } catch {
@@ -76,35 +88,12 @@ const server = http.createServer(async (req, res) => {
             return res.end("Too many requests. Try again later");
         }
 
-        const origin = req.headers.origin;
-
+       
         if (!origin || origin.length > 50 || !allowedOrigins.includes(origin)) {
             res.writeHead(400, { 'Content-Type': 'text/plain' });
             return res.end("Unauthorized");
         }
 
-
-        if (maintenanceMode === "true") {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify( "maintenance" ));
-        }
-
-       
-
-        // Security Headers
-        //res.setHeader("X-Frame-Options", "DENY");
-       // res.setHeader("X-Content-Type-Options", "nosniff");
-      //  res.setHeader("Referrer-Policy", "no-referrer");
-       // res.setHeader("Permissions-Policy", "interest-cohort=()");
-       res.setHeader("X-Frame-Options", "DENY");
-       res.setHeader("X-Content-Type-Options", "nosniff");
-       res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-       res.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'");
-       res.setHeader("Referrer-Policy", "no-referrer");
-       res.setHeader("Permissions-Policy", "geolocation=(), microphone=()");
-       res.setHeader("Access-Control-Allow-Origin", origin);
-       res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-       res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
 
         // Handle preflight OPTIONS requests
@@ -114,95 +103,109 @@ const server = http.createServer(async (req, res) => {
         }
 
         let body = '';
+        let requestAborted = false;
+
         req.on('data', (chunk) => {
             if (chunk.length && chunk.length > api_message_size_limit) {
+                requestAborted = true;
                 res.writeHead(429, { 'Content-Type': 'text/plain' });
-                return res.end("Unauthorized");
+                res.end("Unauthorized");
+                req.destroy();
+                return;
             }
             body += chunk.toString();
-            body = escapeInput(body.toString());
+            body = escapeInput(body);
         });
 
         req.on('end', async () => {
+            if (requestAborted) return;
+
             try {
                 let requestData = {};
                 if (body) {
                     try {
                         requestData = JSON.parse(body);
-                    } catch (err) {
+                    } catch {
                         res.writeHead(400, { 'Content-Type': 'text/plain' });
                         return res.end("Error: Invalid JSON");
                     }
                 }
 
-              
+                               if (global.maintenance == "true") {
+                            res.writeHead(400, { 'Content-Type': 'text/plain' });
+                            return res.end("maintenance");
+                        }
+
 
                 switch (req.url) {
-
                     case '/token':
-                        if (req.method !== 'POST') break;
-                
+
+         
+                        if (req.method !== 'POST') {
+                            res.writeHead(405, { 'Content-Type': 'text/plain' });
+                            return res.end("Method Not Allowed");
+                        }
+
                         if (!requestData.token) {
                             res.writeHead(400, { 'Content-Type': 'text/plain' });
                             return res.end("Error: Missing token");
                         }
 
-                        const response2 = await verifyToken(requestData.token)
-
-                     
-
-                        if (response2 == "valid") {
-                            res.writeHead(200, { 'Content-Type': 'text/plain'  });
+                        const tokenResult = await verifyToken(requestData.token);
+                        if (tokenResult === "valid") {
+                            res.writeHead(200, { 'Content-Type': 'text/plain' });
                             return res.end("true");
                         } else {
                             res.writeHead(401, { 'Content-Type': 'text/plain' });
                             return res.end("Error: Invalid credentials");
                         }
 
-
                     case '/register':
-                        if (req.method !== 'POST') break;
+                        if (req.method !== 'POST') {
+                            res.writeHead(405, { 'Content-Type': 'text/plain' });
+                            return res.end("Method Not Allowed");
+                        }
 
                         if (!requestData.username || !requestData.password) {
                             res.writeHead(400, { 'Content-Type': 'text/plain' });
                             return res.end("Error: Missing username or password");
                         }
 
-
-                        const ip = getClientIp(req);
-                        const user_country = getClientCountry(req);
-                        // Apply Rate Limiting Before Processing
-                        const rateLimitData = await AccountRateLimiter.get(ip);
+                        const userIp = getClientIp(req);
+                        const userCountry = getClientCountry(req);
+                        const rateLimitData = await AccountRateLimiter.get(userIp);
 
                         if (rateLimitData && rateLimitData.remainingPoints <= 0) {
                             res.writeHead(429, { 'Content-Type': 'text/plain' });
-                            return res.end("You cant create more accounts.");
+                            return res.end("You can't create more accounts.");
                         }
 
+                        const createResult = await CreateAccount(requestData.username, requestData.password, userCountry);
 
-                        const response = await CreateAccount(requestData.username, requestData.password, user_country);
-                        if (response.token) {
-                            AccountRateLimiter.consume(ip);
+                        if (createResult.token) {
+                            await AccountRateLimiter.consume(userIp);
                             res.writeHead(200, { 'Content-Type': 'application/json' });
-                            return res.end(JSON.stringify({ data: response }));
+                            return res.end(JSON.stringify({ data: createResult }));
                         } else {
                             res.writeHead(400, { 'Content-Type': 'application/json' });
-                            return res.end(JSON.stringify({ data: response }));
+                            return res.end(JSON.stringify({ data: createResult }));
                         }
 
-
                     case '/login':
-                        if (req.method !== 'POST') break;
+                        if (req.method !== 'POST') {
+                            res.writeHead(405, { 'Content-Type': 'text/plain' });
+                            return res.end("Method Not Allowed");
+                        }
 
                         if (!requestData.username || !requestData.password) {
                             res.writeHead(400, { 'Content-Type': 'text/plain' });
                             return res.end("Error: Missing username or password");
                         }
 
-                        const loginResponse = await Login(requestData.username, requestData.password);
-                        if (loginResponse) {
+                        const loginResult = await Login(requestData.username, requestData.password);
+                        if (loginResult) {
                             res.writeHead(200, { 'Content-Type': 'application/json' });
-                            return res.end(JSON.stringify({ data: loginResponse }));
+                            return res.end(JSON.stringify({ data: loginResult }));
                         } else {
                             res.writeHead(401, { 'Content-Type': 'text/plain' });
                             return res.end("Error: Invalid credentials");
@@ -212,6 +215,7 @@ const server = http.createServer(async (req, res) => {
                         res.writeHead(404, { 'Content-Type': 'text/plain' });
                         return res.end("Error: Not Found");
                 }
+
             } catch (err) {
                 if (!res.headersSent) {
                     res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -219,6 +223,7 @@ const server = http.createServer(async (req, res) => {
                 return res.end("Error: Internal server error");
             }
         });
+
     } catch (err) {
         if (!res.headersSent) {
             res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -311,10 +316,12 @@ async function handleMessage(ws, message, playerVerified) {
             }
             return null; // No issues found
         };
-        
 
+        
+    
         // Validate the incoming message's size constraints
         const MessageValid = checkSizeLimits(data);
+
         if (MessageValid && MessageValid.error) {
             // Send error response and close WebSocket connection if validation fails
             ws.close(1007, "Message invalid.");
@@ -354,6 +361,7 @@ async function handleMessage(ws, message, playerVerified) {
                 break;
 
             case "change_name":
+                
                 response = await updateNickname(playerVerified.playerId, data.new);
                 CompressAndSend(ws, "nickname", response)
                 break;
@@ -421,7 +429,7 @@ const rateLimiterConnection = new RateLimiterMemory(ConnectionOptionsRateLimit);
 
 wss.on("connection", (ws, req) => {
 
-    if (maintenanceMode === "true") {
+    if (global.maintenance == "true") {
         ws.close(4000, "maintenance");
         
     }
@@ -526,6 +534,7 @@ server.on("upgrade", async (request, socket, head) => {
 
         const ip = getClientIp(request);
 
+        console.log("gay")
         if (!ip || request.url.length > 200) return;
 
         await rateLimiterConnection.consume(ip);
@@ -607,7 +616,7 @@ function watchItemShop() {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
                 UpdateMaintenance(change.fullDocument.status)
-                if (maintenanceMode === "true") closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
+                if (global.maintenance == "true") closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
             }
         });
 

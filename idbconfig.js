@@ -2,6 +2,7 @@
 const password = process.env.DB_KEY || "8RLj5Vr3F6DRBAYc"
 const encodedPassword = encodeURIComponent(password);
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const { maintenanceMode } = require("./index");
 
 
 const tokenkey = "d8ce40604d359eeb9f2bff31beca4b4b"
@@ -42,9 +43,7 @@ async function startMongoDB() {
       );
 
 
-      
-   return result.status
-
+      global.maintenance = result.status
 
     } catch (error) {
         console.error("Error connecting to MongoDB:", error);
