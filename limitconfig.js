@@ -24,7 +24,7 @@ function createRateLimiter() { // connected sending message rate limit
 }
 
 const getClientCountry = (req) => {
-  const clientcountry = req.headers['cf-ipcountry'] || "Unknown"
+  const clientcountry = req.headers['true-client-ip'] || "Unknown"
 
   return clientcountry
 };
