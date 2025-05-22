@@ -643,10 +643,17 @@ function broadcast(message) {
 function closeAllClients(code, reason) {
     connectedPlayers.forEach((ws) => {
         if (ws.readyState === WebSocket.OPEN) {
-            ws.close(code, reason);
+           ws.send("logout_maintenance")
+
+            setTimeout(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.close(code, reason);
+                }
+            }, 100); // 100 ms delay to allow message flush
         }
     });
 }
+
 
 process.on("SIGINT", () => {
     changeStream.close();
