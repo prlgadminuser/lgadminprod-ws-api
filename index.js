@@ -616,7 +616,7 @@ function watchItemShop() {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
                 UpdateMaintenance(change.fullDocument.status)
-                if (global.maintenance == "true") closeAllClients(4001, "maintenance");  broadcast("maintenanceupdate");
+                if (global.maintenance == "true") closeAllClients(4001, "maintenance"); // broadcast("maintenanceupdate");
             }
         });
 
@@ -643,7 +643,7 @@ function broadcast(message) {
 function closeAllClients(code, reason) {
     connectedPlayers.forEach((ws) => {
         if (ws.readyState === WebSocket.OPEN) {
-           ws.send("logout_maintenance")
+           ws.send("maintenance_active")
 
             setTimeout(() => {
                 if (ws.readyState === WebSocket.OPEN) {
