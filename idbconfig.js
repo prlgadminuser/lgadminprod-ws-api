@@ -43,11 +43,12 @@ async function startMongoDB() {
 
        const result = await shopcollection.findOne(
         { _id: "maintenance" },
-        { projection: { status: 1 } } // Only retrieve the maintenanceStatus field
+        { projection: { status: 1, public_message: 1 } } // Only retrieve the maintenanceStatus field
       );
 
 
       global.maintenance = result.status
+      global.maintenance_publicinfomessage = result.public_message
 
     } catch (error) {
         console.error("Error connecting to MongoDB:", error);

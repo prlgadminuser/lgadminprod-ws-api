@@ -97,7 +97,7 @@ async function buyItem(username, offerKey, owneditems) {
     );
 
     const documents = itemIds.map(id => ({
-      iid: `${username}+${id}`,
+      iid: `${username}-${id}`,
     }));
 
     await ItemsCertificatesCollection.insertMany(documents);
@@ -108,6 +108,7 @@ async function buyItem(username, offerKey, owneditems) {
       message: `Offer bought successfully.`,
     };
   } catch (error) {
+    console.log(error)
     throw new Error(error.message || "An error occurred while processing your request.");
   }
 }

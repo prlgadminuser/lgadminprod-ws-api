@@ -133,7 +133,13 @@ const server = http.createServer(async (req, res) => {
 
                                if (global.maintenance == "true") {
                             res.writeHead(400, { 'Content-Type': 'text/plain' });
-                            return res.end("maintenance");
+
+                            const maintenancedata = {
+                                status: "maintenance",
+                                gmsg: global.maintenance_publicinfomessage
+                            }
+
+                            return res.end(maintenancedata);
                         }
 
 
