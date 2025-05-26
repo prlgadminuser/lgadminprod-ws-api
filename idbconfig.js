@@ -28,8 +28,12 @@ const client = new MongoClient(uri, {
     },
   });
 
-  
-
+const db = client.db("Cluster0");
+const userCollection = db.collection("users");
+const ItemsCertificatesCollection = db.collection("ItemsCertificates");
+const battlePassCollection = db.collection("battlepass_users");
+const loginRewardsCollection = db.collection("onetime_rewards");
+const shopcollection = db.collection("serverconfig");
 
 
 async function startMongoDB() {
@@ -50,11 +54,6 @@ async function startMongoDB() {
     }
 }
 
-const db = client.db("Cluster0");
-const userCollection = db.collection("users");
-const battlePassCollection = db.collection("battlepass_users");
-const loginRewardsCollection = db.collection("onetime_rewards");
-const shopcollection = db.collection("serverconfig");
 
 module.exports = {
    uri,
@@ -70,4 +69,5 @@ module.exports = {
    passwordRegex,
    badWords,
    webhookURL,
+   ItemsCertificatesCollection,
 }

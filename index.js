@@ -534,7 +534,6 @@ server.on("upgrade", async (request, socket, head) => {
 
         const ip = getClientIp(request);
 
-        console.log("gay")
         if (!ip || request.url.length > 200) return;
 
         await rateLimiterConnection.consume(ip);
