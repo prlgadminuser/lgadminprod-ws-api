@@ -97,8 +97,7 @@ async function buyItem(username, offerKey, owneditems) {
     );
 
     const documents = itemIds.map(id => ({
-      user: username,
-      id: id,
+      iid: `${username}+${id}`,
     }));
 
     await ItemsCertificatesCollection.insertMany(documents);
