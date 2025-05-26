@@ -7,8 +7,11 @@ let connectedClientsCount = 0;
 
 let maintenanceMode = false
 
-function UpdateMaintenance(change) {
+function UpdateMaintenance(change, msg) {
     global.maintenance = change
+    if (msg) {
+    global.maintenance_publicinfomessage = msg
+    }
   }
 
 
@@ -620,7 +623,8 @@ function watchItemShop() {
             if (docId === "dailyItems") {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
-                UpdateMaintenance(change.fullDocument.status)
+                UpdateMaintenance(change.fullDocument.status, change.fullDocument.public_message)
+                console.log(JSON.stringify(change.fullDocument))
                 if (global.maintenance == "true") closeAllClients(4001, "maintenance"); // broadcast("maintenanceupdate");
             }
         });
