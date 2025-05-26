@@ -139,7 +139,7 @@ const server = http.createServer(async (req, res) => {
                                 gmsg: global.maintenance_publicinfomessage
                             }
 
-                            return res.json(maintenancedata);
+                            return res.end(JSON.stringify(maintenancedata));
                         }
 
 
