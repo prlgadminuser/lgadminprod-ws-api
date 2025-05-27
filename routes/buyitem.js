@@ -28,9 +28,9 @@ async function buyItem(username, offerKey, owneditems) {
     const user = await userCollection.findOne(
      {
        "account.username": username,  // Search inside account.username
-        "inventory.items": { $in: itemIds },  // Check if user owns the item
-      }
-   );
+       "inventory.items": { $in: itemIds },  // Check if user owns the item
+      })
+   
 
     //const user = itemIds.some(id => owneditems.has(id));
 
