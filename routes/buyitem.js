@@ -28,7 +28,7 @@ async function buyItem(username, offerKey, owneditems) {
     const user = await userCollection.findOne(
      {
        "account.username": username,  // Search inside account.username
-        "inventory.items": { $exists: true, $in: itemIds },  // Check if user owns the item
+        "inventory.items": { $in: itemIds },  // Check if user owns the item
       }
    );
 
@@ -97,7 +97,7 @@ async function buyItem(username, offerKey, owneditems) {
     );
 
     const documents = itemIds.map(id => ({
-      iid: `${username}-${id}`,
+      iid: `${username}$${id}`,
     }));
 
     await ItemsCertificatesCollection.insertMany(documents);

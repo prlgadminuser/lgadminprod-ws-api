@@ -2,7 +2,7 @@
 const password = process.env.DB_KEY || "8RLj5Vr3F6DRBAYc"
 const encodedPassword = encodeURIComponent(password);
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const { maintenanceMode } = require("./index");
+const { UpdateMaintenance } = require("./index");
 
 
 const tokenkey = "d8ce40604d359eeb9f2bff31beca4b4b"
@@ -46,6 +46,8 @@ async function startMongoDB() {
         { projection: { status: 1, public_message: 1 } } // Only retrieve the maintenanceStatus field
       );
 
+
+      UpdateMaintenance(result.status, result.public_message)
 
       global.maintenance = result.status
       global.maintenance_publicinfomessage = result.public_message
