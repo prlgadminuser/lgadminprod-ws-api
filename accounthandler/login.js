@@ -10,7 +10,7 @@ async function Login(username, password) {
       const user = await userCollection.findOne(
         { "account.username": username },
         { projection: { "account.username": 1, "account.password": 1, "account.token": 1, } },
-      );
+      )
   
       if (!user) {
         return { status: "Invalid username or password" };

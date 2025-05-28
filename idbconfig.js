@@ -1,13 +1,12 @@
 
-const password = process.env.DB_KEY || "8RLj5Vr3F6DRBAYc"
-const encodedPassword = encodeURIComponent(password);
+
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const { UpdateMaintenance } = require("./index");
+const { MONGO_URI, TOKEN_KEY, DISCORDWEBHOOK } = require("./ENV")
 
-
-const tokenkey = "d8ce40604d359eeb9f2bff31beca4b4b"
-const webhookURL = "https://discord.com/api/webhooks/1320922981161107528/KQ_m66iOVDJeXCfSgXX1El9qcsTNC2EKj5d1HZZXiD5pLfPofF5Rb0-QV3MoWgDIaK8_"
-const lgconnecturi = `mongodb+srv://Liquem:${encodedPassword}@cluster0.ed4zami.mongodb.net/?retryWrites=true&w=majority`;
+const lgconnecturi = process.env.MONGO_URI || MONGO_URI
+const tokenkey = process.env.TOKEN_KEY || TOKEN_KEY
+const webhookURL = process.env.DISCORDWEBHOOK || DISCORDWEBHOOK
 
 
 
@@ -30,10 +29,10 @@ const client = new MongoClient(uri, {
 
 const db = client.db("Cluster0");
 const userCollection = db.collection("users");
-const ItemsCertificatesCollection = db.collection("ItemsCertificates");
 const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
+const ItemsCertificatesCollection = db.collection("itemsCertificates");
 
 
 async function startMongoDB() {
@@ -47,7 +46,14 @@ async function startMongoDB() {
       );
 
 
-   // userCollection.createIndex({ "account.username": 1, "inventory.items": 1 })
+    //userCollection.createIndex({ "account.username": 1, "inventory.items": 1 })
+
+
+// const user = await userCollection.find({
+  //"account.username": "Liquem", "inventory.items": "I007" }).explain("executionStats")
+
+
+//console.log(JSON.stringify(user))
 
 
 

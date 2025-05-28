@@ -1,4 +1,4 @@
-const { userCollection, shopcollection, ItemsCertificatesCollection } = require('./../idbconfig');
+const { userCollection, shopcollection } = require('./../idbconfig');
 
 async function buyItem(username, offerKey, owneditems) {
   try {
@@ -25,12 +25,11 @@ async function buyItem(username, offerKey, owneditems) {
 
 
     // Check if the user already owns any item in the offer
-    const user = await userCollection.findOne(
-     {
-       "account.username": username,  // Search inside account.username
-       "inventory.items": { $in: itemIds },  // Check if user owns the item
-      })
-   
+   const user = await userCollection.findOne({
+  "account.username": username,         // Search inside account.username
+  "inventory.items": { $in: itemIds },  // Check if user owns the item
+});
+
 
     //const user = itemIds.some(id => owneditems.has(id));
 
@@ -97,10 +96,10 @@ async function buyItem(username, offerKey, owneditems) {
     );
 
     const documents = itemIds.map(id => ({
-      iid: `${username}$${id}`,
+     iid: `${username}$${id}`,
     }));
 
-    await ItemsCertificatesCollection.insertMany(documents);
+   await ItemsCertificatesCollection.insertMany(documents);
 
     itemIds.forEach(id => owneditems.add(id));
 
