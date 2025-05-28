@@ -1,4 +1,4 @@
-const { userCollection, shopcollection } = require('./../idbconfig');
+const { userCollection, shopcollection, ItemsCertificatesCollection } = require('./../idbconfig');
 
 async function buyItem(username, offerKey, owneditems) {
   try {
@@ -95,11 +95,11 @@ async function buyItem(username, offerKey, owneditems) {
       updateFields
     );
 
-    const documents = itemIds.map(id => ({
-     iid: `${username}$${id}`,
-    }));
+   // const documents = itemIds.map(id => ({
+   //  iid: `${username}$${id}`,
+    //}));
 
-   await ItemsCertificatesCollection.insertMany(documents);
+  // await ItemsCertificatesCollection.insertMany(documents);
 
     itemIds.forEach(id => owneditems.add(id));
 
