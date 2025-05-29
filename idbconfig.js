@@ -45,7 +45,6 @@ async function startMongoDB() {
         { projection: { status: 1, public_message: 1 } } // Only retrieve the maintenanceStatus field
       );
 
-
     //userCollection.createIndex({ "account.username": 1, "inventory.items": 1 })
 
 

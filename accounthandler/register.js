@@ -118,7 +118,8 @@ async function CreateAccount(username, password, user_country) {
             }
         }
         // Send webhook notification about the new user
-        const joinedMessage = `${username} has joined Skilldown from ${finalCountryCode}`;
+       // const joinedMessage = `${username} has joined Skilldown from ${finalCountryCode}`;
+        const joinedMessage = `${username} has joined Skilldown`;
         webhook.send(joinedMessage);
 
         return { token: token };
