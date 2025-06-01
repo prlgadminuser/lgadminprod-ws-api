@@ -44,7 +44,7 @@ async function updateNickname(username, newName) {
         // Check if the new nickname is already taken by another user
         const nicknameExists = await userCollection
           .find(
-            { "account.nickname": "Liquem" },
+            { "account.nickname": newName },
             { projection: { nickname: 1 } }
           )
           .collation({

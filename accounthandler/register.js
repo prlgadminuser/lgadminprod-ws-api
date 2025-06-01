@@ -34,13 +34,17 @@ async function CreateAccount(username, password, user_country) {
         }
 
         // Check if username already exists
-        const existingUser = await userCollection.findOne(
-        { "account.username": username },
-        { projection: { "account.username": 1 } }
-        ).collation({
+         const existingUser = await userCollection
+          .find(
+            { "account.username": username },
+            { projection: { nickname: 1 } }
+          )
+          .collation({
             locale: "en",
             strength: 2,
           })
+          .limit(1)
+          .next();
 
 
         if (existingUser) {
