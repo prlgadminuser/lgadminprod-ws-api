@@ -2,12 +2,12 @@ const { userCollection } = require('./../idbconfig');
 
 // === CONFIGURATION ===
 const rewardConfig = {
-    rewardsPerClaim: 2, // number of rewards to give per daily claim
+    rewardsPerClaim: 1, // number of rewards to give per daily claim
     rewardsPool: [
         { type: "coins", min: 20, max: 30, weight: 80 },
         { type: "boxes", min: 1, max: 2, weight: 20 },
-       // { type: "item", value: "Mystery Box", weight: 10 },
-    // { type: "item", value: "Lucky Token", weight: 5 }
+        // { type: "item", value: "Mystery Box", weight: 10 },
+        // { type: "item", value: "Lucky Token", weight: 5 }
     ]
 };
 
@@ -71,22 +71,32 @@ async function getdailyreward(username) {
             $set: { "inventory.last_collected": Date.now() }
         };
 
+        const itemsToPush = [];
+
         for (const reward of rewards) {
             if (reward.type === "coins") {
                 update.$inc = update.$inc || {};
                 update.$inc["currency.coins"] = (update.$inc["currency.coins"] || 0) + reward.value;
-            } else if (reward.type === "gems") {
+            } else if (reward.type === "boxes") {
                 update.$inc = update.$inc || {};
-                update.$inc["currency.gems"] = (update.$inc["currency.gems"] || 0) + reward.value;
+                update.$inc["currency.boxes"] = (update.$inc["currency.boxes"] || 0) + reward.value;
             } else if (reward.type === "item") {
-                update.$push = update.$push || {};
-                update.$push["inventory.items"] = reward.value;
+                itemsToPush.push(reward.value);
             }
+        }
+
+        if (itemsToPush.length > 0) {
+            update.$push = {
+                "inventory.items": { $each: itemsToPush }
+            };
         }
 
         await userCollection.updateOne({ "account.username": username }, update);
 
-        return rewards;
+        return {
+            time:  Date.now(),
+            rewards: rewards,
+        };
 
     } catch (error) {
         console.log(error);
