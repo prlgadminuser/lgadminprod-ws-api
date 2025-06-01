@@ -85,17 +85,17 @@ async function sendMessage(playerId, message) {
 
   // Broadcast the updated chat history to all connected players
   broadcastChatHistory();
-} 
+}
 
 
 
 const Admins = new Set([
   "Liquem"
-  ])
+])
 
-  const Designer = new Set([
-    "Liquem"
-    ])
+const Designer = new Set([
+  "Liquem"
+])
 
 
 
@@ -107,12 +107,12 @@ async function getUserRoles(playerid) {
 
   if (Designer.has(playerid)) roles.push("Designer")
 
-    return roles
+  return roles
 }
 
 module.exports = {
-    addPlayerToChat,
-    removePlayerFromChat,
-    broadcastChatHistory,
-    sendMessage,
+  addPlayerToChat,
+  removePlayerFromChat,
+  broadcastChatHistory,
+  sendMessage,
 }

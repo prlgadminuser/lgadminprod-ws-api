@@ -42,10 +42,18 @@ async function updateNickname(username, newName) {
         }
 
         // Check if the new nickname is already taken by another user
-        const nicknameExists = await userCollection.findOne(
-            { "account.nickname": { $regex: new RegExp(`^${newNickname}$`, "i") } },
-            { projection: { _id: 1 } } // Only check if the nickname exists (no need to return full user)
-        );
+        const nicknameExists = await userCollection
+          .find(
+            { "account.nickname": "Liquem" },
+            { projection: { nickname: 1 } }
+          )
+          .collation({
+            locale: "en",
+            strength: 2,
+          })
+          .limit(1)
+          .next();
+
 
         if (nicknameExists) {
             return { status: "taken" };

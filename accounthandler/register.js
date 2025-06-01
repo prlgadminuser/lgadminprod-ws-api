@@ -35,9 +35,13 @@ async function CreateAccount(username, password, user_country) {
 
         // Check if username already exists
         const existingUser = await userCollection.findOne(
-            { "account.username": { $regex: new RegExp(`^${username}$`, "i") } },
-            { projection: { _id: 0, "account.username": 1 } }
-        )
+        { "account.username": username },
+        { projection: { _id: 1 } }
+        ).collation({
+            locale: "en",
+            strength: 2,
+          })
+
 
         if (existingUser) {
             return { status: "Name already taken. Please choose another one." };

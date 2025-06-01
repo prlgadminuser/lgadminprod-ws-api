@@ -24,12 +24,15 @@ async function buyItem(username, offerKey, owneditems) {
       : [selectedOffer.itemId];
 
 
-    // Check if the user already owns any item in the offer
-   const user = await userCollection.findOne({
-  "account.username": username,         // Search inside account.username
-  "inventory.items": { $in: itemIds },  // Check if user owns the item
-});
-
+    const user = await userCollection.find(
+      {
+        "account.username": username,
+        "inventory.items": { $in: itemIds }
+      },
+      {
+        projection: { _id: 1 }  // Fetch only _id, minimal data
+      }
+    ).limit(1).next()
 
     //const user = itemIds.some(id => owneditems.has(id));
 
@@ -95,11 +98,11 @@ async function buyItem(username, offerKey, owneditems) {
       updateFields
     );
 
-   // const documents = itemIds.map(id => ({
-   //  iid: `${username}$${id}`,
+    // const documents = itemIds.map(id => ({
+    //  iid: `${username}$${id}`,
     //}));
 
-  // await ItemsCertificatesCollection.insertMany(documents);
+    // await ItemsCertificatesCollection.insertMany(documents);
 
     itemIds.forEach(id => owneditems.add(id));
 
