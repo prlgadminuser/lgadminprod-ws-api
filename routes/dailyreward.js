@@ -2,7 +2,7 @@ const { userCollection } = require('./../idbconfig');
 
 // === CONFIGURATION ===
 const rewardConfig = {
-    rewardsPerClaim: 1, // number of rewards to give per daily claim
+    rewardsPerClaim: 67, // number of rewards to give per daily claim
     rewardsPool: [
         { type: "coins", min: 20, max: 30, weight: 80 },
         { type: "boxes", min: 1, max: 2, weight: 20 },
