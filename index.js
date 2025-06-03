@@ -365,7 +365,7 @@ async function handleMessage(ws, message, playerVerified) {
                 break;
 
             case "dailyreward":
-                response = await getdailyreward(playerVerified.playerId);
+                response = await getdailyreward(playerVerified.playerId, playerVerified.items);
                 CompressAndSend(ws, "dailyreward", response)
                 break;
 

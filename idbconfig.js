@@ -49,7 +49,8 @@ async function startMongoDB() {
 
    // userCollection.createIndex({ "account.username": 1, "inventory.items": 1 })
 
-   
+  // userCollection.createIndex({ status: 1, name: 1, age: 1 })
+
 
 
       UpdateMaintenance(result.status, result.public_message)

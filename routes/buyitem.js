@@ -24,15 +24,16 @@ async function buyItem(username, offerKey, owneditems) {
       : [selectedOffer.itemId];
 
 
-    const user = await userCollection.find(
-      {
-        "account.username": username,
-        "inventory.items": { $in: itemIds }
-      },
-      {
-        projection: { _id: 1 }  // Fetch only _id, minimal data
-      }
-    ).limit(1).next()
+    const user = await userCollection.findOne(
+  {
+    "account.username": username,
+    "inventory.items": { $in: itemIds }, 
+  },
+  {
+    hint: "account.username_1_inventory.items_1",  // optional
+}
+);
+
 
     //const user = itemIds.some(id => owneditems.has(id));
 

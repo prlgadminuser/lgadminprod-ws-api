@@ -40,19 +40,13 @@ async function updateNickname(username, newName) {
 
             return { status: "cooldown" };
         }
-
-        // Check if the new nickname is already taken by another user
-        const nicknameExists = await userCollection
-          .find(
+        
+             const nicknameExists = await userCollection.findOne(
             { "account.nickname": newName },
-            { projection: { nickname: 1 } }
-          )
-          .collation({
-            locale: "en",
-            strength: 2,
-          })
-          .limit(1)
-          .next();
+            {
+                collation: { locale: "en", strength: 2 },
+            }
+        );
 
 
         if (nicknameExists) {

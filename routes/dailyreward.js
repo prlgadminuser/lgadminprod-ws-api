@@ -2,11 +2,11 @@ const { userCollection } = require('./../idbconfig');
 
 // === CONFIGURATION ===
 const rewardConfig = {
-    rewardsPerClaim: 67, // number of rewards to give per daily claim
+    rewardsPerClaim: 1, // number of rewards to give per daily claim
     rewardsPool: [
-        { type: "coins", min: 20, max: 30, weight: 80 },
-        { type: "boxes", min: 1, max: 2, weight: 20 },
-        // { type: "item", value: "Mystery Box", weight: 10 },
+        { type: "coins", min: 20, max: 30, chance: 90 },
+        { type: "boxes", min: 1, max: 2, chance: 8 },
+        { type: "item", value: ["A001", "A002"], weight: 2 },
         // { type: "item", value: "Lucky Token", weight: 5 }
     ]
 };
@@ -19,31 +19,61 @@ function canCollectCoins(lastCollected) {
     return hoursPassed >= 24;
 }
 
+function pickRandomFromArray(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function generateRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 // Weighted random reward selector
-function getRandomReward(pool) {
-    const totalWeight = pool.reduce((sum, reward) => sum + reward.weight, 0);
-    const rand = Math.random() * totalWeight;
-    let accumulated = 0;
+function getRandomReward(pool, ownedItems) {
+    const totalChance = pool.reduce((sum, reward) => sum + reward.chance, 0);
+    const rand = Math.random() * totalChance;
+
+    let cumulativeChance = 0;
 
     for (const reward of pool) {
-        accumulated += reward.weight;
-        if (rand <= accumulated) {
+        cumulativeChance += reward.chance;
+        if (rand < cumulativeChance) {
             if (reward.type === "item") {
-                return { type: reward.type, value: reward.value };
+
+                if (Array.isArray(reward.value)) {
+
+                    const available = reward.value.filter(item => !ownedItems.includes(item));
+
+                    if (available.length === 0) {
+                        return; 
+                    }
+
+                    return {
+                        type: reward.type,
+                        value: pickRandomFromArray(available)
+                    }
+
+                } else {
+                    return {
+                        type: reward.type, value: reward.value
+                    }
+                }
+
+
             } else {
+
                 const value = generateRandomNumber(reward.min, reward.max);
                 return { type: reward.type, value };
+
             }
         }
     }
+
+    return null; // Fallback
 }
 
+
 // === MAIN FUNCTION ===
-async function getdailyreward(username) {
+async function getdailyreward(username, ownedItems) {
     try {
         const user = await userCollection.findOne(
             { "account.username": username },
@@ -63,7 +93,7 @@ async function getdailyreward(username) {
         const rewards = [];
 
         for (let i = 0; i < rewardConfig.rewardsPerClaim; i++) {
-            rewards.push(getRandomReward(rewardConfig.rewardsPool));
+            rewards.push(getRandomReward(rewardConfig.rewardsPool, ownedItems));
         }
 
         // Build update object
@@ -94,12 +124,11 @@ async function getdailyreward(username) {
         await userCollection.updateOne({ "account.username": username }, update);
 
         return {
-            time:  Date.now(),
+            time: Date.now(),
             rewards: rewards,
         };
 
     } catch (error) {
-        console.log(error);
         throw new Error(error.message || "An error occurred while processing your request.");
     }
 }

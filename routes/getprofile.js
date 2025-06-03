@@ -27,6 +27,8 @@ async function getUserProfile(usernamed, selfusername) {
           "stats.sp": 1,
           "stats.p_views": 1,
         },
+      
+    hint: "playerProfileIndex",
       }
     );
 
