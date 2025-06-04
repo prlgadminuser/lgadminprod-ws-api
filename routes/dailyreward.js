@@ -44,31 +44,25 @@ function getRandomReward(pool, ownedItems) {
                     const available = reward.value.filter(item => !ownedItems.includes(item));
 
                     if (available.length === 0) {
-                        return false; 
+                        return false;
                     }
 
                     return {
                         type: reward.type,
                         value: pickRandomFromArray(available)
                     }
+                    
 
-                } else {
+                } else if (reward.type === "coins" || reward.type === "boxes") {
+
                     return {
-                        type: reward.type, value: reward.value
+                        type: reward.type,
+                        value: generateRandomNumber(reward.min, reward.max),
                     }
                 }
-
-
-            } else {
-
-                const value = generateRandomNumber(reward.min, reward.max);
-                return { type: reward.type, value };
-
             }
         }
     }
-
-    return null; // Fallback
 }
 
 
