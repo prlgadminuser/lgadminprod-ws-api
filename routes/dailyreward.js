@@ -2,7 +2,7 @@ const { userCollection } = require('./../idbconfig');
 
 // === CONFIGURATION ===
 const rewardConfig = {
-    rewardsPerClaim: 1, // number of rewards to give per daily claim
+    rewardsPerClaim: 1067, // number of rewards to give per daily claim
     rewardsPool: [
         { type: "coins", min: 20, max: 30, chance: 90 },
         { type: "boxes", min: 1, max: 2, chance: 8 },
@@ -42,7 +42,7 @@ function getRandomReward(pool, ownedItems) {
                     if (Array.isArray(reward.value)) {
                         const available = reward.value.filter(item => !ownedItems.has(item));
                         if (available.length === 0) {
-                            return false;
+                            return null;
                         }
                         return {
                             type: "item",
@@ -52,6 +52,8 @@ function getRandomReward(pool, ownedItems) {
                     break;
 
                 case "coins":
+
+
                 case "boxes":
                     return {
                         type: reward.type,
@@ -59,12 +61,12 @@ function getRandomReward(pool, ownedItems) {
                     };
 
                 default:
-                    return false; // unknown reward type
+                    return null; // unknown reward type
             }
         }
     }
 
-    return false; // fallback if nothing is selected
+    return null; // fallback if nothing is selected
 }
 
 
