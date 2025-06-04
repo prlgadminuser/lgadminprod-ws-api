@@ -2,7 +2,7 @@ const { userCollection } = require('./../idbconfig');
 
 // === CONFIGURATION ===
 const rewardConfig = {
-    rewardsPerClaim: 1057, // number of rewards to give per daily claim
+    rewardsPerClaim: 1, // number of rewards to give per daily claim
     rewardsPool: [
         { type: "coins", min: 20, max: 30, chance: 90 },
         { type: "boxes", min: 1, max: 2, chance: 8 },
@@ -51,7 +51,7 @@ function getRandomReward(pool, ownedItems) {
                         type: reward.type,
                         value: pickRandomFromArray(available)
                     }
-                    
+
 
                 } else if (reward.type === "coins" || reward.type === "boxes") {
 
@@ -124,7 +124,9 @@ async function getdailyreward(username, ownedItems) {
         };
 
     } catch (error) {
+        console.log(error)
         throw new Error(error.message || "An error occurred while processing your request.");
+        
     }
 }
 
