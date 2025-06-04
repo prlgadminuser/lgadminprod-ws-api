@@ -111,7 +111,6 @@ async function buyItem(username, offerKey, owneditems) {
       message: `Offer bought successfully.`,
     };
   } catch (error) {
-    console.log(error)
     throw new Error(error.message || "An error occurred while processing your request.");
   }
 }

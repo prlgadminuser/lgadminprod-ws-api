@@ -528,11 +528,6 @@ wss.on("connection", (ws, req) => {
         if (playerId) {
             connectedPlayers.delete(playerId);
             connectedClientsCount--;
-
-           // if (playerQueue.has(playerId)) {
-             //   playerQueue.delete(playerId);
-               // console.log(`Player ${playerId} removed from queue due to disconnection.`);
-          //  }
         }
     });
 });
@@ -624,7 +619,6 @@ function watchItemShop() {
                 broadcast("shopupdate");
             } else if (docId === "maintenance") {
                 UpdateMaintenance(change.fullDocument.status, change.fullDocument.public_message)
-                console.log(JSON.stringify(change.fullDocument))
                 if (global.maintenance == "true") closeAllClients(4001, "maintenance"); // broadcast("maintenanceupdate");
             }
         });

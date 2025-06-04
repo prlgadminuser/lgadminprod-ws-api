@@ -2,8 +2,8 @@ const { userCollection } = require('./../idbconfig');
 
 const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
 const limit = 10
-
 const UpdateInterval =  5 * 1000 * 60; 
+
 // Function to update highscores by aggregating top players' scores
 const updateHighscores = async () => {
   try {
