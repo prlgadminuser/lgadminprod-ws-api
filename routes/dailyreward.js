@@ -44,7 +44,7 @@ function getRandomReward(pool, ownedItems) {
                     const available = reward.value.filter(item => !ownedItems.includes(item));
 
                     if (available.length === 0) {
-                        return; 
+                        return false; 
                     }
 
                     return {
@@ -93,7 +93,8 @@ async function getdailyreward(username, ownedItems) {
         const rewards = [];
 
         for (let i = 0; i < rewardConfig.rewardsPerClaim; i++) {
-            rewards.push(getRandomReward(rewardConfig.rewardsPool, ownedItems));
+            const reward = getRandomReward(rewardConfig.rewardsPool, ownedItems)
+            if (reward) rewards.push(reward);
         }
 
         // Build update object
