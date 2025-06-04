@@ -37,32 +37,34 @@ function getRandomReward(pool, ownedItems) {
     for (const reward of pool) {
         cumulativeChance += reward.chance;
         if (rand < cumulativeChance) {
-            if (reward.type === "item") {
-
-                if (Array.isArray(reward.value)) {
-
-                    const available = reward.value.filter(item => !ownedItems.has(item));
-
-                    if (available.length === 0) {
-                        return false;
+            switch (reward.type) {
+                case "item":
+                    if (Array.isArray(reward.value)) {
+                        const available = reward.value.filter(item => !ownedItems.has(item));
+                        if (available.length === 0) {
+                            return false;
+                        }
+                        return {
+                            type: "item",
+                            value: pickRandomFromArray(available),
+                        };
                     }
+                    break;
 
-                    return {
-                        type: reward.type,
-                        value: pickRandomFromArray(available)
-                    }
-
-
-                } else if (reward.type === "coins" || reward.type === "boxes") {
-
+                case "coins":
+                case "boxes":
                     return {
                         type: reward.type,
                         value: generateRandomNumber(reward.min, reward.max),
-                    }
-                }
+                    };
+
+                default:
+                    return false; // unknown reward type
             }
         }
     }
+
+    return false; // fallback if nothing is selected
 }
 
 
@@ -88,7 +90,7 @@ async function getdailyreward(username, ownedItems) {
 
         for (let i = 0; i < rewardConfig.rewardsPerClaim; i++) {
             const reward = getRandomReward(rewardConfig.rewardsPool, ownedItems)
-            if (reward) rewards.push(reward);
+            rewards.push(reward);
         }
 
         // Build update object
