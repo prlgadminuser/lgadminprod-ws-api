@@ -24,10 +24,10 @@ async function CreateAccount(username, password, user_country) {
         }
 
         if (!allow_bad_words) {
-        if (badWords.test(username)) {
-            return { status: "Name contains inappropriate words" };
+            if (badWords.test(username)) {
+                return { status: "Name contains inappropriate words" };
+            }
         }
-       }
 
         if (!passwordRegex.test(password)) {
             return { status: "Invalid password. Ensure there are no special characters" };
@@ -123,7 +123,7 @@ async function CreateAccount(username, password, user_country) {
             }
         }
         // Send webhook notification about the new user
-       // const joinedMessage = `${username} has joined Skilldown from ${finalCountryCode}`;
+        // const joinedMessage = `${username} has joined Skilldown from ${finalCountryCode}`;
         const joinedMessage = `${username} has joined Skilldown`;
         webhook.send(joinedMessage);
 
@@ -131,7 +131,7 @@ async function CreateAccount(username, password, user_country) {
 
     } catch (error) {
         console.error("Error creating account:");
-        return { status: "Unexpected error occurred"};
+        return { status: "Unexpected error occurred" };
     }
 };
 

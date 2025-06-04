@@ -10,6 +10,7 @@ async function getUserProfile(usernamed, selfusername) {
       { "account.username": usernamed },
       {
         projection: {
+          _id: 0, 
           "account.username": 1,
           "account.nickname": 1,
           "equipped.hat": 1,
@@ -27,8 +28,8 @@ async function getUserProfile(usernamed, selfusername) {
           "stats.sp": 1,
           "stats.p_views": 1,
         },
-      
-    hint: "playerProfileIndex",
+
+        hint: "playerProfileIndex",
       }
     );
 
