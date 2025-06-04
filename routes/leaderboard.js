@@ -1,6 +1,7 @@
 const { userCollection } = require('./../idbconfig');
 
 const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
+const limit = 10
 
 const UpdateInterval =  5 * 1000 * 60; 
 // Function to update highscores by aggregating top players' scores
@@ -11,11 +12,11 @@ const updateHighscores = async () => {
   .find({}, { projection: { _id: 0, n: "$account.nickname", u: "$account.username", s: "$stats.sp" } })
   .hint("highscoresIndex")
   .sort({ "stats.sp": -1 })
-  .limit(10)
+  .limit(limit)
   .toArray()
 
   const highscores = list.filter(player => !excludedNicknames.includes(player.n));
-  
+
       
     if (highscores) {
       global.highscores = highscores; // Update the global highscores variable with the fetched data

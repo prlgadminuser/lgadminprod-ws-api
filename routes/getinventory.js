@@ -55,10 +55,6 @@ async function getUserInventory(username, loginrewardactive) {
         currentDate.setHours(0, 0, 0, 0);
         const currentTimestamp0am = currentDate.getTime();
         
-        // Determine one-time reward
-        const onetimereward = loginrewardactive
-            ? (onetimeRow ? onetimeRow.username || 0 : 0)
-            : 4;
 
         const slpasstier = bpuserRow ? bpuserRow.currentTier || 0 : 0;
         const season_coins = bpuserRow ? bpuserRow.season_coins || 0 : 0;
