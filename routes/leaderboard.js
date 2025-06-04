@@ -16,8 +16,8 @@ const updateHighscores = async () => {
   .toArray()
 
 
-  console.log(JSON.stringify(highscores))
-   highscores = highscores.filter(player => !excludedNicknames.includes(player.n));
+
+   //highscores = highscores.filter(player => !excludedNicknames.includes(player.n));
 
       
     if (highscores) {
