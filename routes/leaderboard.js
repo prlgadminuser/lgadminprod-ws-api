@@ -7,15 +7,17 @@ const UpdateInterval =  5 * 1000 * 60;
 // Function to update highscores by aggregating top players' scores
 const updateHighscores = async () => {
   try {
+   let highscores
     // Fetch the top 50 players with the highest 'sp' (points) excluding the user "Liquem"
-   const list = await userCollection
+   highscores = await userCollection
   .find({}, { projection: { _id: 0, n: "$account.nickname", u: "$account.username", s: "$stats.sp" } })
   .hint("highscoresIndex")
-  .sort({ "stats.sp": -1 })
   .limit(limit)
   .toArray()
 
-  const highscores = list.filter(player => !excludedNicknames.includes(player.n));
+
+  console.log(JSON.stringify(highscores))
+   highscores = highscores.filter(player => !excludedNicknames.includes(player.n));
 
       
     if (highscores) {
@@ -45,6 +47,9 @@ async function setupHighscores() {
     await updateHighscores();
   }, UpdateInterval); // Update every 5 minutes
 }
+
+
+  //.sort({ "stats.sp": -1 })
 
 module.exports = {
   setupHighscores,
