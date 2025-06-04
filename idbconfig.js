@@ -32,7 +32,15 @@ const userCollection = db.collection("users");
 const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
-const ItemsCertificatesCollection = db.collection("itemsCertificates");
+const ProfileViewsCollection = db.collection("profile_views");
+
+
+
+
+        ProfileViewsCollection.insertOne({ _id: "selfusername$usernamed" });
+      
+  
+
 
 
 async function startMongoDB() {
@@ -83,5 +91,5 @@ module.exports = {
    passwordRegex,
    badWords,
    webhookURL,
-   ItemsCertificatesCollection,
+   ProfileViewsCollection,
 }

@@ -99,11 +99,6 @@ async function buyItem(username, offerKey, owneditems) {
       updateFields
     );
 
-    // const documents = itemIds.map(id => ({
-    //  iid: `${username}$${id}`,
-    //}));
-
-    // await ItemsCertificatesCollection.insertMany(documents);
 
     itemIds.forEach(id => owneditems.add(id));
 

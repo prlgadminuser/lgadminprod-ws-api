@@ -1,4 +1,4 @@
-const { userCollection } = require('./../idbconfig');
+const { userCollection, ProfileViewsCollection } = require('./../idbconfig');
 
 const send_joined_date = false;
 const count_profile_views = false;
@@ -39,12 +39,23 @@ async function getUserProfile(usernamed, selfusername) {
 
     // Update profile views if the profile is being viewed by someone other than the user
     if (count_profile_views && selfusername !== usernamed) {
-      await userCollection.updateOne(
-        { "account.username": usernamed },
-        { $inc: { "social.p_views": 1 } },
-        { upsert: true }
-      );
+      const document = `${selfusername}$${usernamed}`;
+
+      // Check if the document already exists
+      const existing = await ProfileViewsCollection.findOne({ _id: document });
+
+      if (!existing) {
+
+        await ProfileViewsCollection.insertOne({ _id: document });
+
+        await userCollection.updateOne(
+          { "account.username": usernamed },
+          { $inc: { "stats.p_views": 1 } },
+        );
+      }
     }
+
+  
 
     let displayString = null;
     // Calculate and format the join date if `send_joined_date` is enabled
