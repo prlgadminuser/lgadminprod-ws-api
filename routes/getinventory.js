@@ -37,27 +37,13 @@ async function getUserInventory(username, loginrewardactive) {
             ).catch(() => null), // Handle battle pass collection errors
         ];
 
-        if (loginrewardactive) {
-            promises.push(
-                loginRewardsCollection.findOne(
-                    { "account.username": username },
-                    {
-                        projection: {
-                            username: 1
-                        }
-                    }
-                ).catch(() => null) // Handle login reward errors
-            );
-        } else {
-            promises.push(Promise.resolve(null));
-        }
 
         promises.push(
             shopcollection.findOne({ _id: "config" }).catch(() => null) // Handle shop collection errors
         );
 
         // Wait for all promises to resolve
-        const [userRow, bpuserRow, onetimeRow, configrow] = await Promise.all(promises);
+        const [userRow, bpuserRow, configrow] = await Promise.all(promises);
 
         if (!userRow) {
             throw new Error("User not found");
@@ -104,7 +90,6 @@ async function getUserInventory(username, loginrewardactive) {
             server_nexttime: currentTimestamp0am,
             lbtheme: configrow ? configrow.lobbytheme : null,
             season_end: configrow ? configrow.season_end : null,
-            onetimereward,
             boxrarities: rarityPercentages,
             lastnameupdate: userRow.account.nameupdate || 0,
           //  friends: userRow.social.friends || [],

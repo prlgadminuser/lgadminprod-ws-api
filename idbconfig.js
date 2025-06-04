@@ -51,6 +51,11 @@ async function startMongoDB() {
 
   // userCollection.createIndex({ status: 1, name: 1, age: 1 })
 
+  
+
+// You might want to handle null "stats.sp" later in JS, since find projection doesn't do $ifNull
+
+
 
 
       UpdateMaintenance(result.status, result.public_message)

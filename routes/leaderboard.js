@@ -1,36 +1,22 @@
 const { userCollection } = require('./../idbconfig');
 
+const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
+
+const UpdateInterval =  5 * 1000 * 60; 
 // Function to update highscores by aggregating top players' scores
 const updateHighscores = async () => {
   try {
     // Fetch the top 50 players with the highest 'sp' (points) excluding the user "Liquem"
-    const highscores = await userCollection
-      .aggregate([
-        {
-          $match: {
-           "account.nickname": { $ne: "Liquem" }, // Exclude player with the nickname "Liquem"
-            //"stats.sp": { $gt: 0 } // Ensure we only consider players with a positive score
-          }
-        },
-        {
-          $sort: {
-            "stats.sp": -1 // Sort by score (sp) in descending order
-          }
-        },
-        {
-          $limit: 50 // Limit the results to the top 50 players
-        },
-        {
-          $project: {
-            _id: 0, // Exclude MongoDB _id field from the results
-            n: "$account.nickname", // Shorten "nickname" to "n"
-            u: "$account.username", // Shorten "username" to "u"
-            s: { $ifNull: ["$stats.sp", 0] } // Use 0 as the default if "sp" (score) is null
-          }
-        }
-      ])
-      .toArray();
+   const list = await userCollection
+  .find({}, { projection: { _id: 0, n: "$account.nickname", u: "$account.username", s: "$stats.sp" } })
+  .hint("highscoresIndex")
+  .sort({ "stats.sp": -1 })
+  .limit(10)
+  .toArray()
 
+  const highscores = list.filter(player => !excludedNicknames.includes(player.n));
+  
+      
     if (highscores) {
       global.highscores = highscores; // Update the global highscores variable with the fetched data
     } else {
@@ -40,6 +26,7 @@ const updateHighscores = async () => {
     console.error("Error while updating highscores:", error);
   }
 };
+
 
 // Function to get the current highscores
 async function gethighscores() {
@@ -55,7 +42,7 @@ async function setupHighscores() {
   // Set up an interval to refresh the highscores every 5 minutes (300000ms)
   setInterval(async () => {
     await updateHighscores();
-  }, 300000); // Update every 5 minutes
+  }, UpdateInterval); // Update every 5 minutes
 }
 
 module.exports = {

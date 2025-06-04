@@ -1,7 +1,4 @@
-
-
-
-const serverlist = {  // available server adresses - is send with the inventory when the player logs in
+const serverlist = {
   EU: [
     "wss://s1-eu-sdgame.onrender.com"
   ],
@@ -13,49 +10,37 @@ const serverlist = {  // available server adresses - is send with the inventory 
   ],
 };
 
-      
-      module.exports = {
-        serverlist
-      };
+const nearbyserver = {
+  EU: new Set([
+    "GB", "FR", "DE", "IT", "ES", "NL", "SE", "PL", "NO", "FI", 
+    "BE", "AT", "DK", "PT", "CZ", "HU", "IE", "RO", "GR", "CH"
+  ]),
+  US: new Set([
+    "US", "CA", "MX", "BR", "AR", "CO", "CL", "PE", "VE", "EC"
+  ]),
+  AS: new Set([
+    "JP", "CN", "IN", "KR", "SG", "TH", "VN", "MY", "PH", "ID", 
+    "PK", "BD", "LK", "AE", "SA", "IL", "IR", "KZ", "UZ", "QA"
+  ])
+};
 
+function getServerByCountry(countryCode) {
+  const fallback = "US";
 
-      const nearbyserver = {
-        EU: [
-            "GB", "FR", "DE", "IT", "ES", "NL", "SE", "PL", "NO", "FI", 
-            "BE", "AT", "DK", "PT", "CZ", "HU", "IE", "RO", "GR", "CH"
-        ],
-        US: [
-            "US", "CA", "MX", "BR", "AR", "CO", "CL", "PE", "VE", "EC"
-        ],
-        AS: [
-            "JP", "CN", "IN", "KR", "SG", "TH", "VN", "MY", "PH", "ID", 
-            "PK", "BD", "LK", "AE", "SA", "IL", "IR", "KZ", "UZ", "QA"
-        ]
-    };
-    
+  if (!countryCode || countryCode === "Unknown") return fallback;
 
-      function getServerByCountry(countryCode) {
-  
-        const fallback = "US"
-    
-        if (countryCode === "Unknown") return fallback; // Handle empty or undefined input
-    
-        countryCode = countryCode.toUpperCase(); // Normalize input
-    
-        for (const [region, countries] of Object.entries(nearbyserver)) {
-            if (countries.includes(countryCode)) {
-                return `${region}`;
-            }
-        }
-    
-        return fallback; // Fallback if no match
+  countryCode = countryCode.toUpperCase();
+
+  for (const [region, countriesSet] of Object.entries(nearbyserver)) {
+    if (countriesSet.has(countryCode)) {
+      return region;
     }
-    
-      
-
-  module.exports = {
-    serverlist,
-    getServerByCountry,
   }
-  
-  
+
+  return fallback;
+}
+
+module.exports = {
+  serverlist,
+  getServerByCountry,
+};
