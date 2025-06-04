@@ -42,7 +42,7 @@ function getRandomReward(pool, ownedItems) {
                     if (Array.isArray(reward.value)) {
                         const available = reward.value.filter(item => !ownedItems.has(item));
                         if (available.length === 0) {
-                            return null;
+                            return false;
                         }
                         return {
                             type: "item",
@@ -61,12 +61,12 @@ function getRandomReward(pool, ownedItems) {
                     };
 
                 default:
-                    return null; // unknown reward type
+                    return false; // unknown reward type
             }
         }
     }
 
-    return null; // fallback if nothing is selected
+    return false; // fallback if nothing is selected
 }
 
 
@@ -92,7 +92,7 @@ async function getdailyreward(username, ownedItems) {
 
         for (let i = 0; i < rewardConfig.rewardsPerClaim; i++) {
             const reward = getRandomReward(rewardConfig.rewardsPool, ownedItems)
-            rewards.push(reward);
+            if (reward) rewards.push(reward);
         }
 
         // Build update object
