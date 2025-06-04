@@ -28,7 +28,7 @@ async function verifyPlayer(token) {
             throw new Error("Invalid token");
         }
 
-        const inventory = await getUserInventory(username, true);
+        const inventory = await getUserInventory(username);
 
         return {
             playerId: userInformation.account.username,

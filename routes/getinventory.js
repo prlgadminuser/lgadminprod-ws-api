@@ -3,26 +3,22 @@ const { rarityPercentages } = require('./../boxrarityconfig');
 const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');
 
-async function getUserInventory(username, loginrewardactive) {
+async function getUserInventory(username) {
     try {
-        // Update the last_login field
-        await userCollection.updateOne(
-            { "account.username": username },
-            { $set: { "account.last_login": Date.now() } }
-        );
-
         // Prepare promises for parallel execution
         const promises = [
-            userCollection.findOne(
+            await userCollection.findOneAndUpdate(
                 { "account.username": username },
+                { $set: { "account.last_login": Date.now() } },
                 {
+                    returnDocument: "after", // Return the document after update
                     projection: {
                         "account": 1,
                         "equipped": 1,
                         "currency": 1,
                         "inventory": 1,
                         "stats.sp": 1,
-                    }
+                    },
                 }
             ),
             battlePassCollection.findOne(
@@ -54,7 +50,7 @@ async function getUserInventory(username, loginrewardactive) {
         const currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
         const currentTimestamp0am = currentDate.getTime();
-        
+
 
         const slpasstier = bpuserRow ? bpuserRow.currentTier || 0 : 0;
         const season_coins = bpuserRow ? bpuserRow.season_coins || 0 : 0;
@@ -88,8 +84,8 @@ async function getUserInventory(username, loginrewardactive) {
             season_end: configrow ? configrow.season_end : null,
             boxrarities: rarityPercentages,
             lastnameupdate: userRow.account.nameupdate || 0,
-          //  friends: userRow.social.friends || [],
-           // requests: userRow.social.requests || [],
+            //  friends: userRow.social.friends || [],
+            // requests: userRow.social.requests || [],
             serverlist,
             nearestRegion: getServerByCountry(userRow.account.country_code || "Unknown"),
             weaponcatalog: WeaponsToBuy,
