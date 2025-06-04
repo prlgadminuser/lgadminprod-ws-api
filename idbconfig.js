@@ -36,13 +36,6 @@ const ProfileViewsCollection = db.collection("profile_views");
 
 
 
-
-        ProfileViewsCollection.insertOne({ _id: "selfusername$usernamed" });
-      
-  
-
-
-
 async function startMongoDB() {
     try {
         await client.connect();
