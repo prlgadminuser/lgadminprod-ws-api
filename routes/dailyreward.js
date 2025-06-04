@@ -41,7 +41,7 @@ function getRandomReward(pool, ownedItems) {
 
                 if (Array.isArray(reward.value)) {
 
-                    const available = reward.value.filter(item => !ownedItems.includes(item));
+                    const available = reward.value.filter(item => !ownedItems.has(item));
 
                     if (available.length === 0) {
                         return false;
