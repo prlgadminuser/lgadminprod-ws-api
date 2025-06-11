@@ -35,7 +35,6 @@ async function verifyPlayer(token) {
             nickname: userInformation.account.nickname,
             inventory: inventory,
             items: new Set(inventory.items),
-            itemsarray: inventory.items
         };
 
     } catch (error) {

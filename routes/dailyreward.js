@@ -11,7 +11,7 @@ const rewardConfig = {
     ]
 };
 
-
+const bonusitems = ["A001", "A002"]
 
 // === HELPERS ===
 function canCollectCoins(lastCollected) {
@@ -52,8 +52,6 @@ function getRandomReward(pool, ownedItems) {
                     break;
 
                 case "coins":
-
-
                 case "boxes":
                     return {
                         type: reward.type,
@@ -94,6 +92,21 @@ async function getdailyreward(username, ownedItems) {
             const reward = getRandomReward(rewardConfig.rewardsPool, ownedItems)
             if (reward) rewards.push(reward);
         }
+
+
+        const bonuschance = 2
+
+        if (Math.random() < bonuschance / 100) {
+
+            const available = bonusitems.filter(item => !ownedItems.has(item));
+
+            if (available.length > 0) {
+                const bonusreward = { type: "item", value: pickRandomFromArray(available) };
+                rewards.push(bonusreward);
+            }
+        }
+
+
 
         // Build update object
         const update = {

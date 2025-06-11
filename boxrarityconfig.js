@@ -4,44 +4,37 @@
 const rarityConfig = {
     normal: {
         threshold: 0.8,
-        coinsRange: [15, 30], // Coins for normal rarity
-        itemCount: 0, // No items for normal
-        customItems: null, // No custom items for normal
+        coinsRange: [15, 30], 
+        itemCount: 0, 
+        customItems: null, 
         message: "success",
     },
 
     rare: {
-        threshold: 0.995,
-        coinsRange: [15, 25], // No coins for rare
-        itemCount: 2, // Number of unowned items to award (from customItems)
+        threshold: 0.999,
+        coinsRange: [15, 25],
+        itemCount: 2, 
         customItems: [
-            { id: "A001" }, { id: "A002" }, { id: "A003" }, { id: "A004" },
-            { id: "A005" }, { id: "A006" }, { id: "A007" }, { id: "A008" },
-            { id: "A009" }, { id: "A010" }, { id: "A011" }, { id: "A012" },
-            { id: "A013" }, { id: "A014" }, { id: "A015" }, { id: "A016" },
-            { id: "A017" }, { id: "A018" }, { id: "A019" }, { id: "A020" },
-            { id: "A021" }, { id: "A022" }, { id: "A023" }, { id: "A025" },
-            { id: "A026" }, { id: "A030" }, { id: "A031" }, { id: "A034" },
-            { id: "B001" }, { id: "B002" }, { id: "B003" }, { id: "B004" },
-            { id: "B005" }, { id: "B006" }, { id: "B007" }, { id: "B008" },
-            { id: "B009" }, { id: "B010" }, { id: "B011" }, { id: "B012" },
-            { id: "B013" }, { id: "B014" }, { id: "B015" }, { id: "B016" },
-            { id: "B017" }, { id: "B018" }, { id: "B019" }, { id: "B020" },
-            { id: "B024" }, { id: "B025" }, { id: "I001" }, { id: "I002" },
-            { id: "I003" }, { id: "I004" }, { id: "I005" }, { id: "I007" },
-            { id: "I008" }, { id: "I009" }, { id: "I010" }, { id: "P001" },
-            { id: "P002" }, { id: "P003" }, { id: "P004" }, { id: "P005" },
-            { id: "P006" }, { id: "P007" }, { id: "P008" }
+            "A003", "A004", "A005", "A006", "A007", "A008", "A009", "A010",
+            "A011", "A012", "A013", "A014", "A015", "A016", "A017", "A018",
+            "A019", "A020", "A021", "A022", "A023", "A025", "A026", "A030",
+            "A031", "A034", "B001", "B002", "B003", "B004", "B005", "B006",
+            "B007", "B008", "B009", "B010", "B011", "B012", "B013", "B014",
+            "B015", "B016", "B017", "B018", "B019", "B020", "B024", "B025",
+            "I001", "I002", "I003", "I004", "I005", "I007", "I008", "I009",
+            "I010", "P001", "P002", "P003", "P004", "P005", "P006", "P007",
+            "P008"
         ],
+
         message: "success",
     },
     
     legendary: {
-        threshold: 1.0,
+        threshold: 1,
         coinsRange: [130, 200],
         itemCount: 2, 
         customItems: [
-            { id: "A029" }, { id: "I011" }
+            "A029", "I011"
         ],
         message: "success",
     },
