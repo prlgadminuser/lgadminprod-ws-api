@@ -11,7 +11,7 @@ const rarityConfig = {
     },
 
     rare: {
-        threshold: 0.999,
+        threshold: 0.99925,
         coinsRange: [15, 25],
         itemCount: 2, 
         customItems: [
