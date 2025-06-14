@@ -2,7 +2,7 @@
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const { UpdateMaintenance } = require("./index");
-const { MONGO_URI, TOKEN_KEY, DISCORDWEBHOOK } = require("./ENV")
+const { MONGO_URI, TOKEN_KEY, DISCORDWEBHOOK, DB_NAME } = require("./ENV")
 
 const lgconnecturi = process.env.MONGO_URI || MONGO_URI
 const tokenkey = process.env.TOKEN_KEY || TOKEN_KEY
@@ -27,7 +27,7 @@ const client = new MongoClient(uri, {
     },
   });
 
-const db = client.db("Cluster0");
+const db = client.db(DB_NAME);
 const userCollection = db.collection("users");
 const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");

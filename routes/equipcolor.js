@@ -4,7 +4,7 @@ async function equipColor(username, type, color) {
     const parsedColor = parseInt(color, 10);
 
     // Validate the color value
-    if (isNaN(parsedColor) || parsedColor < -400 || parsedColor > 400) {
+    if (isNaN(parsedColor) || parsedColor < -400 || parsedColor > 400 || parsedColor.toString().length > 5) {
         throw new Error("Invalid color value.");
     }
 

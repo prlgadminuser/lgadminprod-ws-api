@@ -23,6 +23,8 @@ function createRateLimiter() { // connected sending message rate limit
   });
 }
 
+// cf-connecting-ip
+
 const getClientCountry = (req) => {
   const clientcountry = req.headers['cf-ipcountry'] || "Unknown"
 

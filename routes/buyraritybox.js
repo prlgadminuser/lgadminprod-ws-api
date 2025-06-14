@@ -54,10 +54,10 @@ function determineRarity(rarityType) {
 function generateRewards(rarity, ownedItems) {
     const config = rarityConfig[rarity];
     const rewards = {
+        message: "success",
         coins: [],
         items: [],
         rarity,
-        message: config.message,
     };
 
     // If rarity is normal, only coins are rewarded

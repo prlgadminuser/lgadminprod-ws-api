@@ -17,7 +17,7 @@ async function getshopdata() {
     return {
       dailyItems: itemshop.items || [], // Return the daily items, ensuring there's a default empty array if not found
       shoptheme: itemshop.theme || null,  // Return shop theme, defaulting to null if not found
-      server_nexttime: t0am  // Server's next reset time
+      server_nexttime: t0am  // Server's shop next reset time
     };
   } catch (error) {
     // Log error if necessary, but for now throw the error to propagate it
