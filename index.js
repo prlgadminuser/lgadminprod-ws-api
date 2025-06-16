@@ -47,7 +47,7 @@ const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
 const { verifyToken } = require("./routes/verifyToken");
 const { addPlayerToChat, removePlayerFromChat, sendMessage } = require("./playerchat/chat")
-const { createPaymentLink, verifyWebhook, handlePaypalWebhookEvent } = require("./paystation")
+const { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent } = require("./paystation")
 
 
 
@@ -86,7 +86,7 @@ const webhookRawBodyParser = bodyParser.json({
 
 const server = http.createServer(async (req, res) => {
 
-     webhookRawBodyParser(req, res, (err) => { });
+    
 
 
      const origin = req.headers.origin;
@@ -246,6 +246,7 @@ const server = http.createServer(async (req, res) => {
                     case '/from-paypal-webhook':
 
                         try {
+                             webhookRawBodyParser(req, res, (err) => { });
                             const isValid = await verifyWebhook(req);
                             if (!isValid) {
                                 console.warn('Invalid PayPal webhook signature.');
@@ -459,6 +460,16 @@ async function handleMessage(ws, message, playerVerified) {
                   //  CompressAndSend(ws, "sendchatmsg", response)
                     break;
     
+
+            // payments via paypal
+
+            
+            case "get-paystation":
+               (async () => {
+                   response = await CreatePaymentLink(playerVerified.playerId, data.packid);
+                })();
+                  CompressAndSend(ws, "get-paystation", response)
+                    break;
 
 
 

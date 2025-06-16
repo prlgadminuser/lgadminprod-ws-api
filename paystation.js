@@ -4,18 +4,17 @@ const paypal = require('@paypal/checkout-server-sdk');
 const { userCollection, PaymentCollection } = require('./idbconfig');
 const { PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID } = require('./ENV.js');
 
-// -- PayPal Checkout SDK (used for payment link + capture)
-//const environment = new paypal.core.SandboxEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
+
 const environment = new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
 const client = new paypal.core.PayPalHttpClient(environment);
 
 const FIXED_OFFERS = {
-  starter_pack: { name: 'Anfängerpaket', price: 5.00, coins: 500 },
-  medium_pack: { name: 'Mittleres Paket', price: 10.00, coins: 1200 },
-  pro_pack: { name: 'Pro-Paket', price: 20.00, coins: 2500 }
+    "1000_coins_pack": { name: '1000 Coins', price: 1.00, coins: 1000 },
+ // medium_pack: { name: 'Mittleres Paket', price: 10.00, coins: 1200 },
+ // pro_pack: { name: 'Pro-Paket', price: 20.00, coins: 2500 }
 };
 
-async function CreatePaymentLink(offerId, userId) {
+async function CreatePaymentLink(userId, offerId) {
   try {
     if (!offerId || !userId) {
       throw new Error('Angebots-ID und Benutzer-ID sind erforderlich.');
@@ -91,7 +90,7 @@ async function verifyWebhook(req) {
     // 1. Get access token (no caching, simple and clean)
     const basicAuth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
     const tokenRes = await axios.post(
-      'https://api-m.paypal.com/v1/oauth2/token',
+      'https://api.paypal.com/v1/oauth2/token',
       new URLSearchParams({ grant_type: 'client_credentials' }),
       {
         headers: {
@@ -104,7 +103,7 @@ async function verifyWebhook(req) {
 
     // 2. Verify the webhook signature
     const verifyRes = await axios.post(
-      'https://api-m.paypal.com/v1/notifications/verify-webhook-signature',
+      'https://api.paypal.com/v1/notifications/verify-webhook-signature',
       {
         auth_algo: authAlgo,
         cert_url: certUrl,
@@ -177,7 +176,4 @@ module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent };
 
 
 // Test runner
-(async () => {
-  const test = await CreatePaymentLink("pro_pack", "Liquem");
-  console.log(test);
-})();
+
