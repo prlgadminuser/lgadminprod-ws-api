@@ -107,38 +107,38 @@ async function verifyWebhook(req) {
     const certUrl = req.headers['paypal-cert-url'];
     const authAlgo = req.headers['paypal-auth-algo'];
     const transmissionSig = req.headers['paypal-transmission-sig'];
-    const webhookId = PAYPAL_WEBHOOK_ID; // Get this from your ENV.js or process.env
+    const webhookId = PAYPAL_WEBHOOK_ID; // From your ENV.js
 
+    console.log(req.body)
     // req.rawBody is captured by body-parser's verify option
-    const webhookEventBody = req.rawBody.toString('utf8'); // Ensure it's a string
-
-    console.log(req.headers)
+    const webhookEventBody = req.rawBody.toString('utf8'); // Keep as string for this function
 
     try {
-        const verifyRequest = new VerifyWebhookSignatureRequest(); // Instantiate the request object
-        verifyRequest.headers = { // Set headers directly on the request object
-            'paypal-transmission-id': transmissionId,
-            'paypal-transmission-time': transmissionTime,
-            'paypal-cert-url': certUrl,
-            'paypal-auth-algo': authAlgo,
-            'paypal-transmission-sig': transmissionSig
-        };
-        verifyRequest.requestBody({ // Set the webhook event body (raw string)
-            webhook_id: webhookId,
-            webhook_event: JSON.parse(webhookEventBody) // The SDK expects the parsed JSON for webhook_event
-        });
+        // --- FIX: Use the 'validate' utility function ---
+        // This function directly takes the headers, raw body, and webhook ID.
+        // It returns true if valid, throws an error if not.
+        const isValid = await validate(
+            transmissionId,
+            transmissionTime,
+            certUrl,
+            authAlgo,
+            transmissionSig,
+            webhookEventBody, // Pass the RAW body string here
+            webhookId
+        );
 
-        // Execute the verification request using the PayPal client
-        const response = await client.execute(verifyRequest);
-
-        // Check the verification status from the response
-        return response.result.verification_status === 'SUCCESS';
+        // If validate does not throw an error, it's considered valid
+        return isValid; // The validate function itself returns nothing on success, it throws on failure.
+                     // So if we reach here, it's valid.
 
     } catch (error) {
+        // The 'validate' function throws specific errors (e.g., SignatureVerificationError)
+        // if verification fails.
         console.error('Error during webhook signature verification:', error.message);
-        return false; // Return false if any error occurs during verification
+        return false; // If any error is caught, the signature is not valid.
     }
 }
+
 
 async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
