@@ -183,20 +183,26 @@ async function handlePaypalWebhookEvent(event) {
       }
 
       // Update user coins in DB
-      await userCollection.updateOne(
-        { "account.username": UserToAward },
-        { $inc: { "currency.coins": offerdata.coins || 0 } }
-      );
+       await session.withTransaction(async () => {
+        // 1. Update user coins
+        const userUpdate = await userCollection.updateOne(
+          { "account.username": UserToAward },
+          { $inc: { "currency.coins": offerdata.coins || 0 } },
+          { session }
+        );
+        if (userUpdate.matchedCount === 0) throw new Error('User not found.');
 
+        // 2. Insert payment record
         await PaymentCollection.insertOne({
-        _id: event.resource.id,
-        paypalCaptureId: capture.id,
-        userId: UserToAward,
-        offerdata: customdata.offerdata,
-        status: capture.status,
-        create_time: capture.create_time,
-        update_time: capture.update_time,
-        payerdata: capture.payer
+          _id: event.resource.id,
+          paypalCaptureId: capture.id,
+          userId: UserToAward,
+          offerdata,
+          status: capture.status,
+          create_time: capture.create_time,
+          update_time: capture.update_time,
+          payerdata: captureResult.payer || null
+        }, { session });
       });
 
     } catch (error) {
