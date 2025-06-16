@@ -10,8 +10,6 @@ const client = new paypal.core.PayPalHttpClient(environment);
 
 const FIXED_OFFERS = {
     "1000_coins_pack": { name: '1000 Coins', price: 1.00, coins: 1000 },
- // medium_pack: { name: 'Mittleres Paket', price: 10.00, coins: 1200 },
- // pro_pack: { name: 'Pro-Paket', price: 20.00, coins: 2500 }
 };
 
 async function CreatePaymentLink(userId, offerId) {
@@ -21,8 +19,6 @@ async function CreatePaymentLink(userId, offerId) {
     }
 
     const offer = FIXED_OFFERS[offerId];
-
-    const offerdata = offer
 
     if (!offer) {
       throw new Error('Angebot nicht gefunden.');
@@ -48,9 +44,9 @@ async function CreatePaymentLink(userId, offerId) {
       purchase_units: [{
         amount: {
           currency_code: 'EUR',
-          value: offer.price.toFixed(2)
+          value: offer.price
         },
-        custom_id: JSON.stringify({ userId, offerId, offerdata }),
+        custom_id: JSON.stringify({ userId, offer }),
         description: `Kauf von ${offer.coins} Münzen (${offer.name}) für ${user.account.nickname}`
       }],
       application_context: {
@@ -141,13 +137,12 @@ async function captureOrder(orderId) {
 
     // Confirm you're getting a capture, not just an order
     if (captureResponse?.result?.status !== 'COMPLETED') {
-      console.warn('⚠️ Capture response status not COMPLETED:', captureResponse.result.status);
-      console.dir(captureResponse.result, { depth: null });
+
     }
 
     return captureResponse.result;
   } catch (error) {
-    console.error("❌ Capture failed:");
+
     if (error.statusCode) {
       console.error("Status Code:", error.statusCode);
     }
@@ -165,7 +160,7 @@ async function captureOrder(orderId) {
 
 async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
-    console.log('Order approved:', event.resource.id);
+
 
     const session = userCollection.client.startSession();
 
@@ -177,8 +172,7 @@ async function handlePaypalWebhookEvent(event) {
 
       const customdata = JSON.parse(customIdStr);
       const UserToAward = customdata.userId;
-      const offerId = customdata.offerId;
-      const offerdata = FIXED_OFFERS[offerId];
+      const offerdata = customdata.offer;
 
       if (!offerdata) {
         return;
@@ -199,7 +193,7 @@ async function handlePaypalWebhookEvent(event) {
           _id: event.resource.id,
           paypalCaptureId: capture.id,
           userId: UserToAward,
-          offerdata,
+          offerdata: offerdata,
           status: capture.status,
           create_time: capture.create_time,
           update_time: capture.update_time,
@@ -214,7 +208,7 @@ async function handlePaypalWebhookEvent(event) {
 }
 //}
 
-module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent };
+module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent, FIXED_OFFERS };
 
 
 // Test runner
