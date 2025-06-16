@@ -157,8 +157,10 @@ async function handlePaypalWebhookEvent(event) {
   
     const UserToAward = event.resource.custom_id.userId
     const offerId = event.resource.custom_id.offerId
-    
+
    // const payment = await PaymentCollection.findOne({ paypalOrderId: capture.supplementary_data?.related_ids?.order_id });
+
+   console.log(FIXED_OFFERS[offerId])
 
     //if (payment) {
       await userCollection.updateOne(
