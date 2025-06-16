@@ -161,13 +161,27 @@ async function captureOrder(orderId) {
 
 
 async function handlePaypalWebhookEvent(event) {
-  if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
-    console.log('Order approved:', event.resource.id);
-    await captureOrder(event.resource.id);
-    // Optionally capture payment here if you want to auto capture on approval
+ if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
+  const orderId = event.resource.id;
+
+  try {
+    const result = await captureOrder(orderId);
+
+    if (result.status === 'COMPLETED') {
+      console.log("✅ Order captured successfully");
+    } else {
+      console.warn("⚠️ Order capture returned non-COMPLETED status:", result.status);
+    }
+  } catch (err) {
+    console.error("❌ Capture error:", err);
   }
+}
 
   if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
+
+    console.log("capture completed")
+
+    console.log(JSON.parse(event.resource))
 
     const data = event.resource
     const customdata = JSON.parse((data.custom_id));
@@ -187,7 +201,6 @@ async function handlePaypalWebhookEvent(event) {
 
       console.log('User coins updated.');
     } else {
-    console.log("error", event.resource)
     }
   }
 //}
