@@ -465,11 +465,12 @@ async function handleMessage(ws, message, playerVerified) {
 
             
             case "get-paystation":
-               (async () => {
-                   response = await CreatePaymentLink(playerVerified.playerId, data.packid);
+                response = await (async () => {
+                    return await CreatePaymentLink(playerVerified.playerId, data.packid);
                 })();
-                  CompressAndSend(ws, "get-paystation", response)
-                    break;
+
+                CompressAndSend(ws, "get-paystation", response)
+                break;
 
 
 
