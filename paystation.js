@@ -47,7 +47,7 @@ async function CreatePaymentLink(offerId, userId) {
           currency_code: 'EUR',
           value: offer.price.toFixed(2)
         },
-        custom_id: JSON.stringify({ userId, offerId }),
+        custom_id: { userId, offerId },
         description: `Kauf von ${offer.coins} Münzen (${offer.name}) für ${user.account.nickname}`
       }],
       application_context: {
