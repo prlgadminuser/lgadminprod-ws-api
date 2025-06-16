@@ -167,6 +167,8 @@ async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
     console.log('Order approved:', event.resource.id);
 
+    const session = userCollection.client.startSession();
+
     try {
       const captureResult = await captureOrder(event.resource.id);
       // Extract custom_id from the capture response
