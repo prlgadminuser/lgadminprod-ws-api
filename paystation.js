@@ -44,9 +44,9 @@ async function CreatePaymentLink(userId, offerId) {
       purchase_units: [{
         amount: {
           currency_code: 'EUR',
-          value: offer.price
+          value: offer.price.toFixed(2)
         },
-        custom_id: JSON.stringify({ userId, offer }),
+        custom_id: JSON.stringify({ userId, offerId }),
         description: `Kauf von ${offer.coins} Münzen (${offer.name}) für ${user.account.nickname}`
       }],
       application_context: {
@@ -172,7 +172,8 @@ async function handlePaypalWebhookEvent(event) {
 
       const customdata = JSON.parse(customIdStr);
       const UserToAward = customdata.userId;
-      const offerdata = customdata.offer;
+      const offerId = customdata.offerId;
+      const offerdata = FIXED_OFFERS[offerId];
 
       if (!offerdata) {
         return;
@@ -193,7 +194,7 @@ async function handlePaypalWebhookEvent(event) {
           _id: event.resource.id,
           paypalCaptureId: capture.id,
           userId: UserToAward,
-          offerdata: offerdata,
+          offerdata,
           status: capture.status,
           create_time: capture.create_time,
           update_time: capture.update_time,
