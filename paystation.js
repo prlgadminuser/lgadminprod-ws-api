@@ -1,6 +1,7 @@
 
 
 const paypal = require('@paypal/checkout-server-sdk');
+const { VerifyWebhookSignatureRequest } = require('@paypal/checkout-server-sdk').core;
 const { userCollection, PaymentCollection } = require('./idbconfig');
 const { PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID } = require('./ENV.js'); // Make sure ENV.js exports these
 
@@ -113,7 +114,7 @@ async function verifyWebhook(req) {
     const webhookEventBody = req.rawBody.toString('utf8'); // Ensure it's a string
 
     try {
-        const isValid = await paypal.webhooks.verifySignature({
+        const isValid = await paypal.webhooks.VerifyWebhookSignatureRequest({
             auth_algo: authAlgo,
             cert_url: certUrl,
             transmission_id: transmissionId,
