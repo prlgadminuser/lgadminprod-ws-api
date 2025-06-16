@@ -155,16 +155,15 @@ async function handlePaypalWebhookEvent(event) {
 
   if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
   
-    console.log("payment captured:", event.id)
-
-    const UserToAward = event.resource.custom_id
+    const UserToAward = event.resource.custom_id.userId
+    const offerId = event.resource.custom_id.offerId
     
    // const payment = await PaymentCollection.findOne({ paypalOrderId: capture.supplementary_data?.related_ids?.order_id });
 
     //if (payment) {
       await userCollection.updateOne(
         { "account.username": UserToAward },
-        { $inc: { "currency.coins": FIXED_OFFERS[payment.offerId]?.coins || 0 } }
+        { $inc: { "currency.coins": FIXED_OFFERS[offerId].coins || 0 } }
       );
 
       console.log('User coins updated.');
