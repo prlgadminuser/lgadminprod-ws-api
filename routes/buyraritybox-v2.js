@@ -20,20 +20,20 @@ async function buyRarityBox(username, owned_items) {
 
         const rewards = generateRewards(config, owned_items);
 
-        // Track item IDs to update inventory
-        const newItems = rewards
-            .filter(r => r.type === "item")
-            .map(r => r.value);
+         const rewardStack = {
+            items: [],
+        };
 
-        newItems.forEach(item => owned_items.add(item));
+        for (const reward of rewards) {
+            if (reward.type === "item") {
+                rewardStack.items.push(reward.value);
+                owned_items.add(reward.value);
+            } else {
+                rewardStack[reward.type] = (rewardStack[reward.type] || 0) + reward.value;
+            }
+        }
 
-        await updateUserFields(username, {
-            "currency.boxes": -1,
-            "inventory.items": newItems,
-            "currency.coins": rewards
-                .filter(r => r.type === "coins")
-                .map(r => r.value)
-        });
+        await updateUserFields(username, rewardStack);
 
         return {
             message: "success",
@@ -77,6 +77,8 @@ function generateRewards(config, ownedItems) {
                     value: item
                 });
             });
+
+
         } else if (ReplaceAlreadyOwnedItemsWithCoins) {
             // Not enough new items, fallback to coins
             for (let i = 0; i < config.itemCount; i++) {
@@ -108,29 +110,26 @@ function getRandomInRange([min, max]) {
 }
 
 // --- MongoDB update operation for coins/items
-async function updateUserFields(username, updateFields) {
-    const updateData = {};
+async function updateUserFields(username, rewardStack) {
+    const updateData = {
+        $inc: { "currency.boxes": -1 }
+    };
 
-    if (Array.isArray(updateFields["inventory.items"]) && updateFields["inventory.items"].length > 0) {
-        updateData.$addToSet = updateData.$addToSet || {};
-        updateData.$addToSet["inventory.items"] = { $each: updateFields["inventory.items"] };
+    if (rewardStack.items && rewardStack.items.length > 0) {
+        updateData.$addToSet = {
+            "inventory.items": { $each: rewardStack.items }
+        };
     }
 
-    if (Array.isArray(updateFields["currency.coins"]) && updateFields["currency.coins"].length > 0) {
-        const totalCoins = updateFields["currency.coins"].reduce((sum, val) => sum + val, 0);
-        updateData.$inc = updateData.$inc || {};
-        updateData.$inc["currency.coins"] = totalCoins;
+    for (const [key, value] of Object.entries(rewardStack)) {
+        if (key === "items" || value === 0) continue;
+        updateData.$inc[`currency.${key}`] = value;
     }
 
-    updateData.$inc = updateData.$inc || {};
-    updateData.$inc["currency.boxes"] = -1;
-
-    if (Object.keys(updateData).length > 0) {
-        await userCollection.updateOne(
-            { "account.username": username },
-            updateData
-        );
-    }
+    await userCollection.updateOne(
+        { "account.username": username },
+        updateData
+    );
 }
 
 // --- Fetch user data

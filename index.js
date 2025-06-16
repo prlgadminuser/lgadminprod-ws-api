@@ -46,6 +46,7 @@ const { CreateAccount } = require('./accounthandler/register');
 const { Login } = require('./accounthandler/login');
 const { verifyToken } = require("./routes/verifyToken");
 const { addPlayerToChat, removePlayerFromChat, sendMessage } = require("./playerchat/chat")
+const { createPaymentLink, verifyWebhook, handlePaypalWebhookEvent } = require("./paystation")
 
 
 
@@ -108,7 +109,10 @@ const server = http.createServer(async (req, res) => {
         let body = '';
         let requestAborted = false;
 
+       
+
         req.on('data', (chunk) => {
+             if (!req.url === "/from-paypal-webhook") {
             if (chunk.length && chunk.length > api_message_size_limit) {
                 requestAborted = true;
                 res.writeHead(429, { 'Content-Type': 'text/plain' });
@@ -116,9 +120,12 @@ const server = http.createServer(async (req, res) => {
                 req.destroy();
                 return;
             }
+             }
             body += chunk.toString();
             body = escapeInput(body);
         });
+
+       
 
         req.on('end', async () => {
             if (requestAborted) return;
@@ -218,6 +225,23 @@ const server = http.createServer(async (req, res) => {
                         } else {
                             res.writeHead(401, { 'Content-Type': 'text/plain' });
                             return res.end("Error: Invalid credentials");
+                        }
+
+                    case '/from-paypal-webhook':
+
+                        try {
+                            const isValid = await verifyWebhook(req);
+                            if (!isValid) {
+                                console.warn('Invalid PayPal webhook signature.');
+                                return res.status(400).send('Invalid signature');
+                            }
+
+                            await handlePaypalWebhookEvent(req.body);
+
+                            res.status(200).send('OK');
+                        } catch (error) {
+                            console.error('Error handling PayPal webhook:', error);
+                            return res.status(500).send('Internal Server Error');
                         }
 
                     default:

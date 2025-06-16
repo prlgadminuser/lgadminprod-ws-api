@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const { UpdateMaintenance } = require("./index");
 const { MONGO_URI, TOKEN_KEY, DISCORDWEBHOOK, DB_NAME } = require("./ENV")
 
+
 const lgconnecturi = process.env.MONGO_URI || MONGO_URI
 const tokenkey = process.env.TOKEN_KEY || TOKEN_KEY
 const webhookURL = process.env.DISCORDWEBHOOK || DISCORDWEBHOOK
@@ -33,6 +34,9 @@ const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
 const ProfileViewsCollection = db.collection("profile_views");
+const PaymentCollection = db.collection("payments")
+
+
 
 
 
@@ -58,12 +62,15 @@ async function startMongoDB() {
 
 
 
+     
+
 
       UpdateMaintenance(result.status, result.public_message)
 
       global.maintenance = result.status
       global.maintenance_publicinfomessage = result.public_message
 
+ 
     } catch (error) {
         console.error("Error connecting to MongoDB:", error);
     }
@@ -85,4 +92,5 @@ module.exports = {
    badWords,
    webhookURL,
    ProfileViewsCollection,
+   PaymentCollection,
 }

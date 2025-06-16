@@ -9,7 +9,6 @@ const rarityConfig = {
         customItems: null, 
     },
 
-    
     hat: {
         threshold: 0.80,
         coinsRange: [20, 40],
