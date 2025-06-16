@@ -24,6 +24,7 @@ module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPl
 const { startMongoDB, shopcollection, userCollection } = require("./idbconfig");
 var sanitize = require('mongo-sanitize');
 const WebSocket = require("ws");
+const bodyParser = require('body-parser')
 const http = require('http');
 const LZString = require("lz-string");
 const { verifyPlayer } = require('./routes/verifyPlayer');
@@ -74,14 +75,26 @@ async function setCommonHeaders(res, origin) {
 }
 
 
+const webhookRawBodyParser = bodyParser.json({
+    verify: (req, res, buf) => {
+        // This crucial line attaches the raw buffer of the request body to req.rawBody
+        // Your verifyWebhook function will use req.rawBody.toString('utf8')
+        req.rawBody = buf;
+    },
+});
+
+
 const server = http.createServer(async (req, res) => {
 
-    
+     webhookRawBodyParser(req, res, (err) => { });
+
 
      const origin = req.headers.origin;
     await setCommonHeaders(res, origin);
+
+
     try {
-         if (!req.url === "/from-paypal-webhook") {
+         if (req.url !== "/from-paypal-webhook") {
         const ip = getClientIp(req);
         if (!ip) {
             res.writeHead(429, { 'Content-Type': 'text/plain' });
@@ -126,6 +139,7 @@ const server = http.createServer(async (req, res) => {
             body += chunk.toString();
             body = escapeInput(body);
         });
+
 
        
 
