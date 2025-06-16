@@ -142,6 +142,8 @@ async function captureOrder(orderId) {
       console.dir(captureResponse.result, { depth: null });
     }
 
+    console.log(captureResponse)
+
     return captureResponse.result;
   } catch (error) {
     console.error("❌ Capture failed:");
