@@ -86,6 +86,7 @@ const webhookRawBodyParser = bodyParser.json({
 
 const server = http.createServer(async (req, res) => {
 
+        webhookRawBodyParser(req, res, (err) => { });
     
 
 
@@ -246,7 +247,7 @@ const server = http.createServer(async (req, res) => {
                     case '/from-paypal-webhook':
 
                         try {
-                             webhookRawBodyParser(req, res, (err) => { });
+                         
                             const isValid = await verifyWebhook(req);
                             if (!isValid) {
                                 console.warn('Invalid PayPal webhook signature.');
