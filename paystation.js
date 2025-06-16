@@ -21,6 +21,9 @@ async function CreatePaymentLink(userId, offerId) {
     }
 
     const offer = FIXED_OFFERS[offerId];
+
+    const offerdata = offer
+
     if (!offer) {
       throw new Error('Angebot nicht gefunden.');
     }
@@ -47,7 +50,7 @@ async function CreatePaymentLink(userId, offerId) {
           currency_code: 'EUR',
           value: offer.price.toFixed(2)
         },
-        custom_id: JSON.stringify({ userId, offerId }),
+        custom_id: JSON.stringify({ userId, offerId, offerdata }),
         description: `Kauf von ${offer.coins} Münzen (${offer.name}) für ${user.account.nickname}`
       }],
       application_context: {
@@ -166,14 +169,9 @@ async function handlePaypalWebhookEvent(event) {
 
     try {
       const captureResult = await captureOrder(event.resource.id);
-      console.log('✅ Order captured successfully:', captureResult.id);
-
       // Extract custom_id from the capture response
+       const capture = captureResult.purchase_units[0].payments.captures[0];
       const customIdStr = captureResult.purchase_units[0].payments.captures[0].custom_id;
-      if (!customIdStr) {
-        console.error('Missing custom_id in capture response');
-        return;
-      }
 
       const customdata = JSON.parse(customIdStr);
       const UserToAward = customdata.userId;
@@ -181,7 +179,6 @@ async function handlePaypalWebhookEvent(event) {
       const offerdata = FIXED_OFFERS[offerId];
 
       if (!offerdata) {
-        console.error('Offer data not found for offerId:', offerId);
         return;
       }
 
@@ -191,7 +188,16 @@ async function handlePaypalWebhookEvent(event) {
         { $inc: { "currency.coins": offerdata.coins || 0 } }
       );
 
-      console.log(`User ${UserToAward} coins updated by ${offerdata.coins}.`);
+        await PaymentCollection.insertOne({
+        _id: event.resource.id,
+        paypalCaptureId: capture.id,
+        userId: UserToAward,
+        offerdata: customdata.offerdata,
+        status: capture.status,
+        create_time: capture.create_time,
+        update_time: capture.update_time,
+        payerdata: capture.payer
+      });
 
     } catch (error) {
       console.error('Error capturing order or updating user coins:', error);
