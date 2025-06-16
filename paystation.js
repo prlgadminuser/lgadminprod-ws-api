@@ -158,9 +158,9 @@ async function handlePaypalWebhookEvent(event) {
     const capture = event.resource;
     console.log('Payment captured:', capture.id);
 
-    const payment = await PaymentCollection.findOne({ paypalOrderId: capture.supplementary_data?.related_ids?.order_id });
+   // const payment = await PaymentCollection.findOne({ paypalOrderId: capture.supplementary_data?.related_ids?.order_id });
 
-    if (payment) {
+    //if (payment) {
       await userCollection.updateOne(
         { "account.username": payment.userId },
         { $inc: { "currency.coins": FIXED_OFFERS[payment.offerId]?.coins || 0 } }
@@ -171,7 +171,7 @@ async function handlePaypalWebhookEvent(event) {
       console.warn('Payment record not found for capture:', capture.id);
     }
   }
-}
+//}
 
 module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent };
 
