@@ -47,7 +47,7 @@ async function CreatePaymentLink(offerId, userId) {
           currency_code: 'EUR',
           value: offer.price.toFixed(2)
         },
-        custom_id: userId.toString(),
+        custom_id: JSON.stringify({ userId, offerId }),
         description: `Kauf von ${offer.coins} Münzen (${offer.name}) für ${user.account.nickname}`
       }],
       application_context: {
@@ -149,20 +149,21 @@ async function captureOrder(orderId) {
 async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
     console.log('Order approved:', event.resource.id);
-
-        await captureOrder(event.resource.id);
+    await captureOrder(event.resource.id);
     // Optionally capture payment here if you want to auto capture on approval
   }
 
   if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
-    const capture = event.resource;
-    console.log('Payment captured:', capture.id);
+  
+    console.log("payment captured:", event.id)
 
+    const UserToAward = event.resource.custom_id
+    
    // const payment = await PaymentCollection.findOne({ paypalOrderId: capture.supplementary_data?.related_ids?.order_id });
 
     //if (payment) {
       await userCollection.updateOne(
-        { "account.username": payment.userId },
+        { "account.username": UserToAward },
         { $inc: { "currency.coins": FIXED_OFFERS[payment.offerId]?.coins || 0 } }
       );
 
