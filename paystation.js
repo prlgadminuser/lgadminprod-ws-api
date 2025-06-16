@@ -155,11 +155,12 @@ async function handlePaypalWebhookEvent(event) {
 
   if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
 
-    const data = JSON.stringify(event.resource)
+    const data = event.resource
+    const customdata = JSON.parse((data.custom_id));
   
-    console.log(data.custom_id.offerId)
-    const UserToAward = data.custom_id.userId
-    const offerId = data.custom_id.offerId
+    console.log(customdata.offerId)
+    const UserToAward = customdata.userId
+    const offerId = customdata.offerId
 
     const offerdata = FIXED_OFFERS[offerId];
 
