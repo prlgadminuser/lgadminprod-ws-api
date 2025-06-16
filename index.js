@@ -86,9 +86,11 @@ const webhookRawBodyParser = bodyParser.json({
 
 const server = http.createServer(async (req, res) => {
 
+     if (req.url === "/from-paypal-webhook") {
+
         webhookRawBodyParser(req, res, (err) => { });
     
-
+     }
 
      const origin = req.headers.origin;
     await setCommonHeaders(res, origin);

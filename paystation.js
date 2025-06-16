@@ -90,7 +90,7 @@ async function verifyWebhook(req) {
     // 1. Get access token (no caching, simple and clean)
     const basicAuth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
     const tokenRes = await axios.post(
-      'https://api.paypal.com/v1/oauth2/token',
+      'https://api-m.paypal.com/v1/oauth2/token',
       new URLSearchParams({ grant_type: 'client_credentials' }),
       {
         headers: {
@@ -103,7 +103,7 @@ async function verifyWebhook(req) {
 
     // 2. Verify the webhook signature
     const verifyRes = await axios.post(
-      'https://api.paypal.com/v1/notifications/verify-webhook-signature',
+      'https://api-m.paypal.com/v1/notifications/verify-webhook-signature',
       {
         auth_algo: authAlgo,
         cert_url: certUrl,
