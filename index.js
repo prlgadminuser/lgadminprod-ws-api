@@ -76,9 +76,12 @@ async function setCommonHeaders(res, origin) {
 
 const server = http.createServer(async (req, res) => {
 
+    
+
      const origin = req.headers.origin;
     await setCommonHeaders(res, origin);
     try {
+         if (!req.url === "/from-paypal-webhook") {
         const ip = getClientIp(req);
         if (!ip) {
             res.writeHead(429, { 'Content-Type': 'text/plain' });
@@ -97,8 +100,7 @@ const server = http.createServer(async (req, res) => {
             res.writeHead(400, { 'Content-Type': 'text/plain' });
             return res.end("Unauthorized");
         }
-
-
+    }
 
         // Handle preflight OPTIONS requests
         if (req.method === 'OPTIONS') {
