@@ -163,48 +163,43 @@ async function captureOrder(orderId) {
 
 
 async function handlePaypalWebhookEvent(event) {
- if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
-  const orderId = event.resource.id;
+  if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
+    console.log('Order approved:', event.resource.id);
 
-  try {
-    const result = await captureOrder(orderId);
+    try {
+      const captureResult = await captureOrder(event.resource.id);
+      console.log('✅ Order captured successfully:', captureResult.id);
 
-    if (result.status === 'COMPLETED') {
-      console.log("✅ Order captured successfully");
-    } else {
-      console.warn("⚠️ Order capture returned non-COMPLETED status:", result.status);
-    }
-  } catch (err) {
-    console.error("❌ Capture error:", err);
-  }
-}
+      // Extract custom_id from the capture response
+      const customIdStr = captureResult.purchase_units?.[0]?.custom_id;
+      if (!customIdStr) {
+        console.error('Missing custom_id in capture response');
+        return;
+      }
 
-  if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
+      const customdata = JSON.parse(customIdStr);
+      const UserToAward = customdata.userId;
+      const offerId = customdata.offerId;
+      const offerdata = FIXED_OFFERS[offerId];
 
-    console.log("capture completed")
+      if (!offerdata) {
+        console.error('Offer data not found for offerId:', offerId);
+        return;
+      }
 
-    console.log(JSON.parse(event.resource))
-
-    const data = event.resource
-    const customdata = JSON.parse((data.custom_id));
-  
-    const UserToAward = customdata.userId
-    const offerId = customdata.offerId
-
-    const offerdata = FIXED_OFFERS[offerId];
-
-   // const payment = await PaymentCollection.findOne({ paypalOrderId: capture.supplementary_data?.related_ids?.order_id });
-
-    //if (payment) {
+      // Update user coins in DB
       await userCollection.updateOne(
         { "account.username": UserToAward },
         { $inc: { "currency.coins": offerdata.coins || 0 } }
       );
 
-      console.log('User coins updated.');
-    } else {
+      console.log(`User ${UserToAward} coins updated by ${offerdata.coins}.`);
+
+    } catch (error) {
+      console.error('Error capturing order or updating user coins:', error);
     }
   }
+}
 //}
 
 module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent };
