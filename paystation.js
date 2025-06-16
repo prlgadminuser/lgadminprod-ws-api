@@ -100,42 +100,42 @@ async function CreatePaymentLink(offerId, userId) {
     }
 }
 
-
 async function verifyWebhook(req) {
     const transmissionId = req.headers['paypal-transmission-id'];
     const transmissionTime = req.headers['paypal-transmission-time'];
     const certUrl = req.headers['paypal-cert-url'];
     const authAlgo = req.headers['paypal-auth-algo'];
     const transmissionSig = req.headers['paypal-transmission-sig'];
-    const webhookId = PAYPAL_WEBHOOK_ID; // From your ENV.js
 
-    console.log(req.body)
-    // req.rawBody is captured by body-parser's verify option
-    const webhookEventBody = req.rawBody.toString('utf8'); // Keep as string for this function
+    const webhookEventBody = req.rawBody.toString('utf8');
+
+    const headers = {
+        'paypal-transmission-id': transmissionId,
+        'paypal-transmission-time': transmissionTime,
+        'paypal-cert-url': certUrl,
+        'paypal-auth-algo': authAlgo,
+        'paypal-transmission-sig': transmissionSig
+    };
 
     try {
-        // --- FIX: Use the 'validate' utility function ---
-        // This function directly takes the headers, raw body, and webhook ID.
-        // It returns true if valid, throws an error if not.
-        const isValid = await validate(
-            transmissionId,
-            transmissionTime,
-            certUrl,
-            authAlgo,
-            transmissionSig,
-            webhookEventBody, // Pass the RAW body string here
-            webhookId
+        const verificationStatus = await paypal.notification.webhookEvent.verify(
+            headers,
+            webhookEventBody,
+            PAYPAL_WEBHOOK_ID
         );
 
-        // If validate does not throw an error, it's considered valid
-        return isValid; // The validate function itself returns nothing on success, it throws on failure.
-                     // So if we reach here, it's valid.
+        console.log(verificationStatus);
 
+        if (verificationStatus.verification_status === 'SUCCESS') {
+            console.log("Webhook verification succeeded.");
+            return true;
+        } else {
+            console.log("Webhook verification failed.");
+            return false;
+        }
     } catch (error) {
-        // The 'validate' function throws specific errors (e.g., SignatureVerificationError)
-        // if verification fails.
         console.error('Error during webhook signature verification:', error.message);
-        return false; // If any error is caught, the signature is not valid.
+        return false;
     }
 }
 

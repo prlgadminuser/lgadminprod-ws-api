@@ -254,7 +254,8 @@ const server = http.createServer(async (req, res) => {
 
                             await handlePaypalWebhookEvent(req.body);
 
-                            res.status(200).send('OK');
+                             res.writeHead(200, { 'Content-Type': 'text/plain' });
+                            return res.end("Good");
                         } catch (error) {
                             console.error('Error handling PayPal webhook:', error);
                             return res.status(500).send('Internal Server Error');
