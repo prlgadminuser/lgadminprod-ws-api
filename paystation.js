@@ -155,7 +155,7 @@ async function handlePaypalWebhookEvent(event) {
 
   if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
   
-    console.log(event.resource.custom_id)
+    console.log(event.resource.custom_id.offerId)
     const UserToAward = event.resource.custom_id.userId
     const offerId = event.resource.custom_id.offerId
 
