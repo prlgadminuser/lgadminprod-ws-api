@@ -167,11 +167,9 @@ async function handlePaypalWebhookEvent(event) {
     try {
       const captureResult = await captureOrder(event.resource.id);
       console.log('✅ Order captured successfully:', captureResult.id);
-      console.log(captureResult)
-     console.log(JSON.stringify(captureResult))
 
       // Extract custom_id from the capture response
-      const customIdStr = captureResult.purchase_units?.[0]?.custom_id;
+      const customIdStr = captureResult.purchase_units[0].payments.captures[0].custom_id;
       if (!customIdStr) {
         console.error('Missing custom_id in capture response');
         return;
