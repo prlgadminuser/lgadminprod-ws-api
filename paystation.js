@@ -167,7 +167,7 @@ async function handlePaypalWebhookEvent(event) {
 
       console.log('User coins updated.');
     } else {
-    
+    console.log("error", event.resource)
     }
   }
 //}
