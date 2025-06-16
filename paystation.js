@@ -1,11 +1,10 @@
 
-
+const axios = require('axios');
 const paypal = require('@paypal/checkout-server-sdk');
-const { VerifyWebhookSignatureRequest } = require('@paypal/checkout-server-sdk').core;
 const { userCollection, PaymentCollection } = require('./idbconfig');
-const { PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID } = require('./ENV.js'); // Make sure ENV.js exports these
+const { PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID } = require('./ENV.js');
 
-// PayPal client setup
+// -- PayPal Checkout SDK (used for payment link + capture)
 const environment = new paypal.core.SandboxEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
 const client = new paypal.core.PayPalHttpClient(environment);
 
@@ -15,130 +14,123 @@ const FIXED_OFFERS = {
   pro_pack: { name: 'Pro-Paket', price: 20.00, coins: 2500 }
 };
 
-
-
-
 async function CreatePaymentLink(offerId, userId) {
-    try {
-        if (!offerId || !userId) {
-            throw new Error('Angebots-ID und Benutzer-ID sind erforderlich.');
-        }
-
-        const offer = FIXED_OFFERS[offerId];
-        if (!offer) {
-            throw new Error('Angebot nicht gefunden.');
-        }
-
-        console.log("offer found")
-
-        console.log(offer)
-
-
-        const user = await userCollection.findOne(
-            { "account.username": userId },
-            {
-                projection: {
-                    "account.username": 1,
-                    "account.nickname": 1,
-                    "currency.coins": 1
-                }
-            }
-        );
-
-        if (!user) {
-            throw new Error('Benutzer nicht gefunden.');
-        }
-
-        const orderDetails = {
-            intent: 'CAPTURE',
-            purchase_units: [{
-                amount: {
-                    currency_code: 'EUR',
-                    value: offer.price.toFixed(2)
-                },
-                custom_id: userId.toString(),
-                description: `Kauf von ${offer.coins} Münzen (${offer.name}) für ${user.account.nickname}`
-            }],
-            application_context: {
-                return_url: 'http://localhost:8080/payment-success.html',
-                cancel_url: 'http://localhost:8080/payment-cancel.html',
-                shipping_preference: 'NO_SHIPPING'
-            }
-        };
-
-        const request = new paypal.orders.OrdersCreateRequest();
-        request.prefer("return=representation");
-        request.requestBody(orderDetails);
-
-        const response = await client.execute(request);
-        const order = response.result;
-
-        const approveLink = order.links.find(link => link.rel === 'approve');
-        if (!approveLink) {
-            throw new Error("Kein Genehmigungslink gefunden.");
-        }
-
-      /*  await userCollection.insertOne({
-            userId: user._id,
-            paypalOrderId: order.id,
-            amountPaid: offer.price,
-            currency: 'EUR',
-            coinsAwarded: 0,
-            offerId: offer.id,
-            status: 'PENDING',
-            rawPaypalData: order,
-            createdAt: new Date()
-        });
-
-        */
-
-        return { success: true, approveUrl: approveLink.href };
-
-    } catch (error) {
-        console.error('Fehler in CreatePaymentLink:', error.message);
-        return { success: false, error: error.message };
+  try {
+    if (!offerId || !userId) {
+      throw new Error('Angebots-ID und Benutzer-ID sind erforderlich.');
     }
-}
 
-async function verifyWebhook(req) {
-    const transmissionId = req.headers['paypal-transmission-id'];
-    const transmissionTime = req.headers['paypal-transmission-time'];
-    const certUrl = req.headers['paypal-cert-url'];
-    const authAlgo = req.headers['paypal-auth-algo'];
-    const transmissionSig = req.headers['paypal-transmission-sig'];
+    const offer = FIXED_OFFERS[offerId];
+    if (!offer) {
+      throw new Error('Angebot nicht gefunden.');
+    }
 
-    const webhookEventBody = req.rawBody.toString('utf8');
+    const user = await userCollection.findOne(
+      { "account.username": userId },
+      {
+        projection: {
+          "account.username": 1,
+          "account.nickname": 1,
+          "currency.coins": 1
+        }
+      }
+    );
 
-    const headers = {
-        'paypal-transmission-id': transmissionId,
-        'paypal-transmission-time': transmissionTime,
-        'paypal-cert-url': certUrl,
-        'paypal-auth-algo': authAlgo,
-        'paypal-transmission-sig': transmissionSig
+    if (!user) {
+      throw new Error('Benutzer nicht gefunden.');
+    }
+
+    const orderDetails = {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        amount: {
+          currency_code: 'EUR',
+          value: offer.price.toFixed(2)
+        },
+        custom_id: userId.toString(),
+        description: `Kauf von ${offer.coins} Münzen (${offer.name}) für ${user.account.nickname}`
+      }],
+      application_context: {
+        return_url: 'http://localhost:8080/payment-success.html',
+        cancel_url: 'http://localhost:8080/payment-cancel.html',
+        shipping_preference: 'NO_SHIPPING'
+      }
     };
 
-    try {
-        const verificationStatus = await paypal.notification.webhookEvent.verify(
-            headers,
-            webhookEventBody,
-            PAYPAL_WEBHOOK_ID
-        );
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+    request.requestBody(orderDetails);
 
-        console.log(verificationStatus);
+    const response = await client.execute(request);
+    const order = response.result;
 
-        if (verificationStatus.verification_status === 'SUCCESS') {
-            console.log("Webhook verification succeeded.");
-            return true;
-        } else {
-            console.log("Webhook verification failed.");
-            return false;
-        }
-    } catch (error) {
-        console.error('Error during webhook signature verification:', error.message);
-        return false;
+    const approveLink = order.links.find(link => link.rel === 'approve');
+    if (!approveLink) {
+      throw new Error("Kein Genehmigungslink gefunden.");
     }
+
+    return { success: true, approveUrl: approveLink.href };
+
+  } catch (error) {
+    console.error('Fehler in CreatePaymentLink:', error.message);
+    return { success: false, error: error.message };
+  }
 }
 
+// ✅ Updated to use paypal-rest-sdk for webhook verification
+async function verifyWebhook(req) {
+  const transmissionId = req.headers['paypal-transmission-id'];
+  const transmissionTime = req.headers['paypal-transmission-time'];
+  const certUrl = req.headers['paypal-cert-url'];
+  const authAlgo = req.headers['paypal-auth-algo'];
+  const transmissionSig = req.headers['paypal-transmission-sig'];
+  const webhookEventBody = req.rawBody.toString('utf8');
+
+
+  console.log(JSON.stringify(req.body))
+  
+  try {
+    // 1. Get access token (no caching, simple and clean)
+    const basicAuth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
+    const tokenRes = await axios.post(
+      'https://api-m.sandbox.paypal.com/v1/oauth2/token',
+      new URLSearchParams({ grant_type: 'client_credentials' }),
+      {
+        headers: {
+          Authorization: `Basic ${basicAuth}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
+    const accessToken = tokenRes.data.access_token;
+
+    // 2. Verify the webhook signature
+    const verifyRes = await axios.post(
+      'https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature',
+      {
+        auth_algo: authAlgo,
+        cert_url: certUrl,
+        transmission_id: transmissionId,
+        transmission_sig: transmissionSig,
+        transmission_time: transmissionTime,
+        webhook_id: PAYPAL_WEBHOOK_ID,
+        webhook_event: JSON.parse(webhookEventBody)
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const status = verifyRes.data.verification_status;
+    return status === 'SUCCESS';
+  } catch (err) {
+    console.error('Webhook verification failed:', err.message);
+    return false;
+  }
+}
 
 async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
@@ -150,26 +142,12 @@ async function handlePaypalWebhookEvent(event) {
     const capture = event.resource;
     console.log('Payment captured:', capture.id);
 
-    const payment = await PaymentCollection.findOne({ paypalOrderId: capture.supplementary_data.related_ids.order_id });
+    const payment = await PaymentCollection.findOne({ paypalOrderId: capture.supplementary_data?.related_ids?.order_id });
 
     if (payment) {
-    /*  await PaymentCollection.updateOne(
-        { _id: payment._id },
-        {
-          $set: {
-            paypalCaptureId: capture.id,
-            status: 'COMPLETED',
-            coinsAwarded: FIXED_OFFERS[payment.offerId]?.coins || 0,
-            updatedAt: new Date()
-          }
-        }
-      );
-
-      */
-
       await userCollection.updateOne(
         { "account.username": payment.userId },
-        { $inc: { "currency.coins": FIXED_OFFERS[payment.offerId].coins || 0 } }
+        { $inc: { "currency.coins": FIXED_OFFERS[payment.offerId]?.coins || 0 } }
       );
 
       console.log('User coins updated.');
@@ -182,9 +160,8 @@ async function handlePaypalWebhookEvent(event) {
 module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent };
 
 
+// Test runner
 (async () => {
   const test = await CreatePaymentLink("pro_pack", "Liquem");
   console.log(test);
 })();
-
-
