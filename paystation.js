@@ -53,7 +53,9 @@ async function CreatePaymentLink(userId, offerId) {
       application_context: {
         return_url: 'http://localhost:8080/payment-success.html',
         cancel_url: 'http://localhost:8080/payment-cancel.html',
-        shipping_preference: 'NO_SHIPPING'
+        shipping_preference: 'NO_SHIPPING',
+        brand_name: 'Liquem Games',  // optional, appears on PayPal UI
+        user_action: 'PAY_NOW'       // shows "Pay Now" instead of "Continue"
       }
     };
 
@@ -130,14 +132,32 @@ async function verifyWebhook(req) {
 
 async function captureOrder(orderId) {
   const request = new paypal.orders.OrdersCaptureRequest(orderId);
-  request.requestBody({}); // empty body for capture
+  request.requestBody({});
   try {
     const captureResponse = await client.execute(request);
+
+    // Confirm you're getting a capture, not just an order
+    if (captureResponse?.result?.status !== 'COMPLETED') {
+      console.warn('⚠️ Capture response status not COMPLETED:', captureResponse.result.status);
+      console.dir(captureResponse.result, { depth: null });
+    }
+
     return captureResponse.result;
   } catch (error) {
+    console.error("❌ Capture failed:");
+    if (error.statusCode) {
+      console.error("Status Code:", error.statusCode);
+    }
+    if (error.message) {
+      console.error("Message:", error.message);
+    }
+    if (error.response) {
+      console.dir(error.response, { depth: null });
+    }
     throw error;
   }
 }
+
 
 
 async function handlePaypalWebhookEvent(event) {
