@@ -101,27 +101,33 @@ async function CreatePaymentLink(offerId, userId) {
 
 
 async function verifyWebhook(req) {
-  const transmissionId = req.headers['paypal-transmission-id'];
-  const transmissionTime = req.headers['paypal-transmission-time'];
-  const certUrl = req.headers['paypal-cert-url'];
-  const authAlgo = req.headers['paypal-auth-algo'];
-  const transmissionSig = req.headers['paypal-transmission-sig'];
-  const webhookId = PAYPAL_WEBHOOK_ID; // From your PayPal dashboard
-  const webhookEventBody = req.rawBody;
+    const transmissionId = req.headers['paypal-transmission-id'];
+    const transmissionTime = req.headers['paypal-transmission-time'];
+    const certUrl = req.headers['paypal-cert-url'];
+    const authAlgo = req.headers['paypal-auth-algo'];
+    const transmissionSig = req.headers['paypal-transmission-sig'];
+    const webhookId = process.env.PAYPAL_WEBHOOK_ID; // Make sure to get this from process.env
 
-  const verifyReq = new paypal.notifications.VerifyWebhookSignatureRequest();
-  verifyReq.requestBody({
-    auth_algo: authAlgo,
-    cert_url: certUrl,
-    transmission_id: transmissionId,
-    transmission_sig: transmissionSig,
-    transmission_time: transmissionTime,
-    webhook_id: webhookId,
-    webhook_event: JSON.parse(webhookEventBody)
-  });
+    // **CRITICAL FIX:** webhook_event must be the RAW, unparsed body string.
+    // req.rawBody is what you've correctly captured using body-parser's verify option.
+    const webhookEventBody = req.rawBody.toString('utf8'); // Ensure it's a string
 
-  const response = await client.execute(verifyReq);
-  return response.result.verification_status === 'SUCCESS';
+    try {
+        const isValid = await paypal.webhooks.verifySignature({
+            auth_algo: authAlgo,
+            cert_url: certUrl,
+            transmission_id: transmissionId,
+            transmission_sig: transmissionSig,
+            transmission_time: transmissionTime,
+            webhook_id: webhookId,
+            webhook_event: webhookEventBody // Pass the RAW body string here
+        });
+
+      return isValid; // This directly returns true or false
+    } catch (error) {
+        console.error('Error during webhook signature verification:', error);
+        return false; // Return false if any error occurs during verification
+    }
 }
 
 
@@ -151,7 +157,7 @@ async function handlePaypalWebhookEvent(event) {
       );
 
       */
-     
+
       await userCollection.updateOne(
         { "account.username": payment.userId },
         { $inc: { "currency.coins": FIXED_OFFERS[payment.offerId].coins || 0 } }
