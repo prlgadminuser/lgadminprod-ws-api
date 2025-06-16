@@ -1,4 +1,5 @@
 const { battlePassCollection, userCollection, loginRewardsCollection, shopcollection } = require('./../idbconfig');
+const { FIXED_OFFERS } = require('./../paystation');
 const { rarityPercentages } = require('./../boxrarityconfig');
 const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');
@@ -89,6 +90,7 @@ async function getUserInventory(username) {
             serverlist,
             nearestRegion: getServerByCountry(userRow.account.country_code || "Unknown"),
             weaponcatalog: WeaponsToBuy,
+            in_app_purchases: FIXED_OFFERS,
         };
 
         // Return the constructed object
