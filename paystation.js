@@ -107,30 +107,38 @@ async function verifyWebhook(req) {
     const certUrl = req.headers['paypal-cert-url'];
     const authAlgo = req.headers['paypal-auth-algo'];
     const transmissionSig = req.headers['paypal-transmission-sig'];
-    const webhookId = process.env.PAYPAL_WEBHOOK_ID; // Make sure to get this from process.env
+    const webhookId = PAYPAL_WEBHOOK_ID; // Get this from your ENV.js or process.env
 
-    // **CRITICAL FIX:** webhook_event must be the RAW, unparsed body string.
-    // req.rawBody is what you've correctly captured using body-parser's verify option.
+    // req.rawBody is captured by body-parser's verify option
     const webhookEventBody = req.rawBody.toString('utf8'); // Ensure it's a string
 
+    console.log(req.headers)
+
     try {
-        const isValid = await paypal.webhooks.VerifyWebhookSignatureRequest({
-            auth_algo: authAlgo,
-            cert_url: certUrl,
-            transmission_id: transmissionId,
-            transmission_sig: transmissionSig,
-            transmission_time: transmissionTime,
+        const verifyRequest = new VerifyWebhookSignatureRequest(); // Instantiate the request object
+        verifyRequest.headers = { // Set headers directly on the request object
+            'paypal-transmission-id': transmissionId,
+            'paypal-transmission-time': transmissionTime,
+            'paypal-cert-url': certUrl,
+            'paypal-auth-algo': authAlgo,
+            'paypal-transmission-sig': transmissionSig
+        };
+        verifyRequest.requestBody({ // Set the webhook event body (raw string)
             webhook_id: webhookId,
-            webhook_event: webhookEventBody // Pass the RAW body string here
+            webhook_event: JSON.parse(webhookEventBody) // The SDK expects the parsed JSON for webhook_event
         });
 
-      return isValid; // This directly returns true or false
+        // Execute the verification request using the PayPal client
+        const response = await client.execute(verifyRequest);
+
+        // Check the verification status from the response
+        return response.result.verification_status === 'SUCCESS';
+
     } catch (error) {
-        console.error('Error during webhook signature verification:', error);
+        console.error('Error during webhook signature verification:', error.message);
         return false; // Return false if any error occurs during verification
     }
 }
-
 
 async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
