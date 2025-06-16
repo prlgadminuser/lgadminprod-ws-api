@@ -88,7 +88,7 @@ async function verifyWebhook(req) {
 
 
   console.log(JSON.stringify(req.body))
-  
+
   try {
     // 1. Get access token (no caching, simple and clean)
     const basicAuth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
@@ -132,9 +132,25 @@ async function verifyWebhook(req) {
   }
 }
 
+async function captureOrder(orderId) {
+  const request = new paypal.orders.OrdersCaptureRequest(orderId);
+  request.requestBody({}); // empty body for capture
+  try {
+    const captureResponse = await client.execute(request);
+    console.log('Capture response:', captureResponse.result);
+    return captureResponse.result;
+  } catch (error) {
+    console.error('Error capturing order:', error);
+    throw error;
+  }
+}
+
+
 async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
     console.log('Order approved:', event.resource.id);
+
+        await captureOrder(event.resource.id);
     // Optionally capture payment here if you want to auto capture on approval
   }
 
