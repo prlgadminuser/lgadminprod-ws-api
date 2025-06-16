@@ -5,7 +5,8 @@ const { userCollection, PaymentCollection } = require('./idbconfig');
 const { PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID } = require('./ENV.js');
 
 // -- PayPal Checkout SDK (used for payment link + capture)
-const environment = new paypal.core.SandboxEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
+//const environment = new paypal.core.SandboxEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
+const environment = new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
 const client = new paypal.core.PayPalHttpClient(environment);
 
 const FIXED_OFFERS = {
@@ -72,7 +73,6 @@ async function CreatePaymentLink(offerId, userId) {
     return { success: true, approveUrl: approveLink.href };
 
   } catch (error) {
-    console.error('Fehler in CreatePaymentLink:', error.message);
     return { success: false, error: error.message };
   }
 }
@@ -87,13 +87,11 @@ async function verifyWebhook(req) {
   const webhookEventBody = req.rawBody.toString('utf8');
 
 
-  console.log(JSON.stringify(req.body))
-
   try {
     // 1. Get access token (no caching, simple and clean)
     const basicAuth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
     const tokenRes = await axios.post(
-      'https://api-m.sandbox.paypal.com/v1/oauth2/token',
+      'https://api-m.paypal.com/v1/oauth2/token',
       new URLSearchParams({ grant_type: 'client_credentials' }),
       {
         headers: {
@@ -106,7 +104,7 @@ async function verifyWebhook(req) {
 
     // 2. Verify the webhook signature
     const verifyRes = await axios.post(
-      'https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature',
+      'https://api-m.paypal.com/v1/notifications/verify-webhook-signature',
       {
         auth_algo: authAlgo,
         cert_url: certUrl,
@@ -127,7 +125,6 @@ async function verifyWebhook(req) {
     const status = verifyRes.data.verification_status;
     return status === 'SUCCESS';
   } catch (err) {
-    console.error('Webhook verification failed:', err.message);
     return false;
   }
 }
@@ -137,10 +134,8 @@ async function captureOrder(orderId) {
   request.requestBody({}); // empty body for capture
   try {
     const captureResponse = await client.execute(request);
-    console.log('Capture response:', captureResponse.result);
     return captureResponse.result;
   } catch (error) {
-    console.error('Error capturing order:', error);
     throw error;
   }
 }
@@ -158,7 +153,6 @@ async function handlePaypalWebhookEvent(event) {
     const data = event.resource
     const customdata = JSON.parse((data.custom_id));
   
-    console.log(customdata.offerId)
     const UserToAward = customdata.userId
     const offerId = customdata.offerId
 
@@ -174,7 +168,7 @@ async function handlePaypalWebhookEvent(event) {
 
       console.log('User coins updated.');
     } else {
-      console.warn('Payment record not found for capture:', capture.id);
+    
     }
   }
 //}
