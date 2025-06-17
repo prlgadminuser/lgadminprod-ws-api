@@ -9,7 +9,8 @@ const environment = new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SEC
 const client = new paypal.core.PayPalHttpClient(environment);
 
 const FIXED_OFFERS = {
-    "1000_coins_pack": { name: '1000 Coins', price: 1.00, coins: 1000 },
+  //  "1000_coins_pack": { name: '1000 Coins', price: 1.00, rewardtype: "coins", value: 1000 },
+    "net_jumper_pack": { name: 'Net Jumper Bundle', price: 1.99, description: "Net Jumper Bundle for Skilldown (2 items)", rewardtype: "item", value: ["A032", "B023"]},
 };
 
 async function CreatePaymentLink(userId, offerId) {
@@ -43,11 +44,11 @@ async function CreatePaymentLink(userId, offerId) {
       intent: 'CAPTURE',
       purchase_units: [{
         amount: {
-          currency_code: 'EUR',
+          currency_code: 'USD',
           value: offer.price.toFixed(2)
         },
         custom_id: JSON.stringify({ userId, offerId }),
-        description: `Kauf von ${offer.coins} Münzen (${offer.name}) für ${user.account.nickname}`
+        description: offer.description
       }],
       application_context: {
         return_url: 'http://localhost:8080/payment-success.html',
@@ -179,14 +180,27 @@ async function handlePaypalWebhookEvent(event) {
         return;
       }
 
-      // Update user coins in DB
+
        await session.withTransaction(async () => {
-        // 1. Update user coins
-        const userUpdate = await userCollection.updateOne(
+
+        let userUpdate
+
+        if (offerdata.rewardtype !== "item") {
+        userUpdate = await userCollection.updateOne(
           { "account.username": UserToAward },
-          { $inc: { "currency.coins": offerdata.coins || 0 } },
+          { $inc: { [`currency.${currency}`]: offerdata.value } },
           { session }
         );
+        } else {
+          
+           userUpdate = await userCollection.updateOne(
+          { "account.username": UserToAward },
+          { $addToSet: { "inventory.items": { $each: offerdata.value } } },
+          { session }
+        );
+        
+      }
+
         if (userUpdate.matchedCount === 0) throw new Error('User not found.');
 
         // 2. Insert payment record
