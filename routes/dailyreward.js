@@ -4,7 +4,7 @@ const { userCollection } = require('./../idbconfig');
 const rewardConfig = {
     rewardsPerClaim: 2, // number of rewards to give per daily claim
     rewardsPool: [
-        { type: "coins", min: 20, max: 30, chance: 90 },
+        { type: "coins", min: 5, max: 10, chance: 90 },
         { type: "boxes", min: 1, max: 2, chance: 8 },
         { type: "item", value: ["A001", "A002"], chance: 2 },
         // { type: "item", value: "Lucky Token", weight: 5 }

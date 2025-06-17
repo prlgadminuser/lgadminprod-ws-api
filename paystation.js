@@ -9,7 +9,7 @@ const environment = new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SEC
 const client = new paypal.core.PayPalHttpClient(environment);
 
 const FIXED_OFFERS = {
-  "1000_coins_pack": { name: '1000 Coins', price: 1.00, description: "1000 Coins for Skilldown", rewardtype: "coins", value: 1000 },
+  "1000_coins_pack": { name: '1000 Coins', price: 1.99, description: "1000 Coins for Skilldown", rewardtype: "coins", value: 1000 },
    // "net_jumper_pack": { name: 'Net Jumper Bundle', price: 1.99, description: "Net Jumper Bundle for Skilldown (2 items)", rewardtype: "item", value: ["A032", "B023"]},
 };
 
@@ -67,8 +67,8 @@ async function CreatePaymentLink(userId, offerId) {
         description: offer.description
       }],
       application_context: {
-        return_url: 'http://localhost:8080/payment-success.html',
-        cancel_url: 'http://localhost:8080/payment-cancel.html',
+        return_url: 'https://skilldown.netlify.app',
+        cancel_url: 'https://skilldown.netlify.app',
         shipping_preference: 'NO_SHIPPING',
         brand_name: 'Liquem Games',  // optional, appears on PayPal UI
         user_action: 'PAY_NOW'       // shows "Pay Now" instead of "Continue"
@@ -188,8 +188,7 @@ async function handlePaypalWebhookEvent(event) {
     const offerdata = FIXED_OFFERS[offerId];
 
     if (!offerdata) {
-      console.warn('Unknown offer ID in webhook:', offerId);
-      return;
+         throw new Error('offerdata not valid');
     }
 
     try {
