@@ -9,8 +9,8 @@ const environment = new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SEC
 const client = new paypal.core.PayPalHttpClient(environment);
 
 const FIXED_OFFERS = {
-  //  "1000_coins_pack": { name: '1000 Coins', price: 1.00, rewardtype: "coins", value: 1000 },
-    "net_jumper_pack": { name: 'Net Jumper Bundle', price: 1.99, description: "Net Jumper Bundle for Skilldown (2 items)", rewardtype: "item", value: ["A032", "B023"]},
+  "1000_coins_pack": { name: '1000 Coins', price: 1.00, description: "1000 Coins for Skilldown", rewardtype: "coins", value: 1000 },
+   // "net_jumper_pack": { name: 'Net Jumper Bundle', price: 1.99, description: "Net Jumper Bundle for Skilldown (2 items)", rewardtype: "item", value: ["A032", "B023"]},
 };
 
 async function CreatePaymentLink(userId, offerId) {
@@ -25,13 +25,29 @@ async function CreatePaymentLink(userId, offerId) {
       throw new Error('Angebot nicht gefunden.');
     }
 
+
+     if (offer.rewardtype === "item") {
+       const ItemsOwned = await userCollection.findOne(
+      {
+        "account.username": username,
+        "inventory.items": { $in: offer.value },
+      },
+      {
+        hint: "account.username_1_inventory.items_1",  // optional
+      }
+    );
+      if (ItemsOwned) throw new Error('You already own this offer');
+  }
+
+    
+
+
     const user = await userCollection.findOne(
       { "account.username": userId },
       {
         projection: {
           "account.username": 1,
           "account.nickname": 1,
-          "currency.coins": 1
         }
       }
     );
@@ -161,49 +177,48 @@ async function captureOrder(orderId) {
 
 async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
-
-
     const session = userCollection.client.startSession();
 
+    const captureResult = await captureOrder(event.resource.id);
+    const capture = captureResult.purchase_units[0].payments.captures[0];
+    const customIdStr = capture.custom_id;
+    const customdata = JSON.parse(customIdStr);
+    const UserToAward = customdata.userId;
+    const offerId = customdata.offerId;
+    const offerdata = FIXED_OFFERS[offerId];
+
+    if (!offerdata) {
+      console.warn('Unknown offer ID in webhook:', offerId);
+      return;
+    }
+
     try {
-      const captureResult = await captureOrder(event.resource.id);
-      // Extract custom_id from the capture response
-       const capture = captureResult.purchase_units[0].payments.captures[0];
-      const customIdStr = captureResult.purchase_units[0].payments.captures[0].custom_id;
-
-      const customdata = JSON.parse(customIdStr);
-      const UserToAward = customdata.userId;
-      const offerId = customdata.offerId;
-      const offerdata = FIXED_OFFERS[offerId];
-
-      if (!offerdata) {
-        return;
-      }
-
-
-       await session.withTransaction(async () => {
-
-        let userUpdate
+      await session.withTransaction(async () => {
+        let userUpdate;
 
         if (offerdata.rewardtype !== "item") {
-        userUpdate = await userCollection.updateOne(
-          { "account.username": UserToAward },
-          { $inc: { [`currency.${currency}`]: offerdata.value } },
-          { session }
-        );
+          userUpdate = await userCollection.updateOne(
+            { "account.username": UserToAward },
+            { $inc: { [`currency.${offerdata.rewardtype}`]: offerdata.value } },
+            { session }
+          );
         } else {
-          
-           userUpdate = await userCollection.updateOne(
-          { "account.username": UserToAward },
-          { $addToSet: { "inventory.items": { $each: offerdata.value } } },
-          { session }
-        );
-        
-      }
+          userUpdate = await userCollection.updateOne(
+            {
+              "account.username": UserToAward,
+              "inventory.items": { $in: offerdata.value }
+            },
+            {
+              $addToSet: { "inventory.items": { $each: offerdata.value } }
+            },
+            { session }
+          );
 
-        if (userUpdate.matchedCount === 0) throw new Error('User not found.');
+          if (userUpdate.modifiedCount === 0) {
+            throw new Error('User already owns one or more items in the offer.');
+          }
+        }
 
-        // 2. Insert payment record
         await PaymentCollection.insertOne({
           _id: event.resource.id,
           paypalCaptureId: capture.id,
@@ -214,13 +229,27 @@ async function handlePaypalWebhookEvent(event) {
           update_time: capture.update_time,
           payerdata: captureResult.payer || null
         }, { session });
+
       });
 
     } catch (error) {
-      console.error('Error capturing order or updating user coins:', error);
+      // ⚠️ Attempt refund if transaction failed but capture happened
+      try {
+        const refundRequest = new paypal.payments.CapturesRefundRequest(capture.id);
+        refundRequest.requestBody({});
+
+        const refundResponse = await client.execute(refundRequest);
+        console.log(`Refund successful for capture ID ${capture.id}:`, refundResponse.result);
+      } catch (refundError) {
+        console.error('Refund failed:', refundError.message);
+        // Optional: save refundError info in DB or alert admins
+      }
+    } finally {
+      await session.endSession();
     }
   }
 }
+
 //}
 
 module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent, FIXED_OFFERS };
