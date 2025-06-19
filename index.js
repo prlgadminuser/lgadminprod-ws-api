@@ -252,21 +252,21 @@ const server = http.createServer(async (req, res) => {
                          
                             const isValid = await verifyWebhook(req);
                             if (!isValid) {
-                                console.warn('Invalid PayPal webhook signature.');
-                                return res.status(400).send('Invalid signature');
+                                 res.writeHead(500, { 'Content-Type': 'text/plain' });
+                                 return res.end("Not valid webhook");
                             }
 
                             await handlePaypalWebhookEvent(req.body);
 
                              res.writeHead(200, { 'Content-Type': 'text/plain' });
-                            return res.end("Good");
+                            return res.end("success");
                         } catch (error) {
-                            console.error('Error handling PayPal webhook:', error);
-                            return res.status(500).send('Internal Server Error');
+                            res.writeHead(500, { 'Content-Type': 'text/plain' });
+                            return res.end("Not valid webhook");
                         }
 
                     default:
-                        res.writeHead(404, { 'Content-Type': 'text/plain' });
+                        res.writeHead(500, { 'Content-Type': 'text/plain' });
                         return res.end("Error: Not Found");
                 }
 
