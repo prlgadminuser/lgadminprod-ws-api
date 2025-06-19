@@ -29,7 +29,7 @@ async function CreatePaymentLink(userId, offerId) {
      if (offer.rewardtype === "item") {
        const ItemsOwned = await userCollection.findOne(
       {
-        "account.username": username,
+        "account.username": userId,
         "inventory.items": { $in: offer.value },
       },
       {
@@ -146,20 +146,34 @@ async function verifyWebhook(req) {
   }
 }
 
-async function captureOrder(orderId) {
+
+ async function captureOrder(orderId) {
   const request = new paypal.orders.OrdersCaptureRequest(orderId);
   request.requestBody({});
+
   try {
     const captureResponse = await client.execute(request);
+    const result = captureResponse.result;
 
-    // Confirm you're getting a capture, not just an order
-    if (captureResponse?.result?.status !== 'COMPLETED') {
+    if (result.status !== 'COMPLETED') {
+      const captureId = result?.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+      if (captureId) {
+        try {
+          const refundRequest = new paypal.payments.CapturesRefundRequest(captureId);
+          refundRequest.requestBody({});
+          const refundResponse = await client.execute(refundRequest);
+        } catch (refundError) {
+          console.error(`❌ Refund failed for incomplete capture ${captureId}:`, refundError.message);
+        }
+      }
 
+      throw new Error(`Capture failed with status: ${result.status}`);
     }
 
-    return captureResponse.result;
-  } catch (error) {
+    return result;
 
+  } catch (error) {
+    console.error("❌ captureOrder error:");
     if (error.statusCode) {
       console.error("Status Code:", error.statusCode);
     }
@@ -172,6 +186,7 @@ async function captureOrder(orderId) {
     throw error;
   }
 }
+
 
 
 
@@ -249,10 +264,6 @@ async function handlePaypalWebhookEvent(event) {
   }
 }
 
-//}
 
 module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent, FIXED_OFFERS };
-
-
-// Test runner
 
