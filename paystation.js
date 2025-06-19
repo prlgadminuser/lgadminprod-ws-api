@@ -41,8 +41,8 @@ async function CreatePaymentLink(userId, offerId) {
         description: offer.description
       }],
       application_context: {
-      //  return_url: 'https://skilldown.netlify.app',
-       // cancel_url: 'https://skilldown.netlify.app',
+        return_url: 'https://skilldown.netlify.app',
+        cancel_url: 'https://skilldown.netlify.app',
         shipping_preference: 'NO_SHIPPING',
         brand_name: 'Liquem Games',
         user_action: 'PAY_NOW'
