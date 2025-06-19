@@ -1,77 +1,51 @@
+// Updated full code with reconciliation job and separated user reward logic
 
 const axios = require('axios');
 const paypal = require('@paypal/checkout-server-sdk');
 const { userCollection, PaymentCollection } = require('./idbconfig');
 const { PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID } = require('./ENV.js');
 
-
 const environment = new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
 const client = new paypal.core.PayPalHttpClient(environment);
 
 const FIXED_OFFERS = {
   "1000_coins_pack": { name: '1000 Coins', price: 1.99, description: "1000 Coins for Skilldown", rewardtype: "coins", value: 1000 },
-   // "net_jumper_pack": { name: 'Net Jumper Bundle', price: 1.99, description: "Net Jumper Bundle for Skilldown (2 items)", rewardtype: "item", value: ["A032", "B023"]},
 };
+
+
+
 
 async function CreatePaymentLink(userId, offerId) {
   try {
-    if (!offerId || !userId) {
-      throw new Error('Angebots-ID und Benutzer-ID sind erforderlich.');
-    }
+    if (!offerId || !userId) throw new Error('Angebots-ID und Benutzer-ID sind erforderlich.');
 
     const offer = FIXED_OFFERS[offerId];
+    if (!offer) throw new Error('Angebot nicht gefunden.');
 
-    if (!offer) {
-      throw new Error('Angebot nicht gefunden.');
-    }
-
-
-     if (offer.rewardtype === "item") {
-       const ItemsOwned = await userCollection.findOne(
-      {
+    if (offer.rewardtype === "item") {
+      const ItemsOwned = await userCollection.findOne({
         "account.username": userId,
         "inventory.items": { $in: offer.value },
-      },
-      {
-        hint: "account.username_1_inventory.items_1",  // optional
-      }
-    );
+      });
       if (ItemsOwned) throw new Error('You already own this offer');
-  }
-
-    
-
-
-    const user = await userCollection.findOne(
-      { "account.username": userId },
-      {
-        projection: {
-          "account.username": 1,
-          "account.nickname": 1,
-        }
-      }
-    );
-
-    if (!user) {
-      throw new Error('Benutzer nicht gefunden.');
     }
+
+    const user = await userCollection.findOne({ "account.username": userId });
+    if (!user) throw new Error('Benutzer nicht gefunden.');
 
     const orderDetails = {
       intent: 'CAPTURE',
       purchase_units: [{
-        amount: {
-          currency_code: 'USD',
-          value: offer.price.toFixed(2)
-        },
+        amount: { currency_code: 'USD', value: offer.price.toFixed(2) },
         custom_id: JSON.stringify({ userId, offerId }),
         description: offer.description
       }],
       application_context: {
-        return_url: 'https://skilldown.netlify.app',
-        cancel_url: 'https://skilldown.netlify.app',
+      //  return_url: 'https://skilldown.netlify.app',
+       // cancel_url: 'https://skilldown.netlify.app',
         shipping_preference: 'NO_SHIPPING',
-        brand_name: 'Liquem Games',  // optional, appears on PayPal UI
-        user_action: 'PAY_NOW'       // shows "Pay Now" instead of "Continue"
+        brand_name: 'Liquem Games',
+        user_action: 'PAY_NOW'
       }
     };
 
@@ -81,11 +55,8 @@ async function CreatePaymentLink(userId, offerId) {
 
     const response = await client.execute(request);
     const order = response.result;
-
     const approveLink = order.links.find(link => link.rel === 'approve');
-    if (!approveLink) {
-      throw new Error("Kein Genehmigungslink gefunden.");
-    }
+    if (!approveLink) throw new Error("Kein Genehmigungslink gefunden.");
 
     return { success: true, approveUrl: approveLink.href };
 
@@ -94,169 +65,113 @@ async function CreatePaymentLink(userId, offerId) {
   }
 }
 
-// ✅ Updated to use paypal-rest-sdk for webhook verification
 async function verifyWebhook(req) {
-  const transmissionId = req.headers['paypal-transmission-id'];
-  const transmissionTime = req.headers['paypal-transmission-time'];
-  const certUrl = req.headers['paypal-cert-url'];
-  const authAlgo = req.headers['paypal-auth-algo'];
-  const transmissionSig = req.headers['paypal-transmission-sig'];
-  const webhookEventBody = req.rawBody.toString('utf8');
-
-
   try {
-    // 1. Get access token (no caching, simple and clean)
-    const basicAuth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64');
+    const headers = req.headers;
+    const webhookEventBody = req.rawBody.toString('utf8');
+
     const tokenRes = await axios.post(
       'https://api-m.paypal.com/v1/oauth2/token',
       new URLSearchParams({ grant_type: 'client_credentials' }),
       {
         headers: {
-          Authorization: `Basic ${basicAuth}`,
+          Authorization: `Basic ${Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64')}`,
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }
     );
-    const accessToken = tokenRes.data.access_token;
 
-    // 2. Verify the webhook signature
     const verifyRes = await axios.post(
       'https://api-m.paypal.com/v1/notifications/verify-webhook-signature',
       {
-        auth_algo: authAlgo,
-        cert_url: certUrl,
-        transmission_id: transmissionId,
-        transmission_sig: transmissionSig,
-        transmission_time: transmissionTime,
+        auth_algo: headers['paypal-auth-algo'],
+        cert_url: headers['paypal-cert-url'],
+        transmission_id: headers['paypal-transmission-id'],
+        transmission_sig: headers['paypal-transmission-sig'],
+        transmission_time: headers['paypal-transmission-time'],
         webhook_id: PAYPAL_WEBHOOK_ID,
         webhook_event: JSON.parse(webhookEventBody)
       },
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${tokenRes.data.access_token}`,
           'Content-Type': 'application/json'
         }
       }
     );
 
-    const status = verifyRes.data.verification_status;
-    return status === 'SUCCESS';
+    return verifyRes.data.verification_status === 'SUCCESS';
   } catch (err) {
     return false;
   }
 }
 
+async function awardUser(userId, offerdata, capture, session) {
+  // Handle item rewards
+  if (offerdata.rewardtype === "item") {
+    // Step 1: Check if user already owns any item in the offer
+    const userHasItem = await userCollection.findOne(
+      {
+        "account.username": userId,
+        "inventory.items": { $in: offerdata.value },
+      },
+      { session }
+    );
 
- async function captureOrder(orderId) {
-  const request = new paypal.orders.OrdersCaptureRequest(orderId);
-  request.requestBody({});
-
-  try {
-    const captureResponse = await client.execute(request);
-    const result = captureResponse.result;
-
-    if (result.status !== 'COMPLETED') {
-      const captureId = result?.purchase_units?.[0]?.payments?.captures?.[0]?.id;
-      if (captureId) {
-        try {
-          const refundRequest = new paypal.payments.CapturesRefundRequest(captureId);
-          refundRequest.requestBody({});
-          const refundResponse = await client.execute(refundRequest);
-        } catch (refundError) {
-          console.error(`❌ Refund failed for incomplete capture ${captureId}:`, refundError.message);
-        }
-      }
-
-      throw new Error(`Capture failed with status: ${result.status}`);
+    if (userHasItem) {
+      throw new Error('User already owns one or more items in the offer.');
     }
 
-    return result;
+    // Step 2: Grant the items
+    await userCollection.updateOne(
+      { "account.username": userId },
+      { $addToSet: { "inventory.items": { $each: offerdata.value } } },
+      { session }
+    );
 
-  } catch (error) {
-    console.error("❌ captureOrder error:");
-    if (error.statusCode) {
-      console.error("Status Code:", error.statusCode);
-    }
-    if (error.message) {
-      console.error("Message:", error.message);
-    }
-    if (error.response) {
-      console.dir(error.response, { depth: null });
-    }
-    throw error;
+  } else {
+    // Handle currency rewards
+    await userCollection.updateOne(
+      { "account.username": userId },
+      { $inc: { [`currency.${offerdata.rewardtype}`]: offerdata.value } },
+      { session }
+    );
   }
+
+  // Log the payment in PaymentCollection
+  await PaymentCollection.insertOne(
+    {
+      _id: capture.id,
+      paypalCaptureId: capture.id,
+      userId,
+      offerdata,
+      status: capture.status,
+      create_time: capture.create_time,
+      update_time: capture.update_time,
+      payerdata: capture.payer || null
+    },
+    { session }
+  );
 }
-
-
-
 
 async function handlePaypalWebhookEvent(event) {
   if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
     const session = userCollection.client.startSession();
-
-    const captureResult = await captureOrder(event.resource.id);
-    const capture = captureResult.purchase_units[0].payments.captures[0];
-    const customIdStr = capture.custom_id;
-    const customdata = JSON.parse(customIdStr);
-    const UserToAward = customdata.userId;
-    const offerId = customdata.offerId;
-    const offerdata = FIXED_OFFERS[offerId];
-
-    if (!offerdata) {
-         throw new Error('offerdata not valid');
-    }
-
     try {
-      await session.withTransaction(async () => {
-        let userUpdate;
+      const captureResult = await captureOrder(event.resource.id);
+      const capture = captureResult.purchase_units[0].payments.captures[0];
+      const { userId, offerId } = JSON.parse(capture.custom_id);
+      const offerdata = FIXED_OFFERS[offerId];
+      if (!offerdata) throw new Error('Invalid offer ID');
 
-        if (offerdata.rewardtype !== "item") {
-          userUpdate = await userCollection.updateOne(
-            { "account.username": UserToAward },
-            { $inc: { [`currency.${offerdata.rewardtype}`]: offerdata.value } },
-            { session }
-          );
-        } else {
-          userUpdate = await userCollection.updateOne(
-            {
-              "account.username": UserToAward,
-              "inventory.items": { $in: offerdata.value }
-            },
-            {
-              $addToSet: { "inventory.items": { $each: offerdata.value } }
-            },
-            { session }
-          );
-
-          if (userUpdate.modifiedCount === 0) {
-            throw new Error('User already owns one or more items in the offer.');
-          }
-        }
-
-        await PaymentCollection.insertOne({
-          _id: event.resource.id,
-          paypalCaptureId: capture.id,
-          userId: UserToAward,
-          offerdata,
-          status: capture.status,
-          create_time: capture.create_time,
-          update_time: capture.update_time,
-          payerdata: captureResult.payer || null
-        }, { session });
-
-      });
-
-    } catch (error) {
-      // ⚠️ Attempt refund if transaction failed but capture happened
+      await session.withTransaction(() => awardUser(userId, offerdata, capture, session));
+    } catch (err) {
       try {
-        const refundRequest = new paypal.payments.CapturesRefundRequest(capture.id);
-        refundRequest.requestBody({});
-
-        const refundResponse = await client.execute(refundRequest);
-        console.log(`Refund successful for capture ID ${capture.id}:`, refundResponse.result);
-      } catch (refundError) {
-        console.error('Refund failed:', refundError.message);
-        // Optional: save refundError info in DB or alert admins
+        const refundReq = new paypal.payments.CapturesRefundRequest(capture.id);
+        refundReq.requestBody({});
+        await client.execute(refundReq);
+      } catch (refundErr) {
+        console.error('Refund failed:', refundErr.message);
       }
     } finally {
       await session.endSession();
@@ -264,6 +179,65 @@ async function handlePaypalWebhookEvent(event) {
   }
 }
 
+async function captureOrder(orderId) {
+  const request = new paypal.orders.OrdersCaptureRequest(orderId);
+  request.requestBody({});
+  const response = await client.execute(request);
+  if (response.result.status !== 'COMPLETED') throw new Error('Capture not completed');
+  return response.result;
+}
 
-module.exports = { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent, FIXED_OFFERS };
+async function reconcileMissedPayments() {
+  const token = await axios.post(
+    'https://api-m.paypal.com/v1/oauth2/token',
+    new URLSearchParams({ grant_type: 'client_credentials' }),
+    {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }
+  );
 
+  const startDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+  const txns = await axios.get(
+    `https://api-m.paypal.com/v1/reporting/transactions?start_date=${startDate}&transaction_status=S&fields=all&page_size=100`,
+    { headers: { Authorization: `Bearer ${token.data.access_token}` } }
+  );
+
+  for (const txn of txns.data.transaction_details || []) {
+    const captureId = txn.transaction_info.transaction_id;
+    if (await PaymentCollection.findOne({ paypalCaptureId: captureId })) continue;
+
+    try {
+      const captureDetails = await client.execute(new paypal.payments.CapturesGetRequest(captureId));
+      const capture = captureDetails.result;
+      const { userId, offerId } = JSON.parse(capture.custom_id || '{}');
+      const offerdata = FIXED_OFFERS[offerId];
+      if (!userId || !offerdata) continue;
+
+      const session = userCollection.client.startSession();
+      try {
+        await session.withTransaction(() => awardUser(userId, offerdata, capture, session));
+      } finally {
+        await session.endSession();
+      }
+    } catch (err) {
+      console.error(`Failed to reconcile capture ${captureId}:`, err.message);
+    }
+  }
+}
+
+
+setInterval(() => {
+  reconcileMissedPayments().catch(console.error);
+}, 3600000);
+
+
+module.exports = {
+  CreatePaymentLink,
+  verifyWebhook,
+  handlePaypalWebhookEvent,
+  reconcileMissedPayments,
+  FIXED_OFFERS
+};
