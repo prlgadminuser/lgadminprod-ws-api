@@ -229,10 +229,6 @@ async function reconcileMissedPayments() {
 }
 
 
-setInterval(() => {
-  reconcileMissedPayments().catch(console.error);
-}, 3600000);
-
 
 module.exports = {
   CreatePaymentLink,
