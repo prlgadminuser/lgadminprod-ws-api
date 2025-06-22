@@ -24,16 +24,17 @@ async function buyItem(username, offerKey, owneditems) {
       : [selectedOffer.itemId];
 
 
-      const user = await userCollection.findOne(
+         const user = await userCollection.findOne(
       {
         "account.username": username,
         "inventory.items": { $in: itemIds },
       },
       {
         hint: "account.username_1_inventory.items_1",
-        projection: { _id: 0 }  // optional
+        projection: { "account.username": 1, _id: 0 }  // optional
       }
     );
+
 
 
 
