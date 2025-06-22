@@ -60,7 +60,7 @@ async function getUserProfile(usernamed, selfusername) {
     let displayString = null;
 
     if (joined_date_displaymode === 2) {
-      const joinedTimestamp = userRow.account.created_at.getTime();
+      const joinedTimestamp = userRow.account.created_at
       const currentTime = new Date().getTime();
       const timeSinceJoined = currentTime - joinedTimestamp;
       const daysSinceJoined = Math.floor(timeSinceJoined / (1000 * 60 * 60 * 24));
@@ -75,7 +75,7 @@ async function getUserProfile(usernamed, selfusername) {
       }
 
     } else if (joined_date_displaymode === 1) {
-      const joinedTimestamp = userRow.account.created_at.getTime();
+      const joinedTimestamp = userRow.account.created_at
       const currentTime = new Date().getTime();
       const timeSinceJoined = currentTime - joinedTimestamp;
       const daysSinceJoined = Math.floor(timeSinceJoined / (1000 * 60 * 60 * 24));
@@ -105,7 +105,6 @@ async function getUserProfile(usernamed, selfusername) {
     ].join(":");
 
   } catch (error) {
-  console.log(error)
     throw new Error("An error occurred while fetching user profile");
   }
 }
