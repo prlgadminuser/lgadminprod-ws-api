@@ -105,6 +105,7 @@ async function getUserProfile(usernamed, selfusername) {
     ].join(":");
 
   } catch (error) {
+  console.log(error)
     throw new Error("An error occurred while fetching user profile");
   }
 }
