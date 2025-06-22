@@ -10,6 +10,7 @@ const updateHighscores = async () => {
     let highscores
     highscores = await userCollection
       .find({}, { projection: { _id: 0, n: "$account.nickname", u: "$account.username", s: "$stats.sp" } })
+       .sort({ "stats.sp": -1 }) 
       .hint("highscoresIndex")
       .limit(limit)
       .toArray()
