@@ -1,6 +1,6 @@
 const { userCollection, ProfileViewsCollection } = require('./../idbconfig');
 
-const send_joined_date = false;
+const joined_date_displaymode = 1;
 const count_profile_views = false;
 
 async function getUserProfile(usernamed, selfusername) {
@@ -58,16 +58,14 @@ async function getUserProfile(usernamed, selfusername) {
   
 
     let displayString = null;
-    // Calculate and format the join date if `send_joined_date` is enabled
-    if (send_joined_date) {
+
+    if (joined_date_displaymode === "2") {
       const joinedTimestamp = userRow.account.created_at.getTime();
       const currentTime = new Date().getTime();
       const timeSinceJoined = currentTime - joinedTimestamp;
-
       const daysSinceJoined = Math.floor(timeSinceJoined / (1000 * 60 * 60 * 24));
       const monthsSinceJoined = Math.floor(daysSinceJoined / 30);
       const yearsSinceJoined = Math.floor(monthsSinceJoined / 12);
-
       if (yearsSinceJoined > 0) {
         displayString = `${yearsSinceJoined} year${yearsSinceJoined > 1 ? "s" : ""}`;
       } else if (monthsSinceJoined > 0) {
@@ -75,7 +73,15 @@ async function getUserProfile(usernamed, selfusername) {
       } else {
         displayString = `${daysSinceJoined} day${daysSinceJoined > 1 ? "s" : ""}`;
       }
+      
+    } else if (joined_date_displaymode === "1") {
+      const joinedTimestamp = userRow.account.created_at.getTime();
+      const currentTime = new Date().getTime();
+      const timeSinceJoined = currentTime - joinedTimestamp;
+      const daysSinceJoined = Math.floor(timeSinceJoined / (1000 * 60 * 60 * 24));
+      displayString = daysSinceJoined 
     }
+
 
     // Return the user profile data as a string joined with `:`
     return [
