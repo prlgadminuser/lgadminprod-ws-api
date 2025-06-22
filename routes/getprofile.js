@@ -59,7 +59,7 @@ async function getUserProfile(usernamed, selfusername) {
 
     let displayString = null;
 
-    if (joined_date_displaymode === "2") {
+    if (joined_date_displaymode = 2) {
       const joinedTimestamp = userRow.account.created_at.getTime();
       const currentTime = new Date().getTime();
       const timeSinceJoined = currentTime - joinedTimestamp;
@@ -73,8 +73,8 @@ async function getUserProfile(usernamed, selfusername) {
       } else {
         displayString = `${daysSinceJoined} day${daysSinceJoined > 1 ? "s" : ""}`;
       }
-      
-    } else if (joined_date_displaymode === "1") {
+
+    } else if (joined_date_displaymode = 1) {
       const joinedTimestamp = userRow.account.created_at.getTime();
       const currentTime = new Date().getTime();
       const timeSinceJoined = currentTime - joinedTimestamp;
