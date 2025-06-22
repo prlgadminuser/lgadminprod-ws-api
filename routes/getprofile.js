@@ -79,7 +79,7 @@ async function getUserProfile(usernamed, selfusername) {
       const currentTime = new Date().getTime();
       const timeSinceJoined = currentTime - joinedTimestamp;
       const daysSinceJoined = Math.floor(timeSinceJoined / (1000 * 60 * 60 * 24));
-      displayString = daysSinceJoined 
+      displayString = daysSinceJoined === 0 ? "0" : daysSinceJoined
     }
 
 
