@@ -33,6 +33,10 @@ async function buyRarityBox(username, owned_items) {
             }
         }
 
+        if (rewardStack.items.length === 0) {
+            delete rewardStack.items;
+        }
+
         await updateUserFields(username, rewardStack);
 
         return {

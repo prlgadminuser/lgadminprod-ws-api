@@ -14,13 +14,14 @@ function UpdateMaintenance(change, msg) {
     }
   }
 
+const RealMoneyPurchasesEnabled = false
 
 const jwt = require("jsonwebtoken");
 const Limiter = require("limiter").RateLimiter;
 const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require('rate-limiter-flexible');
-module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers, maintenanceMode, UpdateMaintenance };
+module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers, maintenanceMode, UpdateMaintenance, RealMoneyPurchasesEnabled };
 const { startMongoDB, shopcollection, userCollection } = require("./idbconfig");
 var sanitize = require('mongo-sanitize');
 const WebSocket = require("ws");
@@ -462,19 +463,19 @@ async function handleMessage(ws, message, playerVerified) {
                     response = await sendMessage(playerVerified.nickname, data.msg);
                   //  CompressAndSend(ws, "sendchatmsg", response)
                     break;
-    
 
-            // payments via paypal
 
-            
             case "get-paystation":
-                response = await (async () => {
-                    return await CreatePaymentLink(playerVerified.playerId, data.packid);
-                })();
 
-                CompressAndSend(ws, "get-paystation", response)
+                if (RealMoneyPurchasesEnabled) {
+                    response = await (async () => {
+                        return await CreatePaymentLink(playerVerified.playerId, data.packid);
+                    })();
+
+                    CompressAndSend(ws, "get-paystation", response)
+
+                }
                 break;
-
 
 
 

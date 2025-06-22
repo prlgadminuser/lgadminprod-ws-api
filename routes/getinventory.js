@@ -3,6 +3,8 @@ const { FIXED_OFFERS } = require('./../paystation');
 const { rarityPercentages } = require('./../boxrarityconfig');
 const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');
+const { RealMoneyPurchasesEnabled } = require('./../index');
+
 
 async function getUserInventory(username) {
     try {
@@ -90,7 +92,7 @@ async function getUserInventory(username) {
             serverlist,
             nearestRegion: getServerByCountry(userRow.account.country_code || "Unknown"),
             weaponcatalog: WeaponsToBuy,
-            in_app_purchases: FIXED_OFFERS,
+            in_app_purchases: RealMoneyPurchasesEnabled ? FIXED_OFFERS : "disabled" ,
         };
 
         // Return the constructed object

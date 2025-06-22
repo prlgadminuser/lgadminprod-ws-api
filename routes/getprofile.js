@@ -55,7 +55,6 @@ async function getUserProfile(usernamed, selfusername) {
       }
     }
 
-  
 
     let displayString = null;
 
