@@ -1,110 +1,91 @@
-
 const { userCollection, shopcollection, userInventoryCollection, client } = require('./../idbconfig');
 
 async function buyItem(username, offerKey, owneditems) {
+  const session = client.startSession();
   try {
     // Fetch shop data and the selected offer using offerKey
     const shopData = await shopcollection.findOne(
       { _id: "dailyItems" },
       { projection: { [`items.${offerKey}`]: 1 } }
     );
-    // If the offer is not found, throw an error
+
     const selectedOffer = shopData?.items?.[offerKey];
-    if (!selectedOffer) {
-      throw new Error("Offer is not valid.");
-    }
-    // Get the currency field from the offer
-    const { currency = "coins" } = selectedOffer; // Default to "coins" if currency is not specified
+    if (!selectedOffer) throw new Error("Offer is not valid.");
 
-    // Normalize itemIds to an array (handle single or bundled items)
-    const itemIds = Array.isArray(selectedOffer.itemId)
-      ? selectedOffer.itemId
-      : [selectedOffer.itemId];
+    const { currency = "coins", quantity = 1 } = selectedOffer;
+    const itemIds = Array.isArray(selectedOffer.itemId) ? selectedOffer.itemId : [selectedOffer.itemId];
 
-    const OwnsOfferItems = await userInventoryCollection.findOne(
+    // Check if any of the itemIds already exist
+    const alreadyOwned = await userInventoryCollection.findOne(
       {
         username: username,
-        itemid: { $in: itemIds },  // Checks if any itemid matches in the array
+        itemid: { $in: itemIds },
       },
       {
         hint: "player_item_unique",
-        projection: { itemid: 1, _id: 0 }, // Optionally return only the matching itemid
+        projection: { itemid: 1, _id: 0 },
       }
     );
-    //const user = itemIds.some(id => owneditems.has(id));
 
-    if (OwnsOfferItems) {
+    if (alreadyOwned) {
       throw new Error("You already own an item from this offer.");
     }
 
     const userRow = await userCollection.findOne(
       { "account.username": username },
-      { projection: { [`currency.${currency}`]: 1 } }  // Fetch user's balance dynamically
+      { projection: { [`currency.${currency}`]: 1 } }
     );
 
-    if (!userRow) {
-      throw new Error("User not found.");
-    }
+    if (!userRow) throw new Error("User not found.");
 
     const price = parseInt(selectedOffer.price, 10);
     if ((userRow.currency[currency] || 0) < price) {
       throw new Error(`Not enough ${currency} to buy the offer.`);
     }
 
-    const isItemPurchase = true
     let updateFields = {};
+    const isItemPurchase = true;
 
     if (!isItemPurchase) {
-      updateFields = {
-        $inc: { "currency.boxes": quantity }, // Increment the 'boxes' field by the quantity
-      };
+      updateFields.$inc = { "currency.boxes": quantity };
     }
 
     if (price > 0) {
-      updateFields = {
-        ...updateFields,
-        $inc: { [`currency.${currency}`]: -price }, // Deduct the correct currency
+      updateFields.$inc = {
+        ...(updateFields.$inc || {}),
+        [`currency.${currency}`]: -price,
       };
     }
 
-    const session = client.startSession();
+    await session.withTransaction(async () => {
+      // Insert inventory items
+      const documentsToInsert = itemIds.map(itemId => ({
+        username,
+        itemid: itemId,
+        // timestamp: new Date(),
+      }));
 
-    console.log(itemIds)
-
-    try {
-      await session.withTransaction(async () => {
-        const documentsToInsert = itemIds.map(itemId => ({
-          username: username,
-          itemid: itemId,
-        //  timestamp: new Date()
-        }));
-
-        await userInventoryCollection.insertMany(documentsToInsert, { session });
-
-        await userCollection.updateOne(
-          { "account.username": username },
-          updateFields,
-          { session }
-        );
+      await userInventoryCollection.insertMany(documentsToInsert, {
+        session,
       });
 
-    } catch (error) {
-      throw error;
-    } finally {
-      await session.endSession();
-    }
-
+      await userCollection.updateOne(
+        { "account.username": username },
+        updateFields,
+        { session }
+      );
+    });
 
     itemIds.forEach(id => owneditems.add(id));
 
-    return {
-      message: `Offer bought successfully.`,
-    };
+    return { message: "Offer bought successfully." };
   } catch (error) {
     throw new Error(error.message || "An error occurred while processing your request.");
+  } finally {
+    await session.endSession();
   }
 }
 
 module.exports = {
-  buyItem
+  buyItem,
 };
