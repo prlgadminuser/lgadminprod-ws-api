@@ -71,7 +71,7 @@ async function verifyWebhook(req) {
     const webhookEventBody = req.rawBody.toString('utf8');
 
     const tokenRes = await axios.post(
-      'https://api-m.paypal.com/v1/oauth2/token',
+      'https://api.paypal.com/v1/oauth2/token',
       new URLSearchParams({ grant_type: 'client_credentials' }),
       {
         headers: {
@@ -82,7 +82,7 @@ async function verifyWebhook(req) {
     );
 
     const verifyRes = await axios.post(
-      'https://api-m.paypal.com/v1/notifications/verify-webhook-signature',
+      'https://api.paypal.com/v1/notifications/verify-webhook-signature',
       {
         auth_algo: headers['paypal-auth-algo'],
         cert_url: headers['paypal-cert-url'],
@@ -189,7 +189,7 @@ async function captureOrder(orderId) {
 
 async function reconcileMissedPayments() {
   const token = await axios.post(
-    'https://api-m.paypal.com/v1/oauth2/token',
+    'https://api.paypal.com/v1/oauth2/token',
     new URLSearchParams({ grant_type: 'client_credentials' }),
     {
       headers: {
@@ -201,7 +201,7 @@ async function reconcileMissedPayments() {
 
   const startDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
   const txns = await axios.get(
-    `https://api-m.paypal.com/v1/reporting/transactions?start_date=${startDate}&transaction_status=S&fields=all&page_size=100`,
+    `https://api.paypal.com/v1/reporting/transactions?start_date=${startDate}&transaction_status=S&fields=all&page_size=100`,
     { headers: { Authorization: `Bearer ${token.data.access_token}` } }
   );
 
@@ -227,6 +227,7 @@ async function reconcileMissedPayments() {
     }
   }
 }
+
 
 
 

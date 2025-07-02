@@ -1,4 +1,5 @@
-const { userCollection, shopcollection, ItemsCertificatesCollection } = require('./../idbconfig');
+
+const { userCollection, shopcollection, userInventoryCollection, client } = require('./../idbconfig');
 
 async function buyItem(username, offerKey, owneditems) {
   try {
@@ -7,13 +8,11 @@ async function buyItem(username, offerKey, owneditems) {
       { _id: "dailyItems" },
       { projection: { [`items.${offerKey}`]: 1 } }
     );
-
     // If the offer is not found, throw an error
     const selectedOffer = shopData?.items?.[offerKey];
     if (!selectedOffer) {
       throw new Error("Offer is not valid.");
     }
-
     // Get the currency field from the offer
     const { currency = "coins" } = selectedOffer; // Default to "coins" if currency is not specified
     const { quantity = 1 } = selectedOffer; // Get the quantity if it's specified
@@ -23,28 +22,22 @@ async function buyItem(username, offerKey, owneditems) {
       ? selectedOffer.itemId
       : [selectedOffer.itemId];
 
-
-         const user = await userCollection.findOne(
+    const OwnsOfferItems = await userInventoryCollection.findOne(
       {
-        "account.username": username,
-        "inventory.items": { $in: itemIds },
+        username: username,
+        itemid: { $in: itemIds },  // Checks if any itemid matches in the array
       },
       {
-        hint: "account.username_1_inventory.items_1",
-        projection: { "account.username": 1, _id: 0 }  // optional
+        hint: "player_item_unique",
+        projection: { itemid: 1, _id: 0 }, // Optionally return only the matching itemid
       }
     );
-
-
-
-
     //const user = itemIds.some(id => owneditems.has(id));
 
-    if (user) {
+    if (OwnsOfferItems) {
       throw new Error("You already own an item from this offer.");
     }
 
-    // Fetch the user's balance for the specified currency
     const userRow = await userCollection.findOne(
       { "account.username": username },
       { projection: { [`currency.${currency}`]: 1 } }  // Fetch user's balance dynamically
@@ -54,41 +47,20 @@ async function buyItem(username, offerKey, owneditems) {
       throw new Error("User not found.");
     }
 
-    // Check if the user has enough balance to buy the offer
-    const price = parseInt(selectedOffer.price, 10); // Ensure price is a number
+    const price = parseInt(selectedOffer.price, 10);
     if ((userRow.currency[currency] || 0) < price) {
       throw new Error(`Not enough ${currency} to buy the offer.`);
     }
 
-    // Check if it's a normal item, box purchase, or season coin pack
-    const isItemPurchase = !selectedOffer.itemId.includes("box") && !selectedOffer.itemId.includes("seasoncoins");
-    const isBoxPurchase = selectedOffer.itemId.includes("box");
-    const isSeasonCoinPack = selectedOffer.itemId.includes("seasoncoins");
-
+    const isItemPurchase = true
     let updateFields = {};
 
-    // Handle normal item purchase
-    if (isItemPurchase) {
-      updateFields = {
-        $addToSet: { "inventory.items": { $each: itemIds } }, // Add the normal item(s)
-      };
-    }
-
-    // Handle box purchases
-    if (isBoxPurchase) {
+    if (!isItemPurchase) {
       updateFields = {
         $inc: { "currency.boxes": quantity }, // Increment the 'boxes' field by the quantity
       };
     }
 
-    // Handle season coin pack purchases
-    if (isSeasonCoinPack) {
-      updateFields = {
-        $inc: { "currency.seasonCoins": quantity }, // Increment the 'seasonCoins' field by the quantity
-      };
-    }
-
-    // Only deduct currency if the price is greater than zero
     if (price > 0) {
       updateFields = {
         ...updateFields,
@@ -96,11 +68,30 @@ async function buyItem(username, offerKey, owneditems) {
       };
     }
 
-    // Deduct currency and update the user's inventory or purchase quantity in a single update operation
-    await userCollection.updateOne(
-      { "account.username": username },  // Search by account.username
-      updateFields
-    );
+    const session = client.startSession();
+
+    try {
+      await session.withTransaction(async () => {
+        const documentsToInsert = itemIds.map(itemId => ({
+          username: username,
+          itemid: itemId,
+        //  timestamp: new Date()
+        }));
+
+        await userInventoryCollection.insertMany(documentsToInsert, { session });
+
+        await userCollection.updateOne(
+          { "account.username": username },
+          updateFields,
+          { session }
+        );
+      });
+
+    } catch (error) {
+      throw error;
+    } finally {
+      await session.endSession();
+    }
 
 
     itemIds.forEach(id => owneditems.add(id));

@@ -22,7 +22,7 @@ const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 module.exports = { jwt, Limiter, bcrypt, Discord, RateLimiterMemory, connectedPlayers, maintenanceMode, UpdateMaintenance, RealMoneyPurchasesEnabled };
-const { startMongoDB, shopcollection, userCollection } = require("./idbconfig");
+const { startMongoDB, shopcollection, userCollection, userInventoryCollection } = require("./idbconfig");
 var sanitize = require('mongo-sanitize');
 const WebSocket = require("ws");
 const bodyParser = require('body-parser')
@@ -660,6 +660,9 @@ startMongoDB().then(() => {
        console.log(`Server started on Port ${PORT}`);
     });
 });
+
+
+
 
 function watchItemShop() {
     const pipeline = [{ $match: { "fullDocument._id": { $in: ["dailyItems", "maintenance"] }, operationType: "update" } }];

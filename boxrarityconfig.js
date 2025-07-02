@@ -9,7 +9,7 @@ const rarityConfig = {
         customItems: null, 
     },
 
-    hat: {
+    rare1: {
         threshold: 0.80,
         coinsRange: [20, 40],
         itemCount: 2,
@@ -21,7 +21,7 @@ const rarityConfig = {
         ],
     },
 
-    top: {
+    rare2: {
         threshold: 0.90,
         coinsRange: [25, 50],
         itemCount: 2,
@@ -32,7 +32,7 @@ const rarityConfig = {
         ],
     },
 
-    banner: {
+    rare3: {
         threshold: 0.96,
         coinsRange: [30, 60],
         itemCount: 2,
@@ -42,7 +42,7 @@ const rarityConfig = {
         ],
     },
 
-    pose: {
+    rare4: {
         threshold: 0.9995,
         coinsRange: [40, 70],
         itemCount: 2,

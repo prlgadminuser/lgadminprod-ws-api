@@ -1,9 +1,26 @@
-const { battlePassCollection, userCollection, loginRewardsCollection, shopcollection } = require('./../idbconfig');
+const { battlePassCollection, userCollection, userInventoryCollection, shopcollection } = require('./../idbconfig');
 const { FIXED_OFFERS } = require('./../paystation');
 const { rarityPercentages } = require('./../boxrarityconfig');
 const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');
 const { RealMoneyPurchasesEnabled } = require('./../index');
+
+
+async function getPlayerItems(username) {
+
+    const itemDocuments = await userInventoryCollection.find(
+        { username: username },
+        { projection: { itemid: 1, _id: 0 } } // Project only the itemId field and exclude the _id
+    )
+    .limit(100)
+    .hint("player_item_unique")
+    .toArray();
+
+    const itemIdsArray = itemDocuments.map(doc => doc.itemid);
+    return itemIdsArray
+   
+}
+
 
 
 async function getUserInventory(username) {
@@ -14,7 +31,7 @@ async function getUserInventory(username) {
                 { "account.username": username },
                 { $set: { "account.last_login": Date.now() } },
                 {
-                    returnDocument: "after", // Return the document after update
+                  //  returnDocument: "after", // Return the document after update
                     projection: {
                         "account": 1,
                         "equipped": 1,
@@ -59,13 +76,16 @@ async function getUserInventory(username) {
         const season_coins = bpuserRow ? bpuserRow.season_coins || 0 : 0;
         const bonusitem_damage = bpuserRow ? bpuserRow.bonusitem_damage || 0 : 0;
 
+        const userInventory = await getPlayerItems(username)
+          
+
         const inventory = {
             nickname: userRow.account.nickname,
             username: username,
             coins: userRow.currency.coins,
             boxes: userRow.currency.boxes,
             sp: userRow.stats.sp,
-            items: userRow.inventory.items,
+            items: userInventory,
             weapons: userRow.inventory.weapons,
             loadout: userRow.inventory.loadout,
             slpasstier,
@@ -94,13 +114,16 @@ async function getUserInventory(username) {
             weaponcatalog: WeaponsToBuy,
             in_app_purchases: RealMoneyPurchasesEnabled ? FIXED_OFFERS : "disabled" ,
         };
-
+  
         // Return the constructed object
         return inventory;
+      //  })
     } catch (error) {
         // Catch and rethrow errors with additional context
         throw new Error(`Failed to get user inventory: ${error.message}`);
+        
     }
+   
 }
 
 module.exports = {

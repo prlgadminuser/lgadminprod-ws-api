@@ -30,6 +30,7 @@ const client = new MongoClient(uri, {
 
 const db = client.db(DB_NAME);
 const userCollection = db.collection("users");
+const userInventoryCollection = db.collection("users_inventory");
 const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
@@ -52,9 +53,7 @@ async function startMongoDB() {
 
   
 
-   // userCollection.createIndex({ "account.username": 1, "inventory.items": 1 })
 
-  // userCollection.createIndex({ status: 1, name: 1, age: 1 })
 
   
 
@@ -79,6 +78,7 @@ async function startMongoDB() {
 
 module.exports = {
    uri,
+   client,
    tokenkey,
    startMongoDB,
    userCollection,
@@ -93,4 +93,5 @@ module.exports = {
    webhookURL,
    ProfileViewsCollection,
    PaymentCollection,
+   userInventoryCollection,
 }

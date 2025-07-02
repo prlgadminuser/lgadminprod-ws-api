@@ -1,7 +1,7 @@
 const { userCollection } = require('./../idbconfig');
 
 const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
-const limit = 50
+const limit = 10
 const UpdateInterval = 5 * 1000 * 60;
 
 
@@ -41,3 +41,4 @@ module.exports = {
   setupHighscores,
   gethighscores,
 };
+
