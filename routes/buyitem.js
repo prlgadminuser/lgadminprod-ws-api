@@ -15,7 +15,6 @@ async function buyItem(username, offerKey, owneditems) {
     }
     // Get the currency field from the offer
     const { currency = "coins" } = selectedOffer; // Default to "coins" if currency is not specified
-    const { quantity = 1 } = selectedOffer; // Get the quantity if it's specified
 
     // Normalize itemIds to an array (handle single or bundled items)
     const itemIds = Array.isArray(selectedOffer.itemId)
@@ -69,6 +68,8 @@ async function buyItem(username, offerKey, owneditems) {
     }
 
     const session = client.startSession();
+
+    console.log(itemIds)
 
     try {
       await session.withTransaction(async () => {
