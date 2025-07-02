@@ -80,7 +80,7 @@ async function buyItem(username, offerKey, owneditems) {
 
         await userInventoryCollection.insertMany(documentsToInsert, { session });
 
-        if (Object.keys(updateData).length > 0) {
+        if (Object.keys(updateFields).length > 0) {
           await userCollection.updateOne(
             { "account.username": username },
             updateFields,
