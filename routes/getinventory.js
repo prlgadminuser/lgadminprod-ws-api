@@ -9,14 +9,14 @@ const { RealMoneyPurchasesEnabled } = require('./../index');
 async function getPlayerItems(username) {
 
     const itemDocuments = await userInventoryCollection.find(
-        { username: username },
-        { projection: { itemid: 1, _id: 0 } } // Project only the itemId field and exclude the _id
+        { uid: username },
+        { projection: { id: 1, _id: 0 } } // Project only the itemId field and exclude the _id
     )
     .limit(100)
     .hint("player_item_unique")
     .toArray();
 
-    const itemIdsArray = itemDocuments.map(doc => doc.itemid);
+    const itemIdsArray = itemDocuments.map(doc => doc.id);
     return itemIdsArray
    
 }

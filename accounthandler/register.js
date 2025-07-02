@@ -73,7 +73,6 @@ async function CreateAccount(username, password, user_country) {
         };
 
         const inventory = {
-            items: [],  // Ensure items is an array
             weapons: ["1", "2", "3"],  // Ensure weapons is an array of strings
             loadout: {
                 "1": "1",  // Ensure loadout values are strings

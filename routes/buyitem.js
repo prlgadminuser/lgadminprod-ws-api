@@ -23,12 +23,12 @@ async function buyItem(username, offerKey, owneditems) {
 
     const OwnsOfferItems = await userInventoryCollection.findOne(
       {
-        username: username,
-        itemid: { $in: itemIds },  // Checks if any itemid matches in the array
+        uid: username,
+        id: { $in: itemIds },  // Checks if any itemid matches in the array
       },
       {
         hint: "player_item_unique",
-        projection: { itemid: 1, _id: 0 }, // Optionally return only the matching itemid
+        projection: { id: 1, _id: 0 }, // Optionally return only the matching itemid
       }
     );
     //const user = itemIds.some(id => owneditems.has(id));
@@ -73,8 +73,8 @@ async function buyItem(username, offerKey, owneditems) {
     try {
       await session.withTransaction(async () => {
         const documentsToInsert = itemIds.map(itemId => ({
-          username: username,
-          itemid: itemId,
+          uid: username,
+          id: itemId,
           //  timestamp: new Date()
         }));
 
