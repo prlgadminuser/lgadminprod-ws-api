@@ -1,56 +1,93 @@
 
-mongodb database indexes setup
+Indexes for collection: payments
+{ v: 2, key: { _id: 1 }, name: '_id_' }
 
+Indexes for collection: serverconfig
+{ v: 2, key: { _id: 1 }, name: '_id_' }
+{ v: 2, key: { items: 1 }, name: 'items_1' }
 
-users collection indexes
+Indexes for collection: users_inventory
+{ v: 2, key: { _id: 1 }, name: '_id_' }
+{
+  v: 2,
+  key: { uid: 1, id: 1 },
+  name: 'player_item_unique',
+  unique: true
+}
 
-db.users.createIndexes([
-  { key: { _id: 1 }, name: '_id_' },
-  { key: { 'account.token': 1 }, name: 'account.token_1' },
-  { key: { 'inventory.weapons': 1 }, name: 'inventory.weapons_1' },
-  { key: { 'stats.sp': -1 }, name: 'stats.sp_-1' },
-  {
-    key: { 'account.nickname': 1 },
-    name: 'account.nickname_1',
-    unique: true,
-    collation: {
-      locale: 'en',
-      strength: 2,
-    }
-  },
-  {
-    key: { 'account.username': 1 },
-    name: 'account.username_1',
-    unique: true,
-    collation: {
-      locale: 'en',
-      strength: 2,
-    }
-  },
-  { key: { 'account.username': 1, 'inventory.items': 1 }, name: 'account.username_1_inventory.items_1' },
-  {
-    key: {
-      'account.username': 1,
-      'account.nickname': 1,
-      'equipped.hat': 1,
-      'equipped.top': 1,
-      'equipped.banner': 1,
-      'equipped.pose': 1,
-      'equipped.color': 1,
-      'equipped.hat_color': 1,
-      'equipped.top_color': 1,
-      'equipped.banner_color': 1,
-      'account.created_at': 1,
-      'stats.kills': 1,
-      'stats.damage': 1,
-      'stats.wins': 1,
-      'stats.sp': 1,
-      'stats.p_views': 1
-    },
-    name: 'playerProfileIndex'
-  },
-  {
-    key: { 'stats.sp': -1, 'account.nickname': 1, 'account.username': 1 },
-    name: 'highscoresIndex'
+Indexes for collection: battlepass_users
+{ v: 2, key: { _id: 1 }, name: '_id_' }
+{ v: 2, key: { username: 1 }, name: 'username_1' }
+
+Indexes for collection: users
+{ v: 2, key: { _id: 1 }, name: '_id_' }
+{ v: 2, key: { 'account.token': 1 }, name: 'account.token_1' }
+{ v: 2, key: { 'inventory.weapons': 1 }, name: 'inventory.weapons_1' }
+{
+  v: 2,
+  key: { 'account.nickname': 1 },
+  name: 'account.nickname_1',
+  unique: true,
+  collation: {
+    locale: 'en',
+    caseLevel: false,
+    caseFirst: 'off',
+    strength: 2,
+    numericOrdering: false,
+    alternate: 'non-ignorable',
+    maxVariable: 'punct',
+    normalization: false,
+    backwards: false,
+    version: '57.1'
   }
-]);
+}
+{
+  v: 2,
+  key: { 'account.username': 1 },
+  name: 'account.username_1',
+  unique: true,
+  collation: {
+    locale: 'en',
+    caseLevel: false,
+    caseFirst: 'off',
+    strength: 2,
+    numericOrdering: false,
+    alternate: 'non-ignorable',
+    maxVariable: 'punct',
+    normalization: false,
+    backwards: false,
+    version: '57.1'
+  }
+}
+{
+  v: 2,
+  key: {
+    'account.username': 1,
+    'account.nickname': 1,
+    'equipped.hat': 1,
+    'equipped.top': 1,
+    'equipped.banner': 1,
+    'equipped.pose': 1,
+    'equipped.color': 1,
+    'equipped.hat_color': 1,
+    'equipped.top_color': 1,
+    'equipped.banner_color': 1,
+    'account.created_at': 1,
+    'stats.kills': 1,
+    'stats.damage': 1,
+    'stats.wins': 1,
+    'stats.sp': 1,
+    'stats.p_views': 1
+  },
+  name: 'playerProfileIndex'
+}
+{ v: 2, key: { 'currency.coins': 1 }, name: 'currency.coins_1' }
+{
+  v: 2,
+  key: { 'stats.sp': -1, 'account.nickname': 1, 'account.username': 1 },
+  name: 'highscoresIndex',
+  partialFilterExpression: { 'stats.sp': { '$gt': 0 } }
+}
+
+Indexes for collection: profile_views
+{ v: 2, key: { _id: 1 }, name: '_id_' }

@@ -21,7 +21,7 @@ async function getPlayerItems(username) {
    
 }
 
-
+   
 
 async function getUserInventory(username) {
     try {
@@ -77,6 +77,12 @@ async function getUserInventory(username) {
         const bonusitem_damage = bpuserRow ? bpuserRow.bonusitem_damage || 0 : 0;
 
         const userInventory = await getPlayerItems(username)
+
+        const skillpassdata = {
+         tier: slpasstier,
+         bucks: season_coins,
+         season_damage: bonusitem_damage
+        }
           
 
         const inventory = {
@@ -86,11 +92,9 @@ async function getUserInventory(username) {
             boxes: userRow.currency.boxes,
             sp: userRow.stats.sp,
             items: userInventory,
+            skillpass: skillpassdata,
             weapons: userRow.inventory.weapons,
             loadout: userRow.inventory.loadout,
-            slpasstier,
-            season_coins,
-            bonusitem_damage,
             last_collected: userRow.inventory.last_collected || 0,
             hat: userRow.equipped.hat || 0,
             top: userRow.equipped.top || 0,
