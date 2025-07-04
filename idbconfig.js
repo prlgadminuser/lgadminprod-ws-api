@@ -30,7 +30,7 @@ const client = new MongoClient(uri, {
 
 const db = client.db(DB_NAME);
 const userCollection = db.collection("users");
-const userInventoryCollection = db.collection("users_inventory");
+const userInventoryCollection = db.collection("users_items");
 const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
