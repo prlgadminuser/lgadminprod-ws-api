@@ -75,6 +75,7 @@ async function buyItem(username, offerKey, owneditems) {
         const documentsToInsert = itemIds.map(itemId => ({
           uid: username,
           id: itemId,
+          ts: Date.now()
           //  timestamp: new Date()
         }));
 
