@@ -1,4 +1,4 @@
-const { userCollection } = require('./../idbconfig');
+const { userCollection, userInventoryCollection } = require('./../idbconfig');
 const { rarityConfig } = require('./../boxrarityconfig');
 const { webhook } = require('./..//discordwebhook');
 
@@ -27,11 +27,20 @@ async function buyRarityBox(username, owned_items) {
         // Update user fields in a single database operation
         await updateUserFields(username, {
             "currency.boxes": -1,
-            "inventory.items": rewards.items, // Add new items to the set
             "currency.coins": rewards.coins // Increment coins safely
         });
 
-        // Return rewards
+
+        if (rewards.items.length > 0) {
+            const docs = rewards.items.map(id => ({
+                uid: username,
+                id: id,
+                ts: Date.now()
+            }));
+            await userInventoryCollection.insertMany(docs);
+        }
+
+
         return rewards;
     } catch (error) {
 
@@ -112,10 +121,6 @@ function rollForRarity() {
 async function updateUserFields(username, updateFields) {
     const updateData = {};
 
-    if (Array.isArray(updateFields["inventory.items"]) && updateFields["inventory.items"].length > 0) {
-        updateData.$addToSet = updateData.$addToSet || {}; // Ensure $addToSet exists
-        updateData.$addToSet["inventory.items"] = { $each: updateFields["inventory.items"] }; // Add new items to the existing set
-    }
 
     if (Array.isArray(updateFields["currency.coins"]) && updateFields["currency.coins"].length > 0) {
         const coinSum = updateFields["currency.coins"].reduce((sum, coin) => sum + coin, 0);
