@@ -30,14 +30,14 @@ const updateHighscores = async () => {
       // 3. Fetch player details for the highscores
       const playerdetails = await userCollection
         //.find({ "account.username": { $in: usernames } }, { projection: { _id: 0, u: "$account.username", c: "$equipped.color", h: "$equipped.hat", hc: "$equipped.hat_color" } })
-         .find({ "account.username": { $in: usernames } }, { projection: { _id: 0, u: "$account.username", c: "$equipped.color" } })
+         .find({ "account.username": { $in: usernames } }, { projection: { _id: 0, u: "$account.username", h: "$equipped.hat", c: "$equipped.color", hc: "$equipped.hat_color",  } })
         .hint("playerProfileIndex")
         .toArray();
 
       // 4. Create a map for quick lookup of player details
       const playerDetailsMap = playerdetails.reduce((map, player) => {
         //map[player.u] = { c: player.c, h: player.h, hc: player.hc };
-         map[player.u] = { c: player.c };
+         map[player.u] = { h: player.h, c: player.c, hc: player.hc, };
         return map;
       }, {});
 
