@@ -1,4 +1,5 @@
 const { userCollection } = require('./../idbconfig');
+const LZString = require("lz-string");
 
 const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
 const limit = 20
@@ -47,8 +48,13 @@ const updateHighscores = async () => {
         return `${player.n}:${player.u}:${player.s}:${details.h}:${details.c}:${details.hc}`;
       });
 
+      const highscoresString = JSON.stringify(finalHighscores);
+
+     const compressedString = LZString.compress(highscoresString);
+
+
       // 6. Update the global variable with the new string array
-      global.highscores = finalHighscores;
+      global.highscores = compressedString;
 
     } else {
 
