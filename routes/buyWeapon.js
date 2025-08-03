@@ -1,16 +1,16 @@
 const { userCollection } = require('./../idbconfig');
 
-const WeaponsToBuy = {
-    "4": 500,
-};
+const WeaponsToBuy = new Map([
+    ["4", 500],
+]);
 
 async function buyWeapon(username, weaponid) {
     try {
-        if (!WeaponsToBuy.hasOwnProperty(weaponid)) {
+        if (!WeaponsToBuy.has(weaponid)) {
             throw new Error("Invalid weapon ID.");
         }
 
-        const price = WeaponsToBuy[weaponid];
+        const price = WeaponsToBuy.get(weaponid);
         const currency = "coins"; // Assuming balance is stored under this key
 
         // Check if the user already owns the weapon

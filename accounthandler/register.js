@@ -41,9 +41,6 @@ async function CreateAccount(username, password, user_country) {
             }
         );
 
-
-
-
         if (existingUser) {
             return { status: "Name already taken. Please choose another one." };
         }

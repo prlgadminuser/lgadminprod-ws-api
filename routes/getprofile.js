@@ -1,4 +1,4 @@
-const { userCollection, ProfileViewsCollection } = require('./../idbconfig');
+const { userCollection, userSocialCollection } = require('./../idbconfig');
 
 const joined_date_displaymode = 1;
 const count_profile_views = false;
@@ -37,17 +37,19 @@ async function getUserProfile(usernamed, selfusername) {
       throw new Error("User not found");
     }
 
-    // Update profile views if the profile is being viewed by someone other than the user
+    
     if (count_profile_views && selfusername !== usernamed) {
-      const document = `${selfusername}$${usernamed}`;
 
-      // Check if the document already exists
-      const existing = await ProfileViewsCollection.findOne({ _id: document });
+      const document = `p_view-${selfusername}$${usernamed}`;
 
-      if (!existing) {
+      const InsertViewEntry = await userSocialCollection.updateOne(
+        { _id: document },
+        { $setOnInsert: { _id: document }},
+        { upsert: true }
+      );
 
-        await ProfileViewsCollection.insertOne({ _id: document });
-
+      if (InsertViewEntry.upsertedCount > 0) {
+        
         await userCollection.updateOne(
           { "account.username": usernamed },
           { $inc: { "stats.p_views": 1 } },

@@ -31,10 +31,10 @@ const client = new MongoClient(uri, {
 const db = client.db(DB_NAME);
 const userCollection = db.collection("users");
 const userInventoryCollection = db.collection("users_items");
+const userSocialCollection = db.collection("users_social");
 const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
-const ProfileViewsCollection = db.collection("profile_views");
 const PaymentCollection = db.collection("payments")
 
 
@@ -91,7 +91,7 @@ module.exports = {
    passwordRegex,
    badWords,
    webhookURL,
-   ProfileViewsCollection,
+   userSocialCollection,
    PaymentCollection,
    userInventoryCollection,
 }

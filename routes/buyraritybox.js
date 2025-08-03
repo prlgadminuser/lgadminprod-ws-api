@@ -30,13 +30,16 @@ async function buyRarityBox(username, owned_items) {
             "currency.coins": rewards.coins // Increment coins safely
         });
 
-
         if (rewards.items.length > 0) {
-            const docs = rewards.items.map(id => ({
+
+            const baseTimestamp = Date.now();
+
+            const docs = rewards.items.map((id, index) => ({
                 uid: username,
                 id: id,
-                ts: Date.now()
+                ts: baseTimestamp + index
             }));
+            
             await userInventoryCollection.insertMany(docs);
         }
 

@@ -72,11 +72,13 @@ async function buyItem(username, offerKey, owneditems) {
 
     try {
       await session.withTransaction(async () => {
-        const documentsToInsert = itemIds.map(itemId => ({
+        
+        const baseTimestamp = Date.now();
+
+        const documentsToInsert = itemIds.map((itemId, index) => ({
           uid: username,
           id: itemId,
-          ts: Date.now()
-          //  timestamp: new Date()
+          ts: baseTimestamp + index  // Ensure ts is unique and increasing
         }));
 
         await userInventoryCollection.insertMany(documentsToInsert, { session });
@@ -86,18 +88,15 @@ async function buyItem(username, offerKey, owneditems) {
             { "account.username": username },
             updateFields,
             { session }
-
           );
         }
       });
-
 
     } catch (error) {
       throw error;
     } finally {
       await session.endSession();
     }
-
 
     itemIds.forEach(id => owneditems.add(id));
 

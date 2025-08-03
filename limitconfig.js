@@ -44,7 +44,7 @@ const getClientIp = (req) => {
 
 const ConnectionOptionsRateLimit = { 
   points: 1, // Number of points
-  duration: 2, // Per second
+  duration: 5, // Per second
 };
 
 const apiRateLimiter = new RateLimiterMemory({
