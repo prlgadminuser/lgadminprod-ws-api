@@ -27,7 +27,6 @@ var sanitize = require('mongo-sanitize');
 const WebSocket = require("ws");
 const bodyParser = require('body-parser')
 const http = require('http');
-const LZString = require("lz-string");
 const { verifyPlayer } = require('./routes/verifyPlayer');
 const { getUserInventory } = require('./routes/getinventory');
 const { updateNickname } = require('./routes/updatename');
@@ -49,8 +48,6 @@ const { Login } = require('./accounthandler/login');
 const { verifyToken } = require("./routes/verifyToken");
 const { addPlayerToChat, removePlayerFromChat, sendMessage } = require("./playerchat/chat")
 const { CreatePaymentLink, verifyWebhook, handlePaypalWebhookEvent } = require("./paystation")
-
-
 
 function CompressAndSend(ws, type, message) {
 
