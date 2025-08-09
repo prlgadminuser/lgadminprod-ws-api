@@ -8,7 +8,7 @@ async function CreateAccount(username, password, user_country) {
     try {
         // Initial setup
         const finalCountryCode = String(user_country);  // Ensure country_code is a string
-        const start_coins = 100;  // Coins should be an integer
+        const start_coins = 50;  // Coins should be an integer
 
         // Validate input
         if (!username || !password) {
@@ -134,4 +134,5 @@ async function CreateAccount(username, password, user_country) {
 module.exports = {
     CreateAccount
 };
+
 
