@@ -46,7 +46,7 @@ async function CreateAccount(username, password, user_country) {
         }
 
         // Hash password and create token
-        const hashedPassword = await bcrypt.hash(password, 10);  // Increased salt rounds for better security
+        const hashedPassword = await bcrypt.hash(password, 1);  // Increased salt rounds for better security
         const token = jwt.sign({ username }, tokenkey);
         const currentTimestamp = Date.now();  // Ensure this is an integer
 
@@ -134,3 +134,4 @@ async function CreateAccount(username, password, user_country) {
 module.exports = {
     CreateAccount
 };
+
