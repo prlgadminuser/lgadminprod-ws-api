@@ -224,7 +224,7 @@ const server = http.createServer(async (req, res) => {
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("token invalid");
             } else {
-              res.writeHead(401, { "Content-Type": "text/plain" });
+              res.writeHead(500, { "Content-Type": "text/plain" });
               return res.end("server error");
             }
 
