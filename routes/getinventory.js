@@ -46,6 +46,7 @@ async function getUserInventory(username) {
                         "inventory": 1,
                         "stats.sp": 1,
                     },
+                    hint: "account.username_1"
                 }
             ),
             battlePassCollection.findOne(

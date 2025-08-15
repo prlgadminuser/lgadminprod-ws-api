@@ -29,7 +29,7 @@ async function verifyToken(token) {
 
         return "valid"// Token is valid and matches the database
     } catch (error) {
-          return "false"
+          return "server error"
     }
 }
 

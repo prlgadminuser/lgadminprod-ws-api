@@ -43,7 +43,6 @@ async function buyRarityBox(username, owned_items) {
             await userInventoryCollection.insertMany(docs);
         }
 
-
         return rewards;
     } catch (error) {
 

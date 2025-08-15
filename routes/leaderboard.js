@@ -3,7 +3,7 @@ const LZString = require("lz-string");
 
 const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
 const limit = 50
-const UpdateInterval = 10 * 1000 * 60;
+const UpdateInterval = 5 * 1000 * 60;
 
 
 const updateUserDocumentsPlaces = false
