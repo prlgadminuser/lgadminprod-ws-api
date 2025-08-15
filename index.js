@@ -220,7 +220,7 @@ const server = http.createServer(async (req, res) => {
             if (tokenResult === "valid") {
               res.writeHead(200, { "Content-Type": "text/plain" });
               return res.end("true");
-            } else if (tokenResult === "false"){
+            } else if (tokenResult === "invalid"){
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("token invalid");
             } else {
