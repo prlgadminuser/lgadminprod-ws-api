@@ -16,7 +16,7 @@ const WS_MSG_SIZE_LIMIT = {
 
 
 function createRateLimiter() { // connected sending message rate limit
-  const rate = 5;
+  const rate = 3;
   return new Limiter({
     tokensPerInterval: rate,
     interval: 1000, // milliseconds
@@ -92,4 +92,5 @@ module.exports = {
   allowedOrigins,
   friendUpdatesTime,
   WS_MSG_SIZE_LIMIT
+
 }
