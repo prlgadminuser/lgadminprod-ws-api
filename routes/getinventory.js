@@ -49,8 +49,12 @@ async function getUserInventory(username) {
                     hint: "account.username_1"
                 }
             ),
+            
+             ];
+
+        promises.push(
             await battlePassCollection.findOne(
-                { "account.username": username },
+                { username },
                 {
                     projection: {
                         ss_passtier: 1,
@@ -59,7 +63,7 @@ async function getUserInventory(username) {
                     }
                 }
             ).catch(() => null), // Handle battle pass collection errors
-        ];
+        );
 
 
         promises.push(
