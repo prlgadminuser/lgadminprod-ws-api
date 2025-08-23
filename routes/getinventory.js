@@ -53,9 +53,9 @@ async function getUserInventory(username) {
                 { "account.username": username },
                 {
                     projection: {
-                        currentTier: 1,
-                        season_coins: 1,
-                        bonusitem_damage: 1,
+                        ss_passtier: 1,
+                        ss_coins: 1,
+                        ss_damage: 1,
                     }
                 }
             ).catch(() => null), // Handle battle pass collection errors
@@ -80,14 +80,14 @@ async function getUserInventory(username) {
         const currentTimestamp0am = currentDate.getTime();
 
 
-        const slpasstier = bpuserRow ? bpuserRow.currentTier || 0 : 0;
-        const season_coins = bpuserRow ? bpuserRow.season_coins || 0 : 0;
-        const bonusitem_damage = bpuserRow ? bpuserRow.bonusitem_damage || 0 : 0;
+        const season_passtier = bpuserRow ? bpuserRow.ss_passtier || 0 : 0;
+        const season_coins = bpuserRow ? bpuserRow.ss_coins || 0 : 0;
+        const bonusitem_damage = bpuserRow ? bpuserRow.ss_damage || 0 : 0;
 
         const userInventory = await getPlayerItems(username)
 
         const skillpassdata = {
-         tier: slpasstier,
+         tier: season_passtier,
          bucks: season_coins,
          season_damage: bonusitem_damage
         }
