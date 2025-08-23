@@ -49,7 +49,7 @@ async function getUserInventory(username) {
                     hint: "account.username_1"
                 }
             ),
-            battlePassCollection.findOne(
+            await battlePassCollection.findOne(
                 { "account.username": username },
                 {
                     projection: {
