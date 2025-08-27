@@ -1,58 +1,87 @@
-const { userCollection } = require('./../idbconfig');
+const { userCollection, userInventoryCollection, userWeaponsCollection, client } = require("./../idbconfig");
 
 const WeaponsToBuy = new Map([
-    ["4", 500],
+  ["4", 500],
 ]);
 
-async function buyWeapon(username, weaponid) {
-    try {
-        if (!WeaponsToBuy.has(weaponid)) {
-            throw new Error("Invalid weapon ID.");
-        }
+const currency = "coins";
 
-        const price = WeaponsToBuy.get(weaponid);
-        const currency = "coins"; // Assuming balance is stored under this key
-
-        // Check if the user already owns the weapon
-        const ItemIsOwned = await userCollection.findOne({ 
-            "account.username": username, 
-            "inventory.weapons": { $in: [weaponid] } 
-        });
-        if (ItemIsOwned) {
-            throw new Error("You already own this weapon.");
-        }
-
-        // Fetch the user's balance
-        const userRow = await userCollection.findOne(
-            { "account.username": username },
-            { projection: { [`currency.${currency}`]: 1 } } // Dynamically fetch the user's balance in the specified currency
-        );
-
-        if (!userRow) {
-            throw new Error("User not found.");
-        }
-
-        if ((userRow.currency[currency] || 0) < price) {
-            throw new Error(`Not enough ${currency} to buy the offer.`);
-        }
-
-        // Update the user's balance and add the weapon to their inventory
-        const updateFields = {
-            $addToSet: { "inventory.weapons": weaponid }, 
-            $inc: { [`currency.${currency}`]: -price } // Deduct the coins
-        };
-
-        await userCollection.updateOne({ "account.username": username }, updateFields);
-
-        return {
-            message: "Weapon purchased successfully.",
-        };
-    } catch (error) {
-        throw new Error(error.message || "An error occurred while processing your request.");
+async function buyWeapon(username, weaponId, ownedItems) {
+  try {
+    // Validate weapon ID
+    if (!WeaponsToBuy.has(weaponId)) {
+      throw new Error("Invalid weapon ID.");
     }
+
+    const price = WeaponsToBuy.get(weaponId);
+
+    // Check if the user already owns the weapon
+    const itemIsOwned = ownedItems.has(weaponId);
+    if (itemIsOwned) {
+      throw new Error("You already own this weapon.");
+    }
+
+    // Fetch user's balance
+    const userRow = await userCollection.findOne(
+      { "account.username": username },
+      { projection: { [`currency.${currency}`]: 1 } }
+    );
+
+    if (!userRow) {
+      throw new Error("User not found.");
+    }
+
+    if ((userRow.currency?.[currency] || 0) < price) {
+      throw new Error(`Not enough ${currency} to buy the weapon.`);
+    }
+
+    // Prepare weapon data
+    const weaponUserInventory = {
+      uid: username,
+      id: weaponId,
+      ts: Date.now(), // Unique timestamp
+    };
+
+    const weapondata = {
+      uid: username,
+      level: 1,
+      equipped_ability: 0,
+      unlocked: [],
+    };
+
+
+
+    const session = client.startSession();
+
+    try {
+      await session.withTransaction(async () => {
+        // Insert weapon into user's inventory
+        await userInventoryCollection.insertOne(weaponUserInventory, { session });
+        await userWeaponsCollection.insertOne(weapondata, { session });
+        // Deduct the user's balance
+        await userCollection.updateOne(
+          { "account.username": username },
+          { $inc: { [`currency.${currency}`]: -price } },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    ownedItems.add(weaponId);
+
+    return {
+      message: "Weapon purchased successfully.",
+    };
+  } catch (error) {
+    throw new Error(
+      error.message || "An error occurred while processing your request."
+    );
+  }
 }
 
 module.exports = {
-    buyWeapon,
-    WeaponsToBuy
+  buyWeapon,
+  WeaponsToBuy,
 };

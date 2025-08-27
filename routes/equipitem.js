@@ -30,12 +30,6 @@ async function equipItem(username, type, itemid, owneditems) {
     }
 
     try {
-        // Check if the user owns the item (this assumes items are stored in 'items' array)
-   
-       // const ItemIsOwned = await userCollection.findOne({
-     //       "account.username": username,
-      //      "inventory.items": itemid  // Check if the item exists in the 'items' array under inventory
-     //   });
 
       
         const ItemIsOwned = owneditems.has(itemid) 

@@ -45,7 +45,7 @@ async function getUserProfile(usernamed, selfusername) {
       const InsertViewEntry = await userSocialCollection.updateOne(
         { _id: document },
         { $setOnInsert: { _id: document }},
-        { upsert: true }
+       { upsert: true }
       );
 
       if (InsertViewEntry.upsertedCount > 0) {

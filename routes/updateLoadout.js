@@ -1,5 +1,7 @@
 const { userCollection } = require('./..//idbconfig');
 
+const always_allowed_weapons = [1,2,3]
+
 async function equipWeapon(username, slot, weaponid) {
   try {
     // Validate the slot and weaponid
@@ -11,12 +13,20 @@ async function equipWeapon(username, slot, weaponid) {
       throw new Error("Invalid weapon ID. Weapon ID should not exceed 5 characters.");
     }
 
-    // Check if the user owns the weapon
-    const ItemIsOwned = await userCollection.findOne({ "account.username": username, "inventory.weapons": { $in: [weaponid] } });
+    let WeaponIsOwned = false
 
-    if (!ItemIsOwned) {
+    if (always_allowed_weapons.has(weaponid)) {
+    WeaponIsOwned = true
+    } else {
+    WeaponIsOwned = owneditems.has(itemid) 
+    }
+
+    if (!WeaponIsOwned) {
       throw new Error("Item is not valid. User does not own the specified weapon.");
     }
+
+
+    
 
     // Update the user's loadout with the new weapon in the specified slot
     await userCollection.updateOne(

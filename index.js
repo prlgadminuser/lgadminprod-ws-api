@@ -435,7 +435,7 @@ async function handleMessage(ws, message, playerVerified) {
         break;
 
       case "buy_weapon":
-        response = await buyWeapon(playerVerified.playerId, data.wid);
+        response = await buyWeapon(playerVerified.playerId, data.wid,  playerVerified.items);
         CompressAndSend(ws, "buyweapon", response);
         break;
 
@@ -443,7 +443,8 @@ async function handleMessage(ws, message, playerVerified) {
         response = await equipWeapon(
           playerVerified.playerId,
           data.slot,
-          data.wid
+          data.wid,
+          playerVerified.items,
         );
         // CompressAndSend(ws, "equipweapon", response)
         break;
