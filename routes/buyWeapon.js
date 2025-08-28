@@ -4,7 +4,7 @@ const WeaponsToBuy = new Map([
   ["4", 500],
 ]);
 
-const StarterWeapons = [1,2,3];
+const StarterWeapons = ["W1","W2","W3"];
 
 const currency = "coins";
 
