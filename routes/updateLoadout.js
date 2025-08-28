@@ -1,6 +1,6 @@
-const { userCollection } = require('./..//idbconfig');
+const { userCollection} = require('./..//idbconfig');
 
-const always_allowed_weapons = [1,2,3]
+const always_allowed_weapons = new Set([1,2,3])
 
 async function equipWeapon(username, slot, weaponid) {
   try {

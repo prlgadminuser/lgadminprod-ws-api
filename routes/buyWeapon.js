@@ -4,7 +4,56 @@ const WeaponsToBuy = new Map([
   ["4", 500],
 ]);
 
+const StarterWeapons = [1,2,3];
+
 const currency = "coins";
+
+
+function weapon_defaultstats(username, weaponId) {
+
+  return {
+    uid: username,
+    wid: weaponId,
+    level: 1,
+    equipped_ability: 0,
+    unlocked: [],
+  };
+}
+
+
+async function InsertStarterWeaponsData(username, session) {
+  try {
+ 
+   const WeaponIdsToInsert = [];
+    const WeaponsDataToInsert = [];
+   
+    for (const weaponId of StarterWeapons) {
+      WeaponIdsToInsert.push({
+        uid: username,
+        id: weaponId,
+        ts: Date.now(),
+      })
+
+      WeaponsDataToInsert.push(weapon_defaultstats(username, weaponId));
+    }
+
+    // Insert inventory + weapons
+    if (WeaponIdsToInsert .length > 0) {
+      await userInventoryCollection.insertMany(WeaponIdsToInsert, { session });
+    }
+    if (WeaponsDataToInsert.length > 0) {
+      await userWeaponsCollection.insertMany(WeaponsDataToInsert, { session });
+    }
+
+    return { message: "Account created successfully with all starter weapons.", username };
+  } catch (err) {
+    throw new Error(err.message || "Failed to create user account.");
+  }
+}
+
+
+
+
 
 async function buyWeapon(username, weaponId, ownedItems) {
   try {
@@ -42,14 +91,7 @@ async function buyWeapon(username, weaponId, ownedItems) {
       ts: Date.now(), // Unique timestamp
     };
 
-    const weapondata = {
-      uid: username,
-      level: 1,
-      equipped_ability: 0,
-      unlocked: [],
-    };
-
-
+    const weapondata = weapon_defaultstats(username, weaponId)
 
     const session = client.startSession();
 
@@ -84,4 +126,5 @@ async function buyWeapon(username, weaponId, ownedItems) {
 module.exports = {
   buyWeapon,
   WeaponsToBuy,
+  InsertStarterWeaponsData
 };

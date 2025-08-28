@@ -4,9 +4,11 @@ const {
   usernameRegex,
   passwordRegex,
   tokenkey,
+  client,
 } = require("./..//idbconfig");
 const { jwt, bcrypt } = require("./..//index");
 const { webhook } = require("./..//discordwebhook");
+const { InsertStarterWeaponsData } = require("./../routes/buyWeapon");
 
 const allow_bad_words = false;
 
@@ -107,39 +109,38 @@ async function CreateAccount(username, password, user_country) {
     };
 
     // Insert the new account into the database
+     const session = client.startSession();
     try {
-      await userCollection.insertOne({
-        account,
-        currency,
-        inventory,
-        equipped,
-        stats,
-      });
-    } catch (error) {
-      // If there's a validation error, catch and log it
-      if (error.code === 121) {
-        // MongoDB validation error code
-        const failedProperties = error.errorResponse.errInfo.details;
-        return {
-          status: "Server validation error",
-          error: error.errorResponse.errInfo.details,
-        };
-      } else {
-        //console.error("Unexpected error: ", error);
-        return { status: "Unexpected error occurred", error: error.message };
-      }
-    }
-    // Send webhook notification about the new user
-    // const joinedMessage = `${username} has joined Skilldown from ${finalCountryCode}`;
-    const joinedMessage = `${username} has joined Skilldown`;
-    webhook.send(joinedMessage);
+      await session.withTransaction(async () => {
+        // Insert new user
+        await userCollection.insertOne(
+          { account, currency, inventory, equipped, stats },
+          { session }
+        );
 
-    return { token: token };
+        // Insert starter weapons
+        await InsertStarterWeaponsData(username, session);
+
+        // Success result
+        result = { token };
+      });
+
+      // Webhook after successful commit
+      if (result) {
+        webhook.send(`${username} has joined Skilldown`);
+      }
+
+      return result || { status: "Transaction failed" };
+    } finally {
+      await session.endSession();
+    }
   } catch (error) {
-    console.error("Error creating account:");
-    return { status: "Unexpected error occurred" };
+    console.error("Error creating account:", error.message);
+    return { status: error.message || "Unexpected error occurred" };
   }
 }
+
+
 
 module.exports = {
   CreateAccount,
