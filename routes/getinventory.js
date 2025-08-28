@@ -23,17 +23,18 @@ async function getPlayerItems(username) {
 }
 
 async function getPlayerWeaponsData(username) {
-
     const itemDocuments = await userWeaponsCollection.find(
-        { uid: username },
+        { uid: username }, // filter
+        { projection: { _id: 0, uid: 0 } } // exclude _id
     )
     .limit(100)
     //.hint("player_item_unique")
     .hint("uid_1")
     .toArray();
 
-    return itemDocuments
+    return itemDocuments;
 }
+
 
 //getPlayerItems("Lique")
  //.then(items => {
