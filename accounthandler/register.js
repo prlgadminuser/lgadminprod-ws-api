@@ -121,14 +121,14 @@ async function CreateAccount(username, password, user_country) {
         // Insert starter weapons
         await InsertStarterWeaponsData(username, session);
 
-        // Success result
+        result = { token: token };
       });
 
       // Webhook after successful commit
      
       
 
-      return token || { status: "Account creation failed" };
+      return result || { status: "Account creation failed" };
     } finally {
       await session.endSession();
       webhook.send(`${username} has joined Skilldown`);
