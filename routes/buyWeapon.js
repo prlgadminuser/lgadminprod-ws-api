@@ -11,16 +11,12 @@ const currency = "coins";
 
 function weapon_defaultstats(username, weaponId) {
 
-  const weapondata = {
-    level: 1,
-    equipped_ability: 0,
-    unlocked: [], 
-  }
-
   return {
     uid: username,
     wid: weaponId,
-    wdata: weapondata,
+    level: 1,
+    equipped_ability: 0,
+    unlocked: [],
   };
 }
 

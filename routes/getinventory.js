@@ -23,17 +23,26 @@ async function getPlayerItems(username) {
 }
 
 async function getPlayerWeaponsData(username) {
+    // Find all weapons for the player, excluding _id and uid
     const itemDocuments = await userWeaponsCollection.find(
-        { uid: username }, // filter
-        { projection: { _id: 0, uid: 0 } } // exclude _id
+        { uid: username },                 // filter by player
+        { projection: { _id: 0, uid: 0 } } // exclude _id and uid
     )
     .limit(100)
-    //.hint("player_item_unique")
-    .hint("weaponindex")
+    .hint("weaponindex")                  // use the compound index
     .toArray();
 
-    return itemDocuments;
+    // Convert array into an object keyed by wid
+    const weaponsByWid = {};
+    for (const doc of itemDocuments) {
+        if (doc.wid) {
+            weaponsByWid[doc.wid] = doc;
+        }
+    }
+
+    return weaponsByWid;
 }
+
 
 
 //getPlayerItems("Lique")
