@@ -125,8 +125,6 @@ async function CreateAccount(username, password, user_country) {
       });
 
       // Webhook after successful commit
-     
-      
 
       return result || { status: "Account creation failed" };
     } finally {

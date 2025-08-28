@@ -1,7 +1,7 @@
 const { userCollection, userInventoryCollection, userWeaponsCollection, client } = require("./../idbconfig");
 
 const WeaponsToBuy = new Map([
-  ["4", 500],
+  ["W4", 500],
 ]);
 
 const StarterWeapons = ["W1","W2","W3"];

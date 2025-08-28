@@ -1,4 +1,4 @@
-const { battlePassCollection, userCollection, userInventoryCollection, shopcollection } = require('./../idbconfig');
+const { battlePassCollection, userCollection, userInventoryCollection, shopcollection, userWeaponsCollection } = require('./../idbconfig');
 const { FIXED_OFFERS } = require('./../paystation');
 const { rarityPercentages } = require('./../boxrarityconfig');
 const { serverlist, getServerByCountry } = require('./../serverlist');
@@ -20,6 +20,19 @@ async function getPlayerItems(username) {
     const itemIdsArray = itemDocuments.map(doc => doc.id);
     return itemIdsArray
    
+}
+
+async function getPlayerWeaponsData(username) {
+
+    const itemDocuments = await userWeaponsCollection.find(
+        { uid: username },
+    )
+    .limit(100)
+    //.hint("player_item_unique")
+    .hint("uid_1")
+    .toArray();
+
+    return itemDocuments
 }
 
 //getPlayerItems("Lique")
@@ -89,6 +102,7 @@ async function getUserInventory(username) {
         const bonusitem_damage = bpuserRow ? bpuserRow.ss_damage || 0 : 0;
 
         const userInventory = await getPlayerItems(username)
+        const userWeaponData = await getPlayerWeaponsData(username)
 
         const skillpassdata = {
          tier: season_passtier,
@@ -106,6 +120,7 @@ async function getUserInventory(username) {
             items: userInventory,
             skillpass: skillpassdata,
             weapons: userRow.inventory.weapons,
+            weapondata: userWeaponData,
             loadout: userRow.inventory.loadout,
             last_collected: userRow.inventory.last_collected || 0,
             hat: userRow.equipped.hat || 0,
