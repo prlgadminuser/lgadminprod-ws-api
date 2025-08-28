@@ -29,7 +29,7 @@ async function getPlayerWeaponsData(username) {
     )
     .limit(100)
     //.hint("player_item_unique")
-    .hint("uid_1")
+    .hint("weaponindex")
     .toArray();
 
     return itemDocuments;
