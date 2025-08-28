@@ -122,21 +122,20 @@ async function CreateAccount(username, password, user_country) {
         await InsertStarterWeaponsData(username, session);
 
         // Success result
-        result = { token };
       });
 
       // Webhook after successful commit
-      if (result) {
-        webhook.send(`${username} has joined Skilldown`);
-      }
+     
+      
 
-      return result || { status: "Transaction failed" };
+      return token || { status: "Account creation failed" };
     } finally {
       await session.endSession();
+      webhook.send(`${username} has joined Skilldown`);
     }
   } catch (error) {
     console.error("Error creating account:", error.message);
-    return { status: error.message || "Unexpected error occurred" };
+    return "Unexpected error occurred";
   }
 }
 
