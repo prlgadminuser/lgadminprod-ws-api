@@ -8,9 +8,14 @@ const allowed_gadgets = new Set([
   "1", "2", "3"
 ]);
 
+const loadout_allowed_items = {
+weapons: Array.from(allowed_weapons),
+gadgets: Array.from(allowed_gadgets) 
+}
+
+
 async function equipWeapon(username, slot, weaponid) {
   try {
-    // Validate the slot and weaponid
     if (!slot || !(slot >= 1 && slot <= 3)) {
       throw new Error(
         "Invalid position in loadout. Slot must be between 1 and 3."
@@ -23,14 +28,14 @@ async function equipWeapon(username, slot, weaponid) {
       );
     }
 
-    if (!allowed_weapons.has(weaponid))  throw new Error("Item is not valid.") 
-  
+    if (!allowed_weapons.has(weaponid)) throw new Error("Item is not valid.");
+
     await userCollection.updateOne(
-      { "account.username": username }, // Filter by username
-      { $set: { [`inventory.loadout.slot${slot}`]: weaponid } } // Dynamically update the correct loadout slot
+      { "account.username": username },
+      { $set: { [`inventory.loadout.slot${slot}`]: weaponid } } 
     );
 
-    return { message: "Weapon equipped successfully.", weaponid }; // Return success message with the weapon ID
+    return { message: "Weapon equipped successfully.", weaponid }; 
   } catch (error) {
     throw new Error(`Error equipping weapon: ${error.message || error}`);
   }
@@ -38,24 +43,22 @@ async function equipWeapon(username, slot, weaponid) {
 
 
 
-
 async function equipGadget(username, gadgetid) {
   try {
-
     if (!gadgetid || gadgetid.length > 5) {
       throw new Error(
         "Invalid gadget ID. gadget ID should not exceed 5 characters."
       );
     }
 
-    if (!allowed_gadgets.has(gadgetid))  throw new Error("Item is not valid.") 
-  
+    if (!allowed_gadgets.has(gadgetid)) throw new Error("Item is not valid.");
+
     await userCollection.updateOne(
-      { "account.username": username }, // Filter by username
-      { $set: { [`inventory.loadout.gadget`]: gadgetid } } // Dynamically update the correct loadout slot
+      { "account.username": username }, 
+      { $set: { [`inventory.loadout.gadget`]: gadgetid } } 
     );
 
-    return { message: "Gadget equipped successfully.", gadgetid }; // Return success message with the weapon ID
+    return { message: "Gadget equipped successfully.", gadgetid }; 
   } catch (error) {
     throw new Error(`Error equipping gadget: ${error.message || error}`);
   }
@@ -65,4 +68,5 @@ async function equipGadget(username, gadgetid) {
 module.exports = {
   equipWeapon,
   equipGadget,
+  loadout_allowed_items,
 };

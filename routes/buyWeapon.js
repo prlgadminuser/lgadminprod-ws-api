@@ -93,5 +93,4 @@ async function buyWeapon(username, weaponId, ownedItems) {
 module.exports = {
   buyWeapon,
   WeaponsToBuy,
-  InsertStarterWeaponsData
 };

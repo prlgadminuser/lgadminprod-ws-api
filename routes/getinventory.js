@@ -3,8 +3,9 @@ const { FIXED_OFFERS } = require('./../paystation');
 const { rarityPercentages } = require('./../boxrarityconfig');
 const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');
+const { loadout_allowed_items } = require('./updateLoadout');
 const { RealMoneyPurchasesEnabled } = require('./../index');
-
+loadout_allowed_items
 
 async function getPlayerItems(username) {
 
@@ -112,7 +113,7 @@ async function getUserInventory(username) {
         const bonusitem_damage = bpuserRow ? bpuserRow.ss_damage || 0 : 0;
 
         const userInventory = await getPlayerItems(username)
-        const userWeaponData = await getPlayerWeaponsData(username)
+       // const userWeaponData = await getPlayerWeaponsData(username)
 
         const skillpassdata = {
          tier: season_passtier,
@@ -130,7 +131,7 @@ async function getUserInventory(username) {
             items: userInventory,
             skillpass: skillpassdata,
             weapons: userRow.inventory.weapons,
-            weapondata: userWeaponData,
+           // weapondata: userWeaponData,
             loadout: userRow.inventory.loadout,
             last_collected: userRow.inventory.last_collected || 0,
             hat: userRow.equipped.hat || 0,
@@ -153,6 +154,7 @@ async function getUserInventory(username) {
             serverlist,
             nearestRegion: getServerByCountry(userRow.account.country_code || "Unknown"),
             weaponcatalog: WeaponsToBuy,
+            loadout_allowed_items: loadout_allowed_items,
             in_app_purchases: RealMoneyPurchasesEnabled ? FIXED_OFFERS : "disabled" ,
         };
   
