@@ -81,9 +81,10 @@ async function CreateAccount(username, password, user_country) {
 
     const inventory = {
       loadout: {
-        1: "1", // Ensure loadout values are strings
-        2: "2",
-        3: "3",
+        slot1: "1", // Ensure loadout values are strings
+        slot2: "2",
+        slot3: "3",
+        gadget: "1"
       },
       last_collected: 0, // Ensure last_collected is an integer
     };
@@ -97,7 +98,6 @@ async function CreateAccount(username, password, user_country) {
       top_color: 0, // Ensure top_color is an integer
       banner_color: 0, // Ensure banner_color is an integer
       color: 0,
-      gadget: "1", // Ensure color is an integer
     };
 
     const stats = {
@@ -108,36 +108,21 @@ async function CreateAccount(username, password, user_country) {
       p_views: 0,
     };
 
-    // Insert the new account into the database
-     const session = client.startSession();
-    try {
-      await session.withTransaction(async () => {
-        // Insert new user
-        await userCollection.insertOne(
-          { account, currency, inventory, equipped, stats },
-          { session }
-        );
 
-        // Insert starter weapons
-        await InsertStarterWeaponsData(username, session);
 
-        result = { token: token };
-      });
+    const success = await userCollection.insertOne(
+      { account, currency, inventory, equipped, stats },
+    );
 
-      // Webhook after successful commit
+    result = { token: token };
 
-      return result || { status: "Account creation failed" };
-    } finally {
-      await session.endSession();
-      webhook.send(`${username} has joined Skilldown`);
-    }
+    if (success) webhook.send(`${username} has joined Skilldown from ${finalCountryCode}`);
+    return result || { status: "Account creation failed" };
   } catch (error) {
     console.error("Error creating account:", error.message);
     return "Unexpected error occurred";
   }
 }
-
-
 
 module.exports = {
   CreateAccount,
