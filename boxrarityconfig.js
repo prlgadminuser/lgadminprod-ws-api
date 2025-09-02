@@ -3,14 +3,14 @@
 
 const rarityConfig = {
     normal: {
-        threshold: 0.6,
+        threshold: 0.1,
         coinsRange: [15, 30], 
         itemCount: 0, 
         customItems: null, 
     },
 
     rare1: {
-        threshold: 0.80,
+        threshold: 0.2,
         coinsRange: [20, 40],
         itemCount: 2,
         customItems: [
@@ -22,7 +22,7 @@ const rarityConfig = {
     },
 
     rare2: {
-        threshold: 0.90,
+        threshold: 0.5,
         coinsRange: [25, 50],
         itemCount: 2,
         customItems: [
@@ -33,7 +33,7 @@ const rarityConfig = {
     },
 
     rare3: {
-        threshold: 0.96,
+        threshold: 0.8,
         coinsRange: [30, 60],
         itemCount: 2,
         customItems: [
@@ -43,7 +43,7 @@ const rarityConfig = {
     },
 
     rare4: {
-        threshold: 0.9995,
+        threshold: 0.9,
         coinsRange: [40, 70],
         itemCount: 2,
         customItems: [
@@ -131,5 +131,6 @@ const rarityConfig = {
         message: "success",
     },
 }; 
+
 
 */ 
