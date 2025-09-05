@@ -26,7 +26,7 @@ async function verifyToken(token) {
 
         if (!userInformation) return "invalid"
 
-       if (bannedUntil <= Date.now()) return "invalid";
+       if (Date.now() <= bannedUntil) return "invalid";
         // Verify if the token matches the token stored in the database
         if (token !== userInformation.account.token) {
             return "invalid"
