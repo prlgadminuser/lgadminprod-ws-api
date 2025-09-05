@@ -219,18 +219,21 @@ const server = http.createServer(async (req, res) => {
               return res.end("token invalid");
             }
 
-            const tokenResult = await verifyToken(requestData.token);
+            const tokenResult = await verifyToken(requestData.token, 2);
             if (tokenResult === "valid") {
               res.writeHead(200, { "Content-Type": "text/plain" });
               return res.end("true");
             } else if (tokenResult === "invalid"){
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("token invalid");
-            } else {
+            } else if (tokenResult.result === "disabled"){
               res.writeHead(500, { "Content-Type": "text/plain" });
+              return res.end(tokenResult);
+            } else {
+              res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("server error");
             }
-
+      
             
 
           case "/register":
@@ -673,7 +676,9 @@ server.on("upgrade", async (request, socket, head) => {
     const sanitizedToken = escapeInput(token, true);
 
     try {
-      const playerVerified = await verifyPlayer(sanitizedToken);
+      const playerVerified = await verifyPlayer(sanitizedToken, 1);
+
+      if (!playerVerified.playerId)  throw new Error("Invalid token");
 
       const existingConnection = connectedPlayers.get(playerVerified.playerId);
       if (existingConnection) {

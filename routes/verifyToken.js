@@ -2,7 +2,7 @@
 const { tokenkey, userCollection } = require('./..//idbconfig');
 const { jwt } = require('./..//index');
 
-async function verifyToken(token) {
+async function verifyToken(token, source) {
      // Directly assign tokenparam to token if token is passed directly
 
 
@@ -24,10 +24,12 @@ async function verifyToken(token) {
 
         if (!userInformation) return "invalid"
 
-        const bannedUntil = userInformation.account.ban_data.until
+      const bannedUntil = userInformation.account.ban_data.until
 
-       if (Date.now() < bannedUntil) return "invalid";
-        // Verify if the token matches the token stored in the database
+      if (source === 1) if (Date.now() < bannedUntil) return { result: "disabled", ban_until: bannedUntil };
+      if (source === 2) if (Date.now() < bannedUntil) return "disabled";
+
+
         if (token !== userInformation.account.token) {
             return "invalid"
         }
