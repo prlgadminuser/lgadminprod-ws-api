@@ -2,6 +2,16 @@
 
 const connectedPlayers = new Map();
 //const playerQueue = new Map();
+function serverid ()  {
+const serverid =  "xxxxxxxxxx".replace(/[xy]/g, function (c) {
+  const r = (Math.random() * 16) | 0;
+  const v = c === "x" ? r : (r & 0x3) | 0x8; // Ensures UUID version 4
+  return v.toString(16);
+}) 
+return serverid
+}
+
+const SERVER_INSTANCE_ID = serverid()
 
 let connectedClientsCount = 0;
 
@@ -32,7 +42,8 @@ module.exports = {
   maintenanceMode,
   UpdateMaintenance,
   RealMoneyPurchasesEnabled,
-  connectedPlayers
+  connectedPlayers,
+  SERVER_INSTANCE_ID
 };
 const {
   startMongoDB,
@@ -89,7 +100,7 @@ const {
   verifyWebhook,
   handlePaypalWebhookEvent,
 } = require("./paystation");
-const { sub } = require("./redis");
+const { sub, checkExistingSession, removeSession, addSession } = require("./redis");
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
@@ -553,54 +564,52 @@ async function handleMessage(ws, message, playerVerified) {
 
 const rateLimiterConnection = new RateLimiterMemory(ConnectionOptionsRateLimit);
 
-wss.on("connection", (ws, req) => {
-  if (global.maintenance == "true") {
+
+const PING_INTERVAL = 15000; // 10 seconds
+const TIMEOUT = 50000; // 50 seconds
+
+// Setup global heartbeat interval
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [playerId, ws] of connectedPlayers.entries()) {
+    if (!ws || ws.readyState !== ws.OPEN) continue;
+
+    // Initialize lastPongTime if not set
+    if (!ws.playerVerified.lastPongTime) {
+      ws.playerVerified.lastPongTime = now;
+      continue; // Skip until first pong
+    }
+    // Check timeout
+    if (now - ws.playerVerified.lastPongTime > TIMEOUT) {
+      ws.close(3845, "activity timeout");
+      continue;
+    }
+  }
+}, PING_INTERVAL);
+
+
+
+
+wss.on("connection", async (ws, req) => {
+  if (global.maintenance === "true") {
     ws.close(4000, "maintenance");
+    return;
   }
 
   const playerVerified = ws.playerVerified;
-  playerVerified.lastPongTime = Date.now();
 
-  //console.log(playerVerified.playerId, "connected");
+  // Check existing session (optional)
+  const existingSid = await checkExistingSession(playerVerified.playerId);
+  if (existingSid && existingSid !== SERVER_INSTANCE_ID) {
+    ws.close(4001, "already connected on another server");
+    return;
+  }
+
+  // Add session for this server
+  await addSession(playerVerified.playerId);
 
   CompressAndSend(ws, "connection_success", playerVerified.inventory);
-
-  const pingIntervalId = setInterval(() => {
-    if (!ws || playerVerified.lastPongTime <= Date.now() - 50000) {
-      ws.close(3845, "activity timeout");
-    }
-    pingInterval;
-  }, pingInterval);
-
-  /* getfrienddata(playerVerified.playerId, ws)
-
-    
-    async function getfrienddata(username, ws) {
-
-    try {
-        UpdateSelfPingTime(username)
-        const friendsdata = await GetFriendsDataLocal(username);
-        ws.send(JSON.stringify({ type: "friendsup", data: friendsdata }));
-   
-       } catch (error) {
-
-       }
-    }
-
- const FriendOnlineInterval = setInterval(async () => {
-
-        if (playerVerified.inventory.friends.length > -1) {
-             try {
-               await getfrienddata(playerVerified.playerId, ws)
-          
-              } catch (error) {
-  
-                  clearInterval(FriendRealtimeDataInterval)
-              }
-          }
-      }, friendUpdatesTime);
-
-    */
 
   ws.on("message", async (message) => {
     try {
@@ -611,7 +620,6 @@ wss.on("connection", (ws, req) => {
         ws.close(1007, "error");
         return;
       }
-
       await handleMessage(ws, message, playerVerified);
     } catch (error) {
       ws.close(1007, "error");
@@ -620,21 +628,11 @@ wss.on("connection", (ws, req) => {
 
   ws.on("error", (error) => {
     if (error.message.includes("payload size")) {
-      //  console.error('Payload size exceeded:', error.message);
       ws.close(1009, "Payload size exceeded");
-    } else {
-      // console.error('WebSocket error:', error);
     }
   });
 
-  ws.on("close", () => {
-    if (typeof pingIntervalId !== "undefined" && pingIntervalId) {
-      clearInterval(pingIntervalId);
-    }
-
-    if (typeof FriendOnlineInterval !== "undefined" && FriendOnlineInterval) {
-      clearInterval(FriendOnlineInterval);
-    }
+  ws.on("close", async () => {
 
     removePlayerFromChat(ws.playerVerified.nickname);
 
@@ -643,14 +641,15 @@ wss.on("connection", (ws, req) => {
     if (playerId) {
       connectedPlayers.delete(playerId);
       connectedClientsCount--;
+      await removeSession(playerId); // Remove session on disconnect
     }
   });
 });
 
+
 server.on("upgrade", async (request, socket, head) => {
   try {
     const ip = getClientIp(request);
-
     if (!ip || request.url.length > 200) return;
 
     await rateLimiterConnection.consume(ip);
@@ -669,42 +668,40 @@ server.on("upgrade", async (request, socket, head) => {
     }
 
     const token = request.url.split("/")[1];
-
-    if (!token || token.trim() === "") {
-      throw new Error("Invalid token");
-    }
+    if (!token || token.trim() === "") throw new Error("Invalid token");
 
     const sanitizedToken = escapeInput(token, true);
+    const playerVerified = await verifyPlayer(sanitizedToken, 1);
 
-    try {
-      const playerVerified = await verifyPlayer(sanitizedToken, 1);
+    if (playerVerified === "disabled") throw new Error("Invalid token");
 
-      if (playerVerified === "disabled")  throw new Error("Invalid token");
-
-      const existingConnection = connectedPlayers.get(playerVerified.playerId);
-      if (existingConnection) {
-        existingConnection.send("code:double")
-        existingConnection.close(1001, "Reassigned connection");
-        await new Promise((resolve) => existingConnection.on("close", resolve));
-
-        connectedPlayers.delete(playerVerified.playerId);
-      }
-
-      playerVerified.rateLimiter = createRateLimiter();
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        ws.playerVerified = playerVerified;
-        connectedPlayers.set(playerVerified.playerId, ws);
-
-        connectedClientsCount++;
-        wss.emit("connection", ws, request);
-      });
-    } catch (error) {
-      // console.log(error)
-      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+    // Check for existing session
+    const existingSid = await checkExistingSession(playerVerified.playerId);
+    if (existingSid && existingSid !== SERVER_INSTANCE_ID) {
+      socket.write("HTTP/1.1 409 Conflict\r\n\r\n");
       socket.destroy();
+      return;
     }
+
+    const existingConnection = connectedPlayers.get(playerVerified.playerId);
+    if (existingConnection) {
+      existingConnection.send("code:double");
+      existingConnection.close(1001, "Reassigned connection");
+      await new Promise((resolve) => existingConnection.on("close", resolve));
+      connectedPlayers.delete(playerVerified.playerId);
+    }
+
+    playerVerified.rateLimiter = createRateLimiter();
+
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      ws.playerVerified = playerVerified;
+      ws.playerVerified.lastPongTime = Date.now();
+      connectedPlayers.set(playerVerified.playerId, ws);
+      connectedClientsCount++;
+      wss.emit("connection", ws, request);
+    });
+
   } catch (error) {
-    // console.log(error)
     socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
     socket.destroy();
   }
@@ -793,5 +790,4 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
-
 });
