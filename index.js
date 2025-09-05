@@ -683,6 +683,7 @@ server.on("upgrade", async (request, socket, head) => {
 
       const existingConnection = connectedPlayers.get(playerVerified.playerId);
       if (existingConnection) {
+        existingConnection.send("code:double")
         existingConnection.close(1001, "Reassigned connection");
         await new Promise((resolve) => existingConnection.on("close", resolve));
 
@@ -792,4 +793,5 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
+
 });
