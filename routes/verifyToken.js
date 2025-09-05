@@ -22,11 +22,11 @@ async function verifyToken(token) {
             { projection: { "account.token": 1, "account.ban_data.until": 1 } }
         );
 
-        const bannedUntil = userInformation.account.ban_data.until
-
         if (!userInformation) return "invalid"
 
-       if (Date.now() <= bannedUntil) return "invalid";
+        const bannedUntil = userInformation.account.ban_data.until
+
+       if (Date.now() < bannedUntil) return "invalid";
         // Verify if the token matches the token stored in the database
         if (token !== userInformation.account.token) {
             return "invalid"
