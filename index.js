@@ -228,7 +228,6 @@ const server = http.createServer(async (req, res) => {
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("token invalid");
             } else if (tokenResult.ban_until) {
-              console.log(tokenResult)
               res.writeHead(500, { "Content-Type": "text/plain" });
               return res.end(JSON.stringify(tokenResult));
             } else {
@@ -681,7 +680,6 @@ server.on("upgrade", async (request, socket, head) => {
       const playerVerified = await verifyPlayer(sanitizedToken, 1);
 
       if (playerVerified === "disabled")  throw new Error("Invalid token");
-      console.log(playerVerified)
 
       const existingConnection = connectedPlayers.get(playerVerified.playerId);
       if (existingConnection) {
