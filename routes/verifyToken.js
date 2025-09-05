@@ -19,11 +19,12 @@ async function verifyToken(token) {
         // Check if the user exists in the database
         const userInformation = await userCollection.findOne(
             { "account.username": username },
-            { projection: { "account.token": 1 } }
+            { projection: { "account.token": 1, "account.bannedUntil": 1 } }
         );
 
         if (!userInformation) return "invalid"
 
+        if (!Date.now() > account.bannedUntil) return "invalid"
         // Verify if the token matches the token stored in the database
         if (token !== userInformation.account.token) {
             return "invalid"

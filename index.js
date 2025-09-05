@@ -21,6 +21,7 @@ const Limiter = require("limiter").RateLimiter;
 const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require("rate-limiter-flexible");
+
 module.exports = {
   jwt,
   Limiter,
@@ -31,6 +32,7 @@ module.exports = {
   maintenanceMode,
   UpdateMaintenance,
   RealMoneyPurchasesEnabled,
+  connectedPlayers
 };
 const {
   startMongoDB,
@@ -87,6 +89,7 @@ const {
   verifyWebhook,
   handlePaypalWebhookEvent,
 } = require("./paystation");
+const { sub } = require("./redis");
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
