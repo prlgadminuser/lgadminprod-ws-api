@@ -32,7 +32,7 @@ function kickPlayer(username) {
   }
 }
 
-sub.on(`server:${SERVER_INSTANCE_ID}`, (channel, message) => {
+sub.on("message", (channel, message) => {
   const data = JSON.parse(message);
   const username = data.uid
   kickPlayer(username);
