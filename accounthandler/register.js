@@ -71,7 +71,7 @@ async function CreateAccount(username, password, user_country) {
       last_login: currentTimestamp, // Cast to int
       lastping: currentTimestamp, // Cast to int
       nameupdate: 0, // Ensure nameupdate is an integer
-      ban_data: { type: "temp", until: 0, reason: 0 }
+      ban_data: { type: 1, until: 0, reason: 0 }
     };
 
     const currency = {

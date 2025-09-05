@@ -15,7 +15,6 @@ async function verifyToken(token, source) {
            
         if (!decodedToken || !username) return "invalid";
 
-
         // Check if the user exists in the database
         const userInformation = await userCollection.findOne(
             { "account.username": username },
@@ -26,8 +25,10 @@ async function verifyToken(token, source) {
 
       const bannedUntil = userInformation.account.ban_data.until
 
-      if (source === 1) if (Date.now() < bannedUntil) return { result: "disabled", ban_until: bannedUntil };
-      if (source === 2) if (Date.now() < bannedUntil) return "disabled";
+      const time = Date.now()
+
+      if (source === 2) if (time < bannedUntil) return { ban_until: bannedUntil, time: time };
+      if (source === 1) if (time < bannedUntil) return "disabled";
 
 
         if (token !== userInformation.account.token) {
@@ -40,7 +41,6 @@ async function verifyToken(token, source) {
     if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
       return "invalid";
     }
-
     // Unexpected server-side error
     return "server error";
   }
