@@ -22,7 +22,7 @@ async function verifyToken(token) {
             { projection: { "account.token": 1, "account.ban_data.until": 1 } }
         );
 
-        const bannedUntil = account.ban_data.bannedUntil
+        const bannedUntil = account.ban_data.until
 
         if (!userInformation) return "invalid"
 
