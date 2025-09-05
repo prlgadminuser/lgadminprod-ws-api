@@ -4,7 +4,7 @@ const { REDIS_KEY } = require("./ENV");
 const { connectedPlayers, SERVER_INSTANCE_ID } = require(".");
 
 const rediskey = REDIS_KEY
-const SERVER_HEARTBEAT_PREFIX = "apiserver_heartbeat:"
+const SERVER_HEARTBEAT_PREFIX = "wsApiServer_heartbeat:"
 const USER_PREFIX = "wsapiuser:"
 const HEARTBEAT_INTERVAL_MS = 1000000
 const HEARTBEAT_TTL_SECONDS = HEARTBEAT_INTERVAL_MS / 1000 * 3
