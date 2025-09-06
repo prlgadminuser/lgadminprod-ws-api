@@ -785,18 +785,6 @@ function closeAllClients(code, reason) {
   });
 }
 
-(async () => {
-  try {
-  const userRow = await getUserProfile( { "$regex": ".*" }, "Lique")
-
-    if (!userRow) {
-      throw new Error("User not found");
-    }
-   console.log(userRow);
-  } catch (error) {
-    console.error(error.message);
-  }
-})();
 
 process.on("SIGINT", () => {
   changeStream.close();
