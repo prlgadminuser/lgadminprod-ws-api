@@ -4,6 +4,10 @@ const { jwt, bcrypt } = require("./..//index");
 const GenerateNewToken = false;
 
 async function Login(username, password) {
+
+  username = String(username); 
+  password = String(password); 
+
   try {
     const user = await userCollection.findOne(
       { "account.username": username },

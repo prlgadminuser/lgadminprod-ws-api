@@ -4,7 +4,7 @@ const { jwt } = require('./..//index');
 
 async function verifyToken(token, source) {
      // Directly assign tokenparam to token if token is passed directly
-
+     token = String(token); 
 
     if (!token) return "false"
 

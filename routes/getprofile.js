@@ -1,9 +1,11 @@
+const { isString } = require('..');
 const { userCollection, userSocialCollection } = require('./../idbconfig');
 
 const joined_date_displaymode = 1;
 const count_profile_views = false;
 
 async function getUserProfile(usernamed, selfusername) {
+
   try {
     // Fetch user data from the database
     const userRow = await userCollection.findOne(

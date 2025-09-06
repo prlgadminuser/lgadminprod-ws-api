@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "build = npm install ws http2 cors axios express-rate-limit lz-string limiter body-parser rate-limiter-flexible validator mongodb jsonwebtoken node-os-utils start = node index.js",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

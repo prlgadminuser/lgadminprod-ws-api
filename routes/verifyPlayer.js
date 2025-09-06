@@ -3,6 +3,9 @@ const { jwt } = require('./..//index');
 const { getUserInventory } = require('./getinventory');
 
 async function verifyPlayer(token) {
+
+   token = String(token); 
+
   if (!token) {
     throw new Error("Unauthorized");
   }

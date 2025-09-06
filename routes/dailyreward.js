@@ -141,7 +141,6 @@ async function getdailyreward(username, ownedItems) {
         };
 
     } catch (error) {
-        console.log(error)
         throw new Error("An error occurred while processing your request.");
         
     }

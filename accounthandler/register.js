@@ -13,6 +13,10 @@ const { InsertStarterWeaponsData } = require("./../routes/buyWeapon");
 const allow_bad_words = false;
 
 async function CreateAccount(username, password, user_country) {
+
+  username = String(username); 
+  password = String(password); 
+  
   try {
     // Initial setup
     const finalCountryCode = String(user_country); // Ensure country_code is a string

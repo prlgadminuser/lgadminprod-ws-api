@@ -32,7 +32,12 @@ const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require("rate-limiter-flexible");
 
+function isString(value) {
+  return typeof value === "string" || value instanceof String;
+}
+
 module.exports = {
+  isString,
   jwt,
   Limiter,
   bcrypt,
@@ -107,6 +112,8 @@ function CompressAndSend(ws, type, message) {
   // const finalmessage = LZString.compressToBase64(json_message); // or compressToBase64 for safer transmission
   ws.send(json_message);
 }
+
+
 
 //setUserOnlineStatus("agag", "agg")
 
@@ -353,9 +360,7 @@ const wss = new WebSocket.Server({
 });
 
 // Function to escape special characters in strings (for MongoDB safety)
-function escapeStringForMongo(input) {
-  return String(input).replace(/[§.]/g, "");
-}
+
 
 const deepSanitizeAndEscape = (value) => {
   // If value is an array, recursively sanitize and escape each element
@@ -376,7 +381,7 @@ const deepSanitizeAndEscape = (value) => {
   return escapeInput(sanitize(value));
 };
 
-function escapeInput(input, isJwt = false) {
+function escapeInput(input) {
   if (input === null || input === undefined) return "";
 
   if (isJwt && typeof input === "string") {
@@ -393,6 +398,7 @@ function escapeInput(input, isJwt = false) {
   }
   return String(input).replace(/[$]/g, "");
 }
+
 
 async function handleMessage(ws, message, playerVerified) {
   try {
@@ -670,7 +676,7 @@ server.on("upgrade", async (request, socket, head) => {
     const token = request.url.split("/")[1];
     if (!token || token.trim() === "") throw new Error("Invalid token");
 
-    const sanitizedToken = escapeInput(token, true);
+    const sanitizedToken = escapeInput(token);
     const playerVerified = await verifyPlayer(sanitizedToken, 1);
 
     if (playerVerified === "disabled") throw new Error("Invalid token");
@@ -778,6 +784,19 @@ function closeAllClients(code, reason) {
     }
   });
 }
+
+(async () => {
+  try {
+  const userRow = await getUserProfile( { "$regex": ".*" }, "Lique")
+
+    if (!userRow) {
+      throw new Error("User not found");
+    }
+   console.log(userRow);
+  } catch (error) {
+    console.error(error.message);
+  }
+})();
 
 process.on("SIGINT", () => {
   changeStream.close();
