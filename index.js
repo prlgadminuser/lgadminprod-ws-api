@@ -384,10 +384,6 @@ const deepSanitizeAndEscape = (value) => {
 function escapeInput(input) {
   if (input === null || input === undefined) return "";
 
-  if (isJwt && typeof input === "string") {
-    return input.replace(/[$]/g, ""); // Return the JWT as is, no sanitization
-  }
-
   if (typeof input === "object") {
     return JSON.stringify(input, (key, value) => {
       if (typeof value === "string") {
@@ -793,8 +789,10 @@ process.on("SIGINT", () => {
 
 process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error);
+  process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
+    process.exit(1);
 });
