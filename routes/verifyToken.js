@@ -18,16 +18,18 @@ async function verifyToken(token, source) {
         // Check if the user exists in the database
         const userInformation = await userCollection.findOne(
             { "account.username": username },
-            { projection: { "account.token": 1, "account.ban_data.until": 1 } }
+            { projection: { "account.token": 1, "account.ban_data": 1 } }
         );
 
         if (!userInformation) return "invalid"
 
+      const bantype = userInformation.account.ban_data.type || "noreason"
+      const banreason = userInformation.account.ban_data.reason || "noreason"
       const bannedUntil = userInformation.account.ban_data.until
 
       const time = Date.now()
 
-      if (source === 2) if (time < bannedUntil) return { ban_until: bannedUntil, time: time };
+      if (source === 2) if (time < bannedUntil) return { bantype: bantype, reason: banreason, ban_until: bannedUntil, time: time };
       if (source === 1) if (time < bannedUntil) return "disabled";
 
 
