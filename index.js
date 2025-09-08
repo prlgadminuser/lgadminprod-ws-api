@@ -619,7 +619,7 @@ if (existingSid) {
     if (existingConnection) {
       existingConnection.send("code:double");
       existingConnection.close(1001, "Reassigned connection");
-      await new Promise((resolve) => existingConnection.once("close", resolve));
+    //  await new Promise((resolve) => existingConnection.once("close", resolve));
       connectedPlayers.delete(username);
     }
   } else {
@@ -668,11 +668,13 @@ connectedClientsCount++;
     removePlayerFromChat(ws.playerVerified.nickname);
 
     const playerId = ws.playerVerified?.playerId;
-
     if (playerId) {
-      connectedPlayers.delete(playerId);
-      connectedClientsCount--;
-      await removeSession(playerId); // Remove session on disconnect
+    const active = connectedPlayers.get(playerId);
+      if (active) {
+        connectedPlayers.delete(playerId);
+        connectedClientsCount--;
+        await removeSession(playerId); // Remove session on disconnect
+      }
     }
   });
 });
