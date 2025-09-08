@@ -684,7 +684,7 @@ server.on("upgrade", async (request, socket, head) => {
       if (existingConnection) {
         existingConnection.send("code:double");
         existingConnection.close(1001, "Reassigned connection");
-     //   await new Promise((resolve) => existingConnection.once("close", resolve));
+      //  await new Promise((resolve) => existingConnection.once("close", resolve));
         connectedPlayers.delete(username);
       }
     } else {
@@ -698,12 +698,14 @@ server.on("upgrade", async (request, socket, head) => {
 
   await addSession(username);
 
-  connectedPlayers.set(playerVerified.playerId, ws);
-  connectedClientsCount++;
-
     wss.handleUpgrade(request, socket, head, (ws) => {
       ws.playerVerified = playerVerified;
       ws.playerVerified.lastPongTime = Date.now();
+
+      
+  connectedPlayers.set(username, ws);
+  connectedClientsCount++;
+
       wss.emit("connection", ws, request);
     });
 
@@ -800,4 +802,3 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
     process.exit(1);
 });
-
