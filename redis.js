@@ -23,7 +23,7 @@ sub.subscribe(`server:${SERVER_INSTANCE_ID}`, (err) => {
   else console.log("Subscribed to bans channel.");
 });
 
-function kickPlayer(username) {
+function kickPlayerBan(username) {
   const ws = connectedPlayers.get(username);
 
   if (ws && ws.close) {
@@ -32,10 +32,28 @@ function kickPlayer(username) {
   }
 }
 
+function kickPlayerNewConnection(username) {
+  const ws = connectedPlayers.get(username);
+
+  if (ws && ws.close) {
+    ws.send("code:double");
+    ws.close(4009, "You have been banned.");
+  }
+}
+
+
 sub.on("message", (channel, message) => {
-  const data = JSON.parse(message);
-  const username = data.uid
-  kickPlayer(username);
+    const data = JSON.parse(message);
+    const type = data.type;
+    const username = data.uid
+    switch (type) {
+      case "ban":
+        kickPlayerBan(username);
+        break;
+      case "disconnect":
+        kickPlayerNewConnection(username);    
+        break;
+    }
 });
 
 function startHeartbeat() {

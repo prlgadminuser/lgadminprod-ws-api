@@ -677,21 +677,29 @@ server.on("upgrade", async (request, socket, head) => {
 
     if (playerVerified === "disabled") throw new Error("Invalid token");
 
-    // Check for existing session
-    const existingSid = await checkExistingSession(playerVerified.playerId);
-    if (existingSid && existingSid !== SERVER_INSTANCE_ID) {
-      socket.write("HTTP/1.1 409 Conflict\r\n\r\n");
-      socket.destroy();
-      return;
-    }
+    const username = playerVerified.playerId
 
-    const existingConnection = connectedPlayers.get(playerVerified.playerId);
-    if (existingConnection) {
-      existingConnection.send("code:double");
-      existingConnection.close(1001, "Reassigned connection");
-      await new Promise((resolve) => existingConnection.on("close", resolve));
-      connectedPlayers.delete(playerVerified.playerId);
+    // Check for existing session
+    const existingSid = await checkExistingSession(username);
+
+  if (existingSid) {
+    if (existingSid === SERVER_INSTANCE_ID) {
+      // Existing session is on THIS server → kick local connection
+      const existingConnection = connectedPlayers.get(username);
+      if (existingConnection) {
+        existingConnection.send("code:double");
+        existingConnection.close(1001, "Reassigned connection");
+        await new Promise((resolve) => existingConnection.once("close", resolve));
+        connectedPlayers.delete(username);
+      }
+    } else {
+      // Existing session is on ANOTHER server → publish an invalidation event
+      await redisClient.publish(
+        `server:${existingSid}`,
+        JSON.stringify({ type: "disconnect", uid: username })
+      );
     }
+  }
 
     playerVerified.rateLimiter = createRateLimiter();
 

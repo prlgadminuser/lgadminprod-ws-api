@@ -35,7 +35,7 @@ async function verifyPlayer(token) {
 
      const bannedUntil = userInformation.account.ban_data.until
      const time = Date.now()
-    if (time < bannedUntil)  throw new Error("user is disabled");
+    if (time < bannedUntil)  return "disabled";
     
 
     const inventory = await getUserInventory(username);

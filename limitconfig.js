@@ -48,7 +48,7 @@ const ConnectionOptionsRateLimit = {
 };
 
 const apiRateLimiter = new RateLimiterMemory({
-    points: 4,  // 10 requests per second
+    points: 3,  // 10 requests per second
     duration: 1,
 });
 
