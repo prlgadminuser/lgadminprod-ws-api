@@ -83,7 +83,7 @@ async function removeSession(username) {
 }
 
 async function checkExistingSession(username) {
-  const userKey = `${REDIS_KEYS.USER_PREFIX}${username}`;
+  const userKey = `${USER_PREFIX}${username}`;
   const sessionValue = await redisClient.get(userKey);
 
   if (!sessionValue) return null;
@@ -108,4 +108,5 @@ startHeartbeat()
 
 
 module.exports = { sub, addSession, removeSession, checkExistingSession };
+
 
