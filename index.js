@@ -601,15 +601,7 @@ wss.on("connection", async (ws, req) => {
 
   const playerVerified = ws.playerVerified;
 
-  // Check existing session (optional)
-  const existingSid = await checkExistingSession(playerVerified.playerId);
-  if (existingSid && existingSid !== SERVER_INSTANCE_ID) {
-    ws.close(4001, "already connected on another server");
-    return;
-  }
-
   // Add session for this server
-  await addSession(playerVerified.playerId);
 
   CompressAndSend(ws, "connection_success", playerVerified.inventory);
 
@@ -700,6 +692,8 @@ server.on("upgrade", async (request, socket, head) => {
       );
     }
   }
+
+    await addSession(username);
 
     playerVerified.rateLimiter = createRateLimiter();
 
