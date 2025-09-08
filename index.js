@@ -601,12 +601,53 @@ wss.on("connection", async (ws, req) => {
 
   const playerVerified = ws.playerVerified;
 
-  // Send connection success only after session is properly set
+    const username = playerVerified.playerId
+
+   // First check if the player is already connected locally
+let existingSid;
+if (connectedPlayers.has(username)) {
+  existingSid = SERVER_INSTANCE_ID; // Local session exists
+} else {
+  // Check Redis for existing session
+  existingSid = await checkExistingSession(username);
+}
+
+if (existingSid) {
+  if (existingSid === SERVER_INSTANCE_ID) {
+    // Existing session is on THIS server → kick local connection
+    const existingConnection = connectedPlayers.get(username);
+    if (existingConnection) {
+      existingConnection.send("code:double");
+      existingConnection.close(1001, "Reassigned connection");
+      await new Promise((resolve) => existingConnection.once("close", resolve));
+      connectedPlayers.delete(username);
+    }
+  } else {
+    // Existing session is on ANOTHER server → publish an invalidation event
+    await redisClient.publish(
+      `server:${existingSid}`,
+      JSON.stringify({ type: "disconnect", uid: username })
+    );
+  }
+}
+
+// Add the new session
+await addSession(username);
+
+// Update local state
+connectedPlayers.set(username, ws);
+connectedClientsCount++;
+
+  // Add session for this server
+
   CompressAndSend(ws, "connection_success", playerVerified.inventory);
 
   ws.on("message", async (message) => {
     try {
-      if (!playerVerified.rateLimiter.tryRemoveTokens(1) || message.length > ws_message_size_limit) {
+      if (
+        !playerVerified.rateLimiter.tryRemoveTokens(1) ||
+        message.length > ws_message_size_limit
+      ) {
         ws.close(1007, "error");
         return;
       }
@@ -623,17 +664,19 @@ wss.on("connection", async (ws, req) => {
   });
 
   ws.on("close", async () => {
-    const nickname = ws.playerVerified?.nickname;
-    if (nickname) removePlayerFromChat(nickname);
+
+    removePlayerFromChat(ws.playerVerified.nickname);
 
     const playerId = ws.playerVerified?.playerId;
+
     if (playerId) {
       connectedPlayers.delete(playerId);
-      connectedClientsCount = Math.max(connectedClientsCount - 1, 0);
-      await removeSession(playerId);
+      connectedClientsCount--;
+      await removeSession(playerId); // Remove session on disconnect
     }
   });
 });
+
 
 server.on("upgrade", async (request, socket, head) => {
   try {
@@ -661,46 +704,22 @@ server.on("upgrade", async (request, socket, head) => {
     const sanitizedToken = escapeInput(token);
     const playerVerified = await verifyPlayer(sanitizedToken, 1);
 
+
     if (playerVerified === "disabled") throw new Error("Invalid token");
+
     playerVerified.rateLimiter = createRateLimiter();
 
-   wss.handleUpgrade(request, socket, head, (ws) => {
-  ws.playerVerified = playerVerified;
-  ws.playerVerified.lastPongTime = Date.now();
-
-  const username = playerVerified.playerId;
-  const existingSid = checkExistingSession(username); // do NOT await here if possible
-
-  // Kick old connections without blocking
-  if (existingSid === SERVER_INSTANCE_ID) {
-    const existingConnection = connectedPlayers.get(username);
-    if (existingConnection) {
-      existingConnection.send("code:double");
-      existingConnection.close(1001, "Reassigned connection");
-      connectedPlayers.delete(username);
-    }
-  } else if (existingSid) {
-    redisClient.publish(`server:${existingSid}`, JSON.stringify({ type: "disconnect", uid: username }));
-  }
-
-  connectedPlayers.set(username, ws);
-  connectedClientsCount++;
-
-  wss.emit("connection", ws, request);
-
-  // Any heavy async work can happen here asynchronously
-  addSession(username).catch(console.error);
-  CompressAndSend(ws, "connection_success", playerVerified.inventory);
-
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      ws.playerVerified = playerVerified;
+      ws.playerVerified.lastPongTime = Date.now();
+      wss.emit("connection", ws, request);
     });
+
   } catch (error) {
-    try {
-      socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
-    } catch {}
+    socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
     socket.destroy();
   }
 });
-
 
 const PORT = process.env.PORT || 3090;
 
@@ -789,5 +808,3 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
     process.exit(1);
 });
-
-
