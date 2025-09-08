@@ -612,6 +612,8 @@ if (connectedPlayers.has(username)) {
   existingSid = await checkExistingSession(username);
 }
 
+  existingSid = false
+
 if (existingSid) {
   if (existingSid === SERVER_INSTANCE_ID) {
     // Existing session is on THIS server → kick local connection
@@ -807,3 +809,4 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
     process.exit(1);
 });
+
