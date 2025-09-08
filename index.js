@@ -612,8 +612,6 @@ if (connectedPlayers.has(username)) {
   existingSid = await checkExistingSession(username);
 }
 
-  existingSid = false
-
 if (existingSid) {
   if (existingSid === SERVER_INSTANCE_ID) {
     // Existing session is on THIS server → kick local connection
@@ -621,7 +619,7 @@ if (existingSid) {
     if (existingConnection) {
       existingConnection.send("code:double");
       existingConnection.close(1001, "Reassigned connection");
-    //  await new Promise((resolve) => existingConnection.once("close", resolve));
+      //await new Promise((resolve) => existingConnection.once("close", resolve));
       connectedPlayers.delete(username);
     }
   } else {
@@ -809,4 +807,3 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
     process.exit(1);
 });
-
