@@ -669,12 +669,9 @@ connectedClientsCount++;
 
     const playerId = ws.playerVerified?.playerId;
     if (playerId) {
-    const active = connectedPlayers.get(playerId);
-      if (active === ws) {
-        connectedPlayers.delete(playerId);
-        connectedClientsCount--;
-        await removeSession(playerId); // Remove session on disconnect
-      }
+      connectedPlayers.delete(playerId);
+      connectedClientsCount--;
+      await removeSession(playerId); // Remove session on disconnect
     }
   });
 });
@@ -810,4 +807,3 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
     process.exit(1);
 });
-
