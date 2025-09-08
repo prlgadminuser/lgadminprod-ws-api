@@ -672,6 +672,11 @@ server.on("upgrade", async (request, socket, head) => {
 
     playerVerified.rateLimiter = createRateLimiter();
 
+    wss.handleUpgrade(request, socket, head, async (ws) => {
+      ws.playerVerified = playerVerified;
+      ws.playerVerified.lastPongTime = Date.now();
+
+      
      const username = playerVerified.playerId
 
     // Check for existing session
@@ -697,10 +702,6 @@ server.on("upgrade", async (request, socket, head) => {
   }
 
   await addSession(username);
-
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      ws.playerVerified = playerVerified;
-      ws.playerVerified.lastPongTime = Date.now();
 
       
   connectedPlayers.set(username, ws);
