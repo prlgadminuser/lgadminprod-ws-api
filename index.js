@@ -603,6 +603,32 @@ wss.on("connection", async (ws, req) => {
 
   // Add session for this server
 
+   const username = playerVerified.playerId
+
+    // Check for existing session
+    const existingSid = await checkExistingSession(username);
+
+  if (existingSid) {
+    if (existingSid === SERVER_INSTANCE_ID) {
+      // Existing session is on THIS server → kick local connection
+      const existingConnection = connectedPlayers.get(username);
+      if (existingConnection) {
+        existingConnection.send("code:double");
+        existingConnection.close(1001, "Reassigned connection");
+        await new Promise((resolve) => existingConnection.once("close", resolve));
+        connectedPlayers.delete(username);
+      }
+    } else {
+      // Existing session is on ANOTHER server → publish an invalidation event
+      await redisClient.publish(
+        `server:${existingSid}`,
+        JSON.stringify({ type: "disconnect", uid: username })
+      );
+    }
+  }
+
+  await addSession(username);
+
   CompressAndSend(ws, "connection_success", playerVerified.inventory);
 
   ws.on("message", async (message) => {
@@ -668,32 +694,6 @@ server.on("upgrade", async (request, socket, head) => {
     const playerVerified = await verifyPlayer(sanitizedToken, 1);
 
     if (playerVerified === "disabled") throw new Error("Invalid token");
-
-    const username = playerVerified.playerId
-
-    // Check for existing session
-    const existingSid = await checkExistingSession(username);
-
-  if (existingSid) {
-    if (existingSid === SERVER_INSTANCE_ID) {
-      // Existing session is on THIS server → kick local connection
-      const existingConnection = connectedPlayers.get(username);
-      if (existingConnection) {
-        existingConnection.send("code:double");
-        existingConnection.close(1001, "Reassigned connection");
-        await new Promise((resolve) => existingConnection.once("close", resolve));
-        connectedPlayers.delete(username);
-      }
-    } else {
-      // Existing session is on ANOTHER server → publish an invalidation event
-      await redisClient.publish(
-        `server:${existingSid}`,
-        JSON.stringify({ type: "disconnect", uid: username })
-      );
-    }
-  }
-
-    await addSession(username);
 
     playerVerified.rateLimiter = createRateLimiter();
 
