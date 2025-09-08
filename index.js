@@ -629,6 +629,9 @@ wss.on("connection", async (ws, req) => {
 
   await addSession(username);
 
+  connectedPlayers.set(playerVerified.playerId, ws);
+  connectedClientsCount++;
+
   CompressAndSend(ws, "connection_success", playerVerified.inventory);
 
   ws.on("message", async (message) => {
@@ -700,8 +703,6 @@ server.on("upgrade", async (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, (ws) => {
       ws.playerVerified = playerVerified;
       ws.playerVerified.lastPongTime = Date.now();
-      connectedPlayers.set(playerVerified.playerId, ws);
-      connectedClientsCount++;
       wss.emit("connection", ws, request);
     });
 
