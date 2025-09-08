@@ -664,39 +664,34 @@ server.on("upgrade", async (request, socket, head) => {
     if (playerVerified === "disabled") throw new Error("Invalid token");
     playerVerified.rateLimiter = createRateLimiter();
 
-    wss.handleUpgrade(request, socket, head, async (ws) => {
-      ws.playerVerified = playerVerified;
-      ws.playerVerified.lastPongTime = Date.now();
+   wss.handleUpgrade(request, socket, head, (ws) => {
+  ws.playerVerified = playerVerified;
+  ws.playerVerified.lastPongTime = Date.now();
 
-      const playerId = playerVerified.playerId;
+  const username = playerVerified.playerId;
+  const existingSid = checkExistingSession(username); // do NOT await here if possible
 
-      // Check for existing session
-      const existingSid = await checkExistingSession(playerId);
+  // Kick old connections without blocking
+  if (existingSid === SERVER_INSTANCE_ID) {
+    const existingConnection = connectedPlayers.get(username);
+    if (existingConnection) {
+      existingConnection.send("code:double");
+      existingConnection.close(1001, "Reassigned connection");
+      connectedPlayers.delete(username);
+    }
+  } else if (existingSid) {
+    redisClient.publish(`server:${existingSid}`, JSON.stringify({ type: "disconnect", uid: username }));
+  }
 
-      if (existingSid) {
-        if (existingSid === SERVER_INSTANCE_ID) {
-          const existingConnection = connectedPlayers.get(playerId);
-          if (existingConnection) {
-            try {
-              existingConnection.send(JSON.stringify({ code: "double" }));
-            } catch {}
-            existingConnection.close(1001, "Reassigned connection");
-            await new Promise((resolve) => existingConnection.once("close", resolve));
-            connectedPlayers.delete(playerId);
-          }
-        } else {
-          await redisClient.publish(
-            `server:${existingSid}`,
-            JSON.stringify({ type: "disconnect", uid: playerId })
-          );
-        }
-      }
+  connectedPlayers.set(username, ws);
+  connectedClientsCount++;
 
-      await addSession(playerId);
-      connectedPlayers.set(playerId, ws);
-      connectedClientsCount++;
+  wss.emit("connection", ws, request);
 
-      wss.emit("connection", ws, request);
+  // Any heavy async work can happen here asynchronously
+  addSession(username).catch(console.error);
+  CompressAndSend(ws, "connection_success", playerVerified.inventory);
+
     });
   } catch (error) {
     try {
@@ -794,4 +789,5 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
     process.exit(1);
 });
+
 
