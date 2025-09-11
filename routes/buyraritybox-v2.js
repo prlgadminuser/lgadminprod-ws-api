@@ -6,47 +6,50 @@ const ReplaceAlreadyOwnedItemsWithCoins = true
 
 async function buyRarityBox(username, owned_items) {
     try {
-        const user = await getUserDetails(username);
-        if (user.currency.boxes < 1) throw new Error("no boxes left");
+      const user = await getUserDetails(username);
+      if (user.currency.boxes < 1) throw new Error("no boxes left");
 
-        const rarityRoll = Math.random();
-        const rarity = determineRarity(rarityRoll);
-        const config = rarityConfig[rarity];
+      const rarityRoll = Math.random();
+      const rarity = determineRarity(rarityRoll);
+      const config = rarityConfig[rarity];
 
-        if (rarity === "legendary") {
-            const joinedMessage = `${username} got the chrono rarity!`;
-            webhook.send(joinedMessage);
+      if (rarity === "legendary") {
+        const joinedMessage = `${username} got the chrono rarity!`;
+
+          webhook.send(joinedMessage).catch();
+
+
+      }
+
+      const rewards = generateRewards(config, owned_items);
+
+      const rewardStack = {
+        items: [],
+      };
+
+      for (const reward of rewards) {
+        if (reward.type === "item") {
+          rewardStack.items.push(reward.value);
+          owned_items.add(reward.value);
+        } else {
+          rewardStack[reward.type] =
+            (rewardStack[reward.type] || 0) + reward.value;
         }
+      }
 
-        const rewards = generateRewards(config, owned_items);
+      if (rewardStack.items.length === 0) {
+        delete rewardStack.items;
+      }
 
-         const rewardStack = {
-            items: [],
-        };
+      await updateUserFields(username, rewardStack);
 
-        for (const reward of rewards) {
-            if (reward.type === "item") {
-                rewardStack.items.push(reward.value);
-                owned_items.add(reward.value);
-            } else {
-                rewardStack[reward.type] = (rewardStack[reward.type] || 0) + reward.value;
-            }
-        }
-
-        if (rewardStack.items.length === 0) {
-            delete rewardStack.items;
-        }
-
-        await updateUserFields(username, rewardStack);
-
-        return {
-            message: "success",
-            rarity: rarity,
-            rewards: rewards
-        };
-
+      return {
+        message: "success",
+        rarity: rarity,
+        rewards: rewards,
+      };
     } catch (error) {
-        throw new Error("An error occurred during the transaction");
+      throw new Error("An error occurred during the transaction");
     }
 }
 

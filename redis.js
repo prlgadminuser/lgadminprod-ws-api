@@ -95,12 +95,10 @@ async function checkExistingSession(username) {
     return null;
   }
 
-  //const heartbeatKey = `${REDIS_KEYS.SERVER_HEARTBEAT_PREFIX}${parsed.sid}`;
- // const isExistingServerAlive = await redisClient.exists(heartbeatKey);
+  const heartbeatKey = `${SERVER_HEARTBEAT_PREFIX}${parsed.sid}`;
+  const isExistingServerAlive = await redisClient.exists(heartbeatKey);
   
-//  return isExistingServerAlive ? parsed.sid : null;
-   
-  return parsed.sid;
+  return isExistingServerAlive ? parsed.sid : null;
 }
 
 
@@ -108,5 +106,3 @@ startHeartbeat()
 
 
 module.exports = { sub, addSession, removeSession, checkExistingSession };
-
-

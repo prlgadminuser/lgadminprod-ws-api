@@ -120,7 +120,10 @@ async function CreateAccount(username, password, user_country) {
 
     result = { token: token };
 
-    if (success) webhook.send(`${username} has joined Skilldown from ${finalCountryCode}`);
+    if (success) webhook.send(`${username} has joined Skilldown from ${finalCountryCode}`).catch();
+
+
+
     return result || { status: "Account creation failed" };
   } catch (error) {
     console.error("Error creating account:", error.message);
