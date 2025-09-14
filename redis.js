@@ -105,4 +105,4 @@ async function checkExistingSession(username) {
 startHeartbeat()
 
 
-module.exports = { sub, addSession, removeSession, checkExistingSession };
+module.exports = { sub, addSession, removeSession, checkExistingSession, redisClient };

@@ -50,6 +50,7 @@ module.exports = {
   connectedPlayers,
   SERVER_INSTANCE_ID
 };
+
 const {
   startMongoDB,
   shopcollection,
@@ -105,7 +106,7 @@ const {
   verifyWebhook,
   handlePaypalWebhookEvent,
 } = require("./paystation");
-const { sub, checkExistingSession, removeSession, addSession } = require("./redis");
+const { sub, checkExistingSession, removeSession, addSession, redisClient } = require("./redis");
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
