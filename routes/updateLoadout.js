@@ -1,7 +1,7 @@
 const { userCollection } = require("./..//idbconfig");
 
 const allowed_weapons = new Set([
-  "1", "2", "3", "4"
+  "1", "2", "3"
 ]);
 
 const allowed_gadgets = new Set([
@@ -70,4 +70,3 @@ module.exports = {
   equipGadget,
   loadout_allowed_items,
 };
-
