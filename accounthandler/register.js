@@ -120,7 +120,7 @@ async function CreateAccount(username, password, user_country) {
 
     result = { token: token };
 
-    if (success) webhook.send(`${username} has joined Skilldown from ${finalCountryCode}`).catch();
+    if (success) webhook.send(`${username} has joined Skilldown from ${finalCountryCode}`).catch(() => {});
 
 
 

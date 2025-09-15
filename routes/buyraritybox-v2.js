@@ -16,7 +16,7 @@ async function buyRarityBox(username, owned_items) {
       if (rarity === "legendary") {
         const joinedMessage = `${username} got the chrono rarity!`;
 
-          webhook.send(joinedMessage).catch();
+          webhook.send(joinedMessage).catch(() => {});
 
 
       }

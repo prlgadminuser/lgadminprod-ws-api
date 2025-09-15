@@ -70,4 +70,3 @@ module.exports = {
   equipGadget,
   loadout_allowed_items,
 };
-
