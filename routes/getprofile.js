@@ -2,7 +2,8 @@ const { isString } = require('..');
 const { userCollection, userSocialCollection } = require('./../idbconfig');
 
 const joined_date_displaymode = 1;
-const count_profile_views = false;
+const count_profile_views = true;
+const ignore_user_already_viewed_profile = false
 
 async function getUserProfile(usernamed, selfusername) {
 
@@ -40,24 +41,7 @@ async function getUserProfile(usernamed, selfusername) {
     }
 
     
-    if (count_profile_views && selfusername !== usernamed) {
-
-      const document = `p_view-${selfusername}$${usernamed}`;
-
-      const InsertViewEntry = await userSocialCollection.updateOne(
-        { _id: document },
-        { $setOnInsert: { _id: document }},
-       { upsert: true }
-      );
-
-      if (InsertViewEntry.upsertedCount > 0) {
-        
-        await userCollection.updateOne(
-          { "account.username": usernamed },
-          { $inc: { "stats.p_views": 1 } },
-        );
-      }
-    }
+    if (count_profile_views && selfusername !== usernamed) TryIncreaseProfileViews(selfusername, usernamed)
 
 
     let displayString = null;
@@ -111,6 +95,27 @@ async function getUserProfile(usernamed, selfusername) {
     throw new Error("An error occurred while fetching user profile");
   }
 }
+
+
+
+async function TryIncreaseProfileViews(selfusername, usernamed) {
+  const document = `p_view-${selfusername}$${usernamed}`;
+
+  const InsertViewEntry = await userSocialCollection.updateOne(
+    { _id: document },
+    { $setOnInsert: { _id: document } },
+    { upsert: true }
+  );
+
+  if (InsertViewEntry.upsertedCount > 0) {
+    await userCollection.updateOne(
+      { "account.username": usernamed },
+      { $inc: { "stats.p_views": 1 } }
+    );
+  }
+}
+
+
 
 module.exports = {
   getUserProfile,
