@@ -59,7 +59,8 @@ const updateHighscores = async () => {
 
     const playerdetails = await userCollection
       .find({ "account.username": { $in: usernames } }, { projection: { _id: 0, u: "$account.username", h: "$equipped.hat", c: "$equipped.color", hc: "$equipped.hat_color" } })
-      .hint("playerProfileIndex")
+      //.hint("playerProfileIndex")
+      .hint("account.username_1")
       .toArray();
 
     const playerDetailsMap = playerdetails.reduce((map, player) => {
