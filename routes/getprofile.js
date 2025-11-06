@@ -32,7 +32,8 @@ async function getUserProfile(usernamed, selfusername) {
           "stats.p_views": 1,
         },
 
-        hint: "playerProfileIndex",
+        //hint: "playerProfileIndex",
+         hint: "account.username_1",
       }
     );
 
@@ -99,7 +100,7 @@ async function getUserProfile(usernamed, selfusername) {
 
 
 async function TryIncreaseProfileViews(selfusername, usernamed) {
-  const document = `p_view-${selfusername}$${usernamed}`;
+  const document = `p_view=${selfusername}$${usernamed}`;
 
   const InsertViewEntry = await userSocialCollection.updateOne(
     { _id: document },
