@@ -30,6 +30,7 @@ async function getUserProfile(usernamed, selfusername) {
           "stats.wins": 1,
           "stats.sp": 1,
           "stats.p_views": 1,
+          "inventory.loadout": 1,
         },
 
         //hint: "playerProfileIndex",
@@ -72,6 +73,14 @@ async function getUserProfile(usernamed, selfusername) {
 
 
     // Return the user profile data as a string joined with `:`
+
+    const formattedLoadout = [
+    userRow.inventory.loadout.slot1,
+    userRow.inventory.loadout.slot2,
+    userRow.inventory.loadout.slot3,
+    ].join(":")
+
+
     return [
       userRow.account.username,
       userRow.account.nickname,
@@ -90,7 +99,8 @@ async function getUserProfile(usernamed, selfusername) {
       userRow.stats.p_views,
       // Display the join date if requested
       displayString || null,
-    ].join(":");
+      formattedLoadout,
+    ].join("$");
 
   } catch (error) {
     throw new Error("An error occurred while fetching user profile");
