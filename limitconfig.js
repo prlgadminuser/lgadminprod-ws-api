@@ -16,7 +16,7 @@ const WS_MSG_SIZE_LIMIT = {
 
 
 function createRateLimiter() { // connected sending message rate limit
-  const rate = 3;
+  const rate = 5;
   return new Limiter({
     tokensPerInterval: rate,
     interval: 1000, // milliseconds
@@ -95,3 +95,4 @@ module.exports = {
   WS_MSG_SIZE_LIMIT
 
 }
+
