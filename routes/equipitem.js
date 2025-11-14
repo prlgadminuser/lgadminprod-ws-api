@@ -19,7 +19,7 @@ async function equipItem(username, itemtype, itemid, owneditems) {
     if (itemid === "0") {
       await userCollection.updateOne(
         { "account.username": username },
-        { $set: { [`equipped.${itemtype}`]: itemid } }
+        { $set: { [`equipped.${mappedType}`]: itemid } }
       );
       return { message: "success" };
     }
