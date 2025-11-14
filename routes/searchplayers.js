@@ -9,7 +9,7 @@
 
   try {
     const users = await userCollection.find(
-      { username: { $regex: `^${text}`, $options: "i" } },  // Case-insensitive search
+      { "account.nickname": {  $regex: `^${text}`, $options: "i" } },  // Case-insensitive search
       {
         projection: {
           username: 1, 

@@ -448,7 +448,6 @@ async function handleMessage(ws, message, playerVerified) {
       case "equip_item":
         response = await equipItem(
           playerVerified.playerId,
-          data.type,
           data.itemid,
           playerVerified.items
         );

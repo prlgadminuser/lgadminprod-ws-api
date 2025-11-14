@@ -2,15 +2,16 @@ const { userCollection } = require('./../idbconfig');
 
 const item_own_check_local = true
 
-async function equipItem(username, type, itemid, owneditems) {
-    const itemTypeMap = {
-        a: "hat",
-        b: "top",
-        i: "banner",
-        p: "pose",  // Assuming 'p' stands for pose (or other item)
+   const itemTypeMap = {
+        A: "hat",
+        B: "top",
+        I: "banner",
+        P: "pose",  // Assuming 'p' stands for pose (or other item)
     };
 
-    const itemType = itemTypeMap[type.toLowerCase()];
+async function equipItem(username, itemid, owneditems) {
+
+    const itemType = itemTypeMap[type[0]];
 
     if (!itemType) {
         throw new Error("Invalid item type.");
