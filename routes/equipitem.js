@@ -1,7 +1,5 @@
 const { userCollection } = require("./../idbconfig");
 
-const item_own_check_local = true;
-
 const itemTypeMap = {
   A: "hat",
   B: "top",
@@ -10,50 +8,46 @@ const itemTypeMap = {
 };
 
 async function equipItem(username, itemtype, itemid, owneditems) {
-  // Allow itemid "0" to always be equipped (assuming this is a default item)
-
-  const itemType = itemTypeMap[itemtype];
-
-  if (!itemType) {
-    throw new Error("Invalid item type.");
-  }
-
-  if (itemid === "0") {
-    try {
-      await userCollection.updateOne(
-        { "account.username": username },
-        { $set: { [`equipped.${itemtype}`]: itemid } } // Update item under 'equipped'
-      );
-      return { message: "success" };
-    } catch (error) {
-      throw new Error("Error while equipping item.");
-    }
-  }
-
   try {
-    const itemType = itemTypeMap[itemid[0]];
-
-    if (!itemType) {
+    // Validate provided item type
+    const mappedType = itemTypeMap[itemtype];
+    if (!mappedType) {
       throw new Error("Invalid item type.");
     }
 
-    const ItemIsOwned = owneditems.has(itemid);
+    // If equipping default item "0"
+    if (itemid === "0") {
+      await userCollection.updateOne(
+        { "account.username": username },
+        { $set: { [`equipped.${itemtype}`]: itemid } }
+      );
+      return { message: "success" };
+    }
 
-    if (!ItemIsOwned) {
+    // Determine actual item type from item ID (first character)
+    const itemTypeFromId = itemTypeMap[itemid[0]];
+    if (!itemTypeFromId) {
+      throw new Error("Invalid item type.");
+    }
+
+    // Verify the user owns the item
+    if (!owneditems.has(itemid)) {
       throw new Error("Item is not valid or not owned.");
     }
 
-    // Equip the item by updating the corresponding field in the 'equipped' section
+    // Equip item
     await userCollection.updateOne(
       { "account.username": username },
-      { $set: { [`equipped.${itemType}`]: itemid } }
+      { $set: { [`equipped.${itemTypeFromId}`]: itemid } }
     );
 
     return { id: itemid, message: "Item equipped successfully." };
+
   } catch (error) {
     throw new Error("Error equipping item: " + error.message);
   }
 }
+
 
 module.exports = {
   equipItem,
