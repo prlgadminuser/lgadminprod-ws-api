@@ -1,0 +1,61 @@
+db.users.updateMany(
+  {},   // update every document
+  [
+    {
+      $set: {
+        equipped: {
+          /* ---------- BANNER (I…) ---------- */
+          banner: {
+            $arrayElemAt: [
+              [
+                "I001","I002","I003","I004","I005","I007","I008","I009","I010"
+              ],
+              { $floor: { $multiply: [ { $rand: {} }, 9 ] } }   // 0-8 → 9 items
+            ]
+          },
+
+          /* ---------- HAT (A…) ---------- */
+          hat: {
+            $arrayElemAt: [
+              [
+                "A003","A004","A005","A006","A007","A008","A009","A010",
+                "A011","A012","A013","A014","A015","A016","A017","A018",
+                "A019","A020","A021","A022","A023","A025","A026","A030",
+                "A031","A034"
+              ],
+              { $floor: { $multiply: [ { $rand: {} }, 26 ] } }   // 0-25 → 26 items
+            ]
+          },
+
+          /* ---------- TOP (B…) ---------- */
+          top: {
+            $arrayElemAt: [
+              [
+                "B001","B002","B003","B004","B005","B006","B007","B008",
+                "B009","B010","B011","B012","B013","B014","B015","B016",
+                "B017","B018","B019","B020","B024","B025"
+              ],
+              { $floor: { $multiply: [ { $rand: {} }, 22 ] } }   // 0-21 → 22 items
+            ]
+          },
+
+          /* ---------- POSE (P…) ---------- */
+          pose: {
+            $arrayElemAt: [
+              [
+                "P001","P002","P003","P004","P005","P006","P007","P008"
+              ],
+              { $floor: { $multiply: [ { $rand: {} }, 8 ] } }   // 0-7 → 8 items
+            ]
+          },
+
+          /* ---------- COLOURS (unchanged) ---------- */
+          hat_color:    { $subtract: [ { $floor: { $multiply: [ { $rand: {} }, 401 ] } }, 200 ] },
+          top_color:    { $subtract: [ { $floor: { $multiply: [ { $rand: {} }, 401 ] } }, 200 ] },
+          banner_color: { $subtract: [ { $floor: { $multiply: [ { $rand: {} }, 401 ] } }, 200 ] },
+          color:        { $subtract: [ { $floor: { $multiply: [ { $rand: {} }, 401 ] } }, 200 ] }
+        }
+      }
+    }
+  ]
+) // never run this!!!!!
