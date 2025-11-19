@@ -1,5 +1,6 @@
 const { isString } = require('..');
 const { userCollection, userSocialCollection } = require('./../idbconfig');
+const { UpdateInterval } = require('./leaderboard');
 
 const joined_date_displaymode = 1;
 const count_profile_views = true;
@@ -75,7 +76,7 @@ async function getUserProfile(usernamed, selfusername) {
     let leaderboard_rank
 
     if (userRow.stats.place) {
-      if (userRow.stats.place.expires > Date.now()) {
+      if (userRow.stats.place.updated > Date.now() + UpdateInterval) {
         leaderboard_rank = 0;
       } else {
         leaderboard_rank = userRow.stats.place.place;
