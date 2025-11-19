@@ -3,7 +3,7 @@ const LZString = require("lz-string");
 
 const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
 const limit = 50
-const UpdateIntervalMins = 5 // minutes between highscore updates
+const UpdateInterval = 5 * 1000 * 60 // minutes between highscore updates
 
 
 const updateUserDocumentsPlaces = false
@@ -36,7 +36,7 @@ const updateHighscores = async () => {
         const place = index + 1;
         const placedata = {
           place: place,
-          time: timestamp,
+          expires: timestamp + UpdateInterval,
         };
 
         return {
@@ -73,6 +73,9 @@ const updateHighscores = async () => {
       .hint("account.username_1")
       .toArray();
 
+
+      console.log(playerdetails)
+
     const playerDetailsMap = playerdetails.reduce((map, player) => {
       map[player.username] = {
         nickname: player.nickname,
@@ -93,8 +96,6 @@ const updateHighscores = async () => {
 
     const compressedString = LZString.compress(highscoresString);
 
-    console.log(highscoresString);
-
     global.highscores = compressedString;
   } catch (error) {
     console.error("Error while updating highscores:", error);
@@ -111,7 +112,7 @@ async function setupHighscores() {
   await updateHighscores();
   setInterval(async () => {
     await updateHighscores();
-  }, UpdateIntervalMins * 60000);
+  }, UpdateInterval);
 }
 
 module.exports = {
