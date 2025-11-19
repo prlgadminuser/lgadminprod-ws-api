@@ -6,7 +6,7 @@ const limit = 50
 const UpdateInterval = 5 * 1000 * 60 // minutes between highscore updates
 
 
-const updateUserDocumentsPlaces = false
+const updateUserDocumentsPlaces = true
 
 const updateHighscores = async () => {
   try {
@@ -119,5 +119,6 @@ module.exports = {
   setupHighscores,
   gethighscores,
 };
+
 
 
