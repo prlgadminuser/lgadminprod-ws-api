@@ -30,6 +30,7 @@ async function getUserProfile(usernamed, selfusername) {
           "stats.wins": 1,
           "stats.sp": 1,
           "stats.p_views": 1,
+          "stats.place": 1,
           "inventory.loadout": 1,
         },
 
@@ -71,6 +72,17 @@ async function getUserProfile(usernamed, selfusername) {
       displayString = daysSinceJoined === 0 ? "0" : daysSinceJoined
     }
 
+    let leaderboard_rank
+
+    if (userRow.stats.place) {
+      if (userRow.stats.place.expires > Date.now()) {
+        leaderboard_rank = 0;
+      } else {
+        leaderboard_rank = userRow.stats.place.place;
+      }
+    } else {
+      leaderboard_rank = 0;
+    }
 
     // Return the user profile data as a string joined with `:`
 
@@ -100,6 +112,7 @@ async function getUserProfile(usernamed, selfusername) {
       // Display the join date if requested
       displayString || null,
       formattedLoadout,
+      leaderboard_rank,
     ].join("$");
 
   } catch (error) {
