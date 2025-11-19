@@ -74,7 +74,7 @@ const updateHighscores = async () => {
       .toArray();
 
 
-      console.log(playerdetails)
+ //     console.log(playerdetails)
 
     const playerDetailsMap = playerdetails.reduce((map, player) => {
       map[player.username] = {
@@ -119,4 +119,5 @@ module.exports = {
   setupHighscores,
   gethighscores,
 };
+
 
