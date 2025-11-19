@@ -76,11 +76,16 @@ async function getUserProfile(usernamed, selfusername) {
     let leaderboard_rank
 
     if (userRow.stats.place) {
-      if (userRow.stats.place.updated - UpdateInterval > Date.now()) {
-        leaderboard_rank = 0;
-      } else {
-        leaderboard_rank = userRow.stats.place.place;
-      }
+
+      const expirationTime = userRow.stats.place.updated + UpdateInterval;
+
+      if (Date.now() > expirationTime) {
+// If the current time is past the expiration time, the score is stale/invalid.
+    leaderboard_rank = 0;
+} else {
+// Otherwise, the score is still valid.
+    leaderboard_rank = userRow.stats.place.place;
+}
     } else {
       leaderboard_rank = 0;
     }
@@ -145,4 +150,3 @@ async function TryIncreaseProfileViews(selfusername, usernamed) {
 module.exports = {
   getUserProfile,
 };
-
