@@ -76,7 +76,7 @@ async function getUserProfile(usernamed, selfusername) {
     let leaderboard_rank
 
     if (userRow.stats.place) {
-      if (userRow.stats.place.updated > Date.now() + UpdateInterval) {
+      if (userRow.stats.place.updated - UpdateInterval > Date.now()) {
         leaderboard_rank = 0;
       } else {
         leaderboard_rank = userRow.stats.place.place;
@@ -145,3 +145,4 @@ async function TryIncreaseProfileViews(selfusername, usernamed) {
 module.exports = {
   getUserProfile,
 };
+
