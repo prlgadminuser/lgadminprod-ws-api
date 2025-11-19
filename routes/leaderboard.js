@@ -6,7 +6,7 @@ const limit = 50
 const UpdateInterval = 5 * 1000 * 60 // minutes between highscore updates
 
 
-const updateUserDocumentsPlaces = true
+const updateUserDocumentsPlaces = false
 
 const updateHighscores = async () => {
   try {
@@ -36,7 +36,7 @@ const updateHighscores = async () => {
         const place = index + 1;
         const placedata = {
           place: place,
-          expires: timestamp + UpdateInterval,
+          updated: timestamp,
         };
 
         return {
@@ -74,7 +74,7 @@ const updateHighscores = async () => {
       .toArray();
 
 
- //     console.log(playerdetails)
+     // console.log(playerdetails)
 
     const playerDetailsMap = playerdetails.reduce((map, player) => {
       map[player.username] = {
@@ -118,7 +118,6 @@ async function setupHighscores() {
 module.exports = {
   setupHighscores,
   gethighscores,
+  UpdateInterval
 };
-
-
 
