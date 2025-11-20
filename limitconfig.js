@@ -53,7 +53,7 @@ const apiRateLimiter = new RateLimiterMemory({
 });
 
 const AccountRateLimiter = new RateLimiterMemory({
-  points: 3,  // 10 requests per second
+  points: 3,  // 10 requests per second max account that can be created per day by ip
   duration: 86400,
 });
 
@@ -95,5 +95,6 @@ module.exports = {
   WS_MSG_SIZE_LIMIT
 
 }
+
 
 
