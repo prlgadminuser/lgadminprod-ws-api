@@ -1,30 +1,40 @@
  
  const { userCollection } = require('./../idbconfig');
 
- async function searchplayers(text) {
- 
- if (text.length < 4 || text.length > 16) {
+
+async function searchplayers(text) {
+  if (text.length < 4 || text.length > 16) {
     throw new Error("search text invalid length");
   }
 
+  const lower = text.toLowerCase();
+  const nextChar = String.fromCharCode(lower.charCodeAt(lower.length - 1) + 1);
+  const nextPrefix = lower.slice(0, -1) + nextChar;
+
   try {
-    const users = await userCollection.find(
-      { "account.nickname": {  $regex: `^${text}`, $options: "i" } },  // Case-insensitive search
+    const users = await userCollection
+    .find(
       {
-        projection: {
-          username: 1, 
-          nickname: 1, 
-          sp: 1, 
-          _id: 0
+        "account.nickname": {
+          $gte: text,     // case doesn't matter due to collation
+          $lt: nextPrefix
         }
-      }  // Only return the username
+      },
+      
+        { projection: { _id: 0, nickname: "$account.nickname", username: "$account.username", stats: "$stats.sp" },
+        collation: { locale: "en", strength: 2 },
+        hint: { "account.nickname": 1 }
+      }
     )
     .limit(3)
-    .toArray();
+    .toArray()
+   // .explain("executionStats");
 
+    console.log(JSON.stringify(users));
     return users;
   } catch (error) {
-        throw new Error("error");
+    console.error("Search error:", error);
+    throw new Error("error");
   }
 }
 
@@ -55,5 +65,6 @@ async function getUsersSlice(min, max) {
     throw new Error("error");
   }
 }
+
 
 module.exports = {searchplayers}
