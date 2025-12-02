@@ -38,6 +38,7 @@ async function searchplayers(text) {
   }
 }
 
+
 async function getUsersSlice(min, max) {
 
     if (min < 1 || max <= min) {
@@ -65,6 +66,5 @@ async function getUsersSlice(min, max) {
     throw new Error("error");
   }
 }
-
 
 module.exports = {searchplayers}

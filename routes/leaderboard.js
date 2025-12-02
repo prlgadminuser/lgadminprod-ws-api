@@ -8,11 +8,15 @@ const UpdateInterval = 5 * 1000 * 60 // minutes between highscore updates
 
 const updateUserDocumentsPlaces = true
 
+const now = Date.now();
+
 const updateHighscores = async () => {
   try {
     const highscores = await userCollection
       .find(
-        {},
+        {
+      //    $or: [{ "account.ban_data.until": { $lte: now } }],
+        },
         {
           projection: {
             _id: 0,
@@ -23,12 +27,16 @@ const updateHighscores = async () => {
       )
       .hint("highscores_skillpoints")
       .limit(limit)
-      .toArray();
+    .toArray();
 
     if (!highscores.length) {
       console.error("No highscores found.");
       return;
     }
+
+    const usernames = highscores.map((player) => player.username);
+
+
 
     if (updateUserDocumentsPlaces) {
       const timestamp = Date.now();
@@ -55,7 +63,6 @@ const updateHighscores = async () => {
       }
     }
 
-    const usernames = highscores.map((player) => player.username);
     const playerdetails = await userCollection
       .find(
         { "account.username": { $in: usernames } },
@@ -120,8 +127,4 @@ module.exports = {
   gethighscores,
   UpdateInterval
 };
-
-
-
-
 

@@ -1,6 +1,6 @@
 // src/database/redisClient.js
 const Redis = require("ioredis");
-const { REDIS_KEY } = require("./ENV");
+const REDIS_KEY = process.env.REDIS_KEY
 const { connectedPlayers, SERVER_INSTANCE_ID } = require(".");
 
 const rediskey = REDIS_KEY

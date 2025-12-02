@@ -1,240 +1,146 @@
 // Updated full code with reconciliation job and separated user reward logic
 
-const axios = require('axios');
-const paypal = require('@paypal/checkout-server-sdk');
 const { userCollection, PaymentCollection } = require('./idbconfig');
-const { PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID } = require('./ENV.js');
+const express = require('express');
+const bodyParser = require('body-parser');
+const axios = require('axios');
+const crypto = require('crypto');
 
-const environment = new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
-const client = new paypal.core.PayPalHttpClient(environment);
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const FIXED_OFFERS = {
-  "1000_coins_pack": { name: '1000 Coins', price: 1.99, description: "1000 Coins for Skilldown", rewardtype: "coins", value: 1000 },
+const XSOLLA_PROJECT_ID = "257403"
+const XSOLLA_MERCHANT_ID = "512328"
+const XSOLLA_API_KEY = "809fc93045d9a9938a8aaf195b0295947bd04275";
+const XSOLLA_WEBHOOK_SECRET = process.env.XSOLLA_WEBHOOK_SECRET;
+
+app.use(bodyParser.json());
+
+
+// Example products in memory (optional, can also be in DB)
+const products = {
+    "coinspack_200": {
+        name: 'pack_1',
+        price: 2.00,
+        currency: 'USD',
+        description: 'Kickstart your adventure!',
+       // image_url: 'https://example.com/images/gooberdash.png'
+    }
 };
 
+// 1️⃣ Generate hosted checkout page
 
 
 
-async function CreatePaymentLink(userId, offerId) {
-  try {
-    if (!offerId || !userId) throw new Error('Angebots-ID und Benutzer-ID sind erforderlich.');
 
-    const offer = FIXED_OFFERS[offerId];
-    if (!offer) throw new Error('Angebot nicht gefunden.');
-
-    if (offer.rewardtype === "item") {
-      const ItemsOwned = await userCollection.findOne({
-        "account.username": userId,
-        "inventory.items": { $in: offer.value },
-      });
-      if (ItemsOwned) throw new Error('You already own this offer');
+async function generateXsollaCheckoutURL(product_id, user_id, userCountryCode) {
+    if (!product_id || !user_id) {
+        throw new Error('Missing product_id or user_id');
     }
-
-    const user = await userCollection.findOne({ "account.username": userId });
-    if (!user) throw new Error('Benutzer nicht gefunden.');
-
-    const orderDetails = {
-      intent: 'CAPTURE',
-      purchase_units: [{
-        amount: { currency_code: 'USD', value: offer.price.toFixed(2) },
-        custom_id: JSON.stringify({ userId, offerId }),
-        description: offer.description
-      }],
-      application_context: {
-        return_url: 'https://skilldown.netlify.app',
-        cancel_url: 'https://skilldown.netlify.app',
-        shipping_preference: 'NO_SHIPPING',
-        brand_name: 'Liquem Games',
-        user_action: 'PAY_NOW'
-      }
-    };
-
-    const request = new paypal.orders.OrdersCreateRequest();
-    request.prefer("return=representation");
-    request.requestBody(orderDetails);
-
-    const response = await client.execute(request);
-    const order = response.result;
-    const approveLink = order.links.find(link => link.rel === 'approve');
-    if (!approveLink) throw new Error("Kein Genehmigungslink gefunden.");
-
-    return { success: true, approveUrl: approveLink.href };
-
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
-
-async function verifyWebhook(req) {
-  try {
-    const headers = req.headers;
-    const webhookEventBody = req.rawBody.toString('utf8');
-
-    const tokenRes = await axios.post(
-      'https://api.paypal.com/v1/oauth2/token',
-      new URLSearchParams({ grant_type: 'client_credentials' }),
-      {
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }
-    );
-
-    const verifyRes = await axios.post(
-      'https://api.paypal.com/v1/notifications/verify-webhook-signature',
-      {
-        auth_algo: headers['paypal-auth-algo'],
-        cert_url: headers['paypal-cert-url'],
-        transmission_id: headers['paypal-transmission-id'],
-        transmission_sig: headers['paypal-transmission-sig'],
-        transmission_time: headers['paypal-transmission-time'],
-        webhook_id: PAYPAL_WEBHOOK_ID,
-        webhook_event: JSON.parse(webhookEventBody)
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${tokenRes.data.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    return verifyRes.data.verification_status === 'SUCCESS';
-  } catch (err) {
-    return false;
-  }
-}
-
-async function awardUser(userId, offerdata, capture, session) {
-  // Handle item rewards
-  if (offerdata.rewardtype === "item") {
-    // Step 1: Check if user already owns any item in the offer
-    const userHasItem = await userCollection.findOne(
-      {
-        "account.username": userId,
-        "inventory.items": { $in: offerdata.value },
-      },
-      { session }
-    );
-
-    if (userHasItem) {
-      throw new Error('User already owns one or more items in the offer.');
+    const product = products[product_id];
+    if (!product) {
+        throw new Error('Invalid product_id');
     }
-
-    // Step 2: Grant the items
-    await userCollection.updateOne(
-      { "account.username": userId },
-      { $addToSet: { "inventory.items": { $each: offerdata.value } } },
-      { session }
-    );
-
-  } else {
-    // Handle currency rewards
-    await userCollection.updateOne(
-      { "account.username": userId },
-      { $inc: { [`currency.${offerdata.rewardtype}`]: offerdata.value } },
-      { session }
-    );
-  }
-
-  // Log the payment in PaymentCollection
-  await PaymentCollection.insertOne(
-    {
-      _id: capture.id,
-      paypalCaptureId: capture.id,
-      userId,
-      offerdata,
-      status: capture.status,
-      create_time: capture.create_time,
-      update_time: capture.update_time,
-      payerdata: capture.payer || null
-    },
-    { session }
-  );
-}
-
-async function handlePaypalWebhookEvent(event) {
-  if (event.event_type === 'CHECKOUT.ORDER.APPROVED') {
-    const session = userCollection.client.startSession();
-    try {
-      const captureResult = await captureOrder(event.resource.id);
-      const capture = captureResult.purchase_units[0].payments.captures[0];
-      const { userId, offerId } = JSON.parse(capture.custom_id);
-      const offerdata = FIXED_OFFERS[offerId];
-      if (!offerdata) throw new Error('Invalid offer ID');
-
-      await session.withTransaction(() => awardUser(userId, offerdata, capture, session));
-    } catch (err) {
-      try {
-        const refundReq = new paypal.payments.CapturesRefundRequest(capture.id);
-        refundReq.requestBody({});
-        await client.execute(refundReq);
-      } catch (refundErr) {
-        console.error('Refund failed:', refundErr.message);
-      }
-    } finally {
-      await session.endSession();
+    if (!userCountryCode) {
+        throw new Error('Missing user country code (ISO 2-letter)'); 
     }
-  }
-}
-
-async function captureOrder(orderId) {
-  const request = new paypal.orders.OrdersCaptureRequest(orderId);
-  request.requestBody({});
-  const response = await client.execute(request);
-  if (response.result.status !== 'COMPLETED') throw new Error('Capture not completed');
-  return response.result;
-}
-
-async function reconcileMissedPayments() {
-  const token = await axios.post(
-    'https://api.paypal.com/v1/oauth2/token',
-    new URLSearchParams({ grant_type: 'client_credentials' }),
-    {
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString('base64')}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    }
-  );
-
-  const startDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-  const txns = await axios.get(
-    `https://api.paypal.com/v1/reporting/transactions?start_date=${startDate}&transaction_status=S&fields=all&page_size=100`,
-    { headers: { Authorization: `Bearer ${token.data.access_token}` } }
-  );
-
-  for (const txn of txns.data.transaction_details || []) {
-    const captureId = txn.transaction_info.transaction_id;
-    if (await PaymentCollection.findOne({ paypalCaptureId: captureId })) continue;
 
     try {
-      const captureDetails = await client.execute(new paypal.payments.CapturesGetRequest(captureId));
-      const capture = captureDetails.result;
-      const { userId, offerId } = JSON.parse(capture.custom_id || '{}');
-      const offerdata = FIXED_OFFERS[offerId];
-      if (!userId || !offerdata) continue;
+        const response = await axios.post(
+            `https://store.xsolla.com/api/v3/project/${XSOLLA_PROJECT_ID}/admin/payment/token`,
+            {
+                sandbox: true,  // for testing
+                user: {
+                    id: { value: String(user_id) },
+                    country: { value: userCountryCode }
+                },
+                purchase: {
+                    items: [
+                        {
+                            sku: product_id,
+                            name: product.name,
+                            type: "virtual_item",
+                            quantity: 1, // ✅ required
+                           // amount: 1,
+                            description: product.description
+                            // **Do not include price override** unless your project supports custom pricing
+                        }
+                    ]
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Basic ${Buffer.from(XSOLLA_PROJECT_ID + ':' + XSOLLA_API_KEY).toString('base64')}`,
+                    'Content-Type': 'application/json'
+                    // optionally: 'X-User-Ip': userIp
+                }
+            }
+        );
 
-      const session = userCollection.client.startSession();
-      try {
-        await session.withTransaction(() => awardUser(userId, offerdata, capture, session));
-      } finally {
-        await session.endSession();
-      }
+        const token = response.data.token;
+        // If sandbox, use sandbox paystation URL
+        const base = response.data.status === 'sandbox' 
+            ? 'https://sandbox-secure.xsolla.com/paystation4/?token=' 
+            : 'https://secure.xsolla.com/paystation4/?token=';
+        return base + token;
     } catch (err) {
-      console.error(`Failed to reconcile capture ${captureId}:`, err.message);
+        console.error("Xsolla Shop Builder Token Error:", err.response?.data || err.message);
     }
-  }
 }
 
 
+// 2️⃣ Handle Xsolla webhook
+app.post('/webhook', async (req, res) => {
+    const signature = req.headers['x-xsolla-signature'] || '';
+    const payload = JSON.stringify(req.body);
 
+    // Verify webhook signature
+    const expectedSig = crypto
+        .createHmac('sha256', XSOLLA_WEBHOOK_SECRET)
+        .update(payload)
+        .digest('hex');
 
-module.exports = {
-  CreatePaymentLink,
-  verifyWebhook,
-  handlePaypalWebhookEvent,
-  reconcileMissedPayments,
-  FIXED_OFFERS
-};
+    if (signature !== expectedSig) return res.status(403).send('Invalid signature');
+
+    const event = req.body;
+
+    if (event.notification_type === 'payment') {
+        const order = event.order;
+        const userId = order.user.id;
+        const sku = order.virtual_items[0].sku;
+
+        try {
+            // 3️⃣ Database operation
+            // Example: grant virtual item
+            const result = await userCollection.updateOne(
+                { _id: userId },
+                { $push: { inventory: sku } }
+            );
+
+            if (result.modifiedCount === 1) {
+                console.log(`Delivered item ${sku} to user ${userId}`);
+
+                // 4️⃣ Confirm payment capture to Xsolla only if DB success
+                await axios.post(
+                    `https://sandbox.api.xsolla.com/merchant/v2/merchants/${XSOLLA_PROJECT_ID}/orders/${order.id}/capture`,
+                    {},
+                    {
+                        headers: {
+                            Authorization: `Basic ${Buffer.from(XSOLLA_API_KEY + ':').toString('base64')}`
+                        }
+                    }
+                );
+            } else {
+                console.log(`Failed to deliver item for user ${userId}, payment not captured`);
+            }
+        } catch (err) {
+            console.error('Error processing order:', err.message);
+        }
+    }
+
+    res.sendStatus(200);
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

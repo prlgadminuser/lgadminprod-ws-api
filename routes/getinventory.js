@@ -14,7 +14,7 @@ async function getPlayerItems(username) {
         { projection: { id: 1, _id: 0 } } // Project only the itemId field and exclude the _id
     )
     .limit(100)
-   // .hint("player_item_unique")
+    //.hint("player_item_unique")
     .hint("player_unique_sorted")
     .toArray();
 
@@ -172,5 +172,3 @@ async function getUserInventory(username) {
 module.exports = {
     getUserInventory,
 };
-
-

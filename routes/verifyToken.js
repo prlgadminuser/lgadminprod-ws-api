@@ -29,6 +29,8 @@ async function verifyToken(token, source) {
 
       const time = Date.now()
 
+      const daysBanned = Math.floor((bannedUntil - time) / 86400) + 1
+
       if (source === 2) if (time < bannedUntil) return { bantype: bantype, reason: banreason, ban_until: bannedUntil, time: time };
       if (source === 1) if (time < bannedUntil) return "disabled";
 

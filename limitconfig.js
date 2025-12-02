@@ -44,21 +44,20 @@ const getClientIp = (req) => {
 
 const ConnectionOptionsRateLimit = { 
   points: 1, // Number of points
-  duration: 5, // Per second
+  duration: 4, // Per second
 };
 
 const apiRateLimiter = new RateLimiterMemory({
-    points: 4,  // 10 requests per second
+    points: 5,  // 10 requests per second
     duration: 1,
 });
 
 const AccountRateLimiter = new RateLimiterMemory({
-  points: 3,  // 10 requests per second max account that can be created per day by ip
+  points: 3,  // 10 requests per second
   duration: 86400,
 });
 
 const allowedOrigins = [
-    "https://staging.turbowarp.org",
     "https://slcount.netlify.app",
     "https://slgame.netlify.app",
     "https://serve.gamejolt.net",
@@ -93,8 +92,4 @@ module.exports = {
   allowedOrigins,
   friendUpdatesTime,
   WS_MSG_SIZE_LIMIT
-
 }
-
-
-

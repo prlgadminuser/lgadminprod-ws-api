@@ -2,12 +2,12 @@
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const { UpdateMaintenance } = require("./index");
-const { MONGO_URI, TOKEN_KEY, DISCORDWEBHOOK, DB_NAME } = require("./ENV")
+const { createChallenge, verifySolution } = require("./accounthandler/security");
 
-
-const lgconnecturi = process.env.MONGO_URI || MONGO_URI
-const tokenkey = process.env.TOKEN_KEY || TOKEN_KEY
-const webhookURL = process.env.DISCORDWEBHOOK || DISCORDWEBHOOK
+const lgconnecturi = process.env.MONGO_URI
+const tokenkey = process.env.TOKEN_KEY
+const webhookURL = process.env.DISCORDWEBHOOK
+const DB_name = process.env.DB_NAME
 
 
 
@@ -28,16 +28,23 @@ const client = new MongoClient(uri, {
     },
   });
 
-const db = client.db(DB_NAME);
+const db = client.db(DB_name);
 const userCollection = db.collection("users");
 const userInventoryCollection = db.collection("users_items");
 const userWeaponsCollection = db.collection("users_weapons");
+const userQuestCollection = db.collection("users_quests");
 const userSocialCollection = db.collection("users_social");
 const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
 const PaymentCollection = db.collection("payments")
 
+//console.log(createChallenge(4))
+
+//const challange = `{"difficulty":4,"salt":"45fc8a49a5e017023ad45e1b888037eb","expiry":1763166498797}.a749d2b63d9282c49e5e0798e09a3ba2048feaa6cddda5d5ce93e416564ddeef`
+
+
+//console.log(verifySolution(challange, "112426"))
 
 
 
@@ -96,4 +103,5 @@ module.exports = {
    PaymentCollection,
    userInventoryCollection,
    userWeaponsCollection,
+   userQuestCollection,
 }

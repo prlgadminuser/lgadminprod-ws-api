@@ -1,5 +1,7 @@
 "use strict";
 
+require('dotenv').config();
+
 const connectedPlayers = new Map();
 //const playerQueue = new Map();
 function serverid ()  {
@@ -107,6 +109,10 @@ const {
   handlePaypalWebhookEvent,
 } = require("./paystation");
 const { sub, checkExistingSession, removeSession, addSession, redisClient } = require("./redis");
+const { configDotenv } = require('dotenv');
+
+
+
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
@@ -247,7 +253,7 @@ const server = http.createServer(async (req, res) => {
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("token invalid");
             } else if (tokenResult.ban_until) {
-              res.writeHead(500, { "Content-Type": "text/plain" });
+              res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end(JSON.stringify(tokenResult));
             } else {
               res.writeHead(401, { "Content-Type": "text/plain" });

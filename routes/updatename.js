@@ -16,9 +16,7 @@ async function updateNickname(username, newName) {
             return { status: "not allowed" };
         }
 
-        // Check if the new nickname contains any prohibited words
-        const containsBadWords = badWords.test(newNickname);
-        if (containsBadWords) {
+        if (badWords.test(newNickname)) {
             return { status: "not allowed" };
         }
 
