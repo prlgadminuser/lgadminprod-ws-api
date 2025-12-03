@@ -179,7 +179,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (!origin || origin.length > 50 || !allowedOrigins.includes(origin)) {
-        res.writeHead(400, { "Content-Type": "text/plain" });
+        res.writeHead(200, { "Content-Type": "text/plain" });
         return res.end("Unauthorized");
       }
     }
@@ -813,4 +813,5 @@ process.on("uncaughtException", (error) => {
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
     process.exit(1);
+
 });
