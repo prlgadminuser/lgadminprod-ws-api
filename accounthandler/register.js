@@ -9,10 +9,11 @@ const {
 const { jwt, bcrypt } = require("./..//index");
 const { webhook } = require("./..//discordwebhook");
 const { InsertStarterWeaponsData } = require("./../routes/buyWeapon");
+const { CheckUserIp } = require("./security");
 
 const allow_bad_words = false;
 
-async function CreateAccount(username, password, user_country) {
+async function CreateAccount(username, password, user_country, userIp) {
 
   username = String(username); 
   password = String(password); 
@@ -58,6 +59,13 @@ async function CreateAccount(username, password, user_country) {
     if (existingUser) {
       return { status: "Name already taken. Please choose another one." };
     }
+
+    const isUsingVpn = CheckUserIp(userIp).isVPN === true
+
+    if (isUsingVpn) {
+      return { status: "VPNs/Proxies are not allowed. Please disable them and try again" };
+    }
+
 
     // Hash password and create token
     const hashedPassword = await bcrypt.hash(password, 1); // Increased salt rounds for better security

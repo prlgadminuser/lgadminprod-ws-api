@@ -118,7 +118,39 @@ function verifySolution(challengeToken, nonce) {
 
 
 
+
+
+async function CheckUserIp(ip) {
+  const proxyCheckUrl = `https://proxycheck.io/v2/${ip}?key=361c8a-127f25-394247-47kers&vpn=1&asn=1&risk=1`;
+
+  try {
+    const res = await fetch(proxyCheckUrl);
+
+    const data = await res.json();
+
+    if (data[ip]?.proxy === "yes") {
+      return {
+        ip,
+        isVPN: true,
+        type: data[ip].type || "VPN/Proxy",
+        provider: data[ip].provider || "Unknown"
+      };
+    } else {
+      return {
+        ip,
+        isVPN: false,
+        type: "Residential"
+      };
+    }
+  } catch (error) {
+    return { ip, isVPN: true, error: "Check failed" };
+  }
+}
+
+
+
 module.exports = {
     createChallenge,
-    verifySolution
+    verifySolution,
+    CheckUserIp
 };
