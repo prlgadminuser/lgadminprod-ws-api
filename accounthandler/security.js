@@ -128,7 +128,7 @@ async function CheckUserIp(ip) {
 
     const data = await res.json();
 
-    if (data[ip]?.proxy === "yes") {
+    if (data[ip]?.vpn === "yes" || data[ip]?.proxy === "yes") {
       return {
         ip,
         isVPN: true,

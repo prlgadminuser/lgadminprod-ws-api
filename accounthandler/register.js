@@ -60,7 +60,7 @@ async function CreateAccount(username, password, user_country, userIp) {
       return { status: "Name already taken. Please choose another one." };
     }
 
-    const isUsingVpn = CheckUserIp(userIp).isVPN === true
+    const isUsingVpn = CheckUserIp(userIp).isVPN
 
     if (isUsingVpn) {
       return { status: "VPNs/Proxies are not allowed. Please disable them and try again" };
