@@ -285,7 +285,8 @@ const server = http.createServer(async (req, res) => {
             const createResult = await CreateAccount(
               requestData.username,
               requestData.password,
-              userCountry
+              userCountry,
+              userIp,
             );
 
             if (createResult.token) {
@@ -815,4 +816,3 @@ process.on("unhandledRejection", (reason, promise) => {
     process.exit(1);
 
 });
-
