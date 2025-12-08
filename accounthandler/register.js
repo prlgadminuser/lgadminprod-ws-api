@@ -12,6 +12,7 @@ const { InsertStarterWeaponsData } = require("./../routes/buyWeapon");
 const { CheckUserIp } = require("./security");
 
 const allow_bad_words = false;
+const allowVPNS = false
 
 async function CreateAccount(username, password, user_country, userIp) {
 
@@ -59,12 +60,16 @@ async function CreateAccount(username, password, user_country, userIp) {
     if (existingUser) {
       return { status: "Name already taken. Please choose another one." };
     }
+    
+
+    if (!allowVPNS) {
 
     const isUsingVpn = await CheckUserIp(userIp)
 
     if (isUsingVpn.isVPN) {
       return { status: "VPNs/Proxies are not allowed. Please disable them and try again" };
     }
+  }
 
 
     // Hash password and create token
