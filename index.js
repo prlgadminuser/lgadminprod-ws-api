@@ -110,6 +110,7 @@ const {
 } = require("./paystation");
 const { sub, checkExistingSession, removeSession, addSession, redisClient } = require("./redis");
 const { configDotenv } = require('dotenv');
+const { CheckUserIp } = require('./accounthandler/security');
 
 
 
@@ -816,3 +817,10 @@ process.on("unhandledRejection", (reason, promise) => {
     process.exit(1);
 
 });
+
+async function run() {
+  const create = await CreateAccount(358457876783, 357353, "US", "77.111.245.17");
+//  console.log(create);
+}
+
+//run();
