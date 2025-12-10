@@ -756,6 +756,7 @@ function watchItemShop() {
     changeStream.on("change", (change) => {
       const docId = change.fullDocument._id;
       if (docId === "dailyItems") {
+         global.cached_shopdata = change.fullDocument // cache to avoid database read
         broadcast("shopupdate");
       } else if (docId === "maintenance") {
         UpdateMaintenance(

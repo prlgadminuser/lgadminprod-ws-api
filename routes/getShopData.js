@@ -7,8 +7,9 @@ async function getshopdata() {
 
   try {
     // Fetch the shop data for the daily items
-    const dailyItemsConfig = "dailyItems";
-    const itemshop = await shopcollection.findOne({ _id: dailyItemsConfig });
+ //  const dailyItemsConfig = "dailyItems";
+    const itemshop = global.cached_shopdata
+   //const itemshop = global.cached_shopdata || await shopcollection.findOne({ _id: dailyItemsConfig });
 
     if (!itemshop) {
       throw new Error("Shop configuration not found");

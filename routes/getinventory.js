@@ -1,5 +1,4 @@
 const { battlePassCollection, userCollection, userInventoryCollection, shopcollection, userWeaponsCollection } = require('./../idbconfig');
-const { FIXED_OFFERS } = require('./../paystation');
 const { rarityPercentages } = require('./../boxrarityconfig');
 const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');

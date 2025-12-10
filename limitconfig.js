@@ -1,7 +1,6 @@
 
 const { Limiter, RateLimiterMemory } = require('./index');
 
-
 const friendUpdatesTime = 30000
 const ws_message_size_limit = 200
 const api_message_size_limit = 520
@@ -16,7 +15,7 @@ const WS_MSG_SIZE_LIMIT = {
 
 
 function createRateLimiter() { // connected sending message rate limit
-  const rate = 5;
+  const rate = 3;
   return new Limiter({
     tokensPerInterval: rate,
     interval: 1000, // milliseconds
@@ -48,7 +47,7 @@ const ConnectionOptionsRateLimit = {
 };
 
 const apiRateLimiter = new RateLimiterMemory({
-    points: 5,  // 10 requests per second
+    points: 2,  // 10 requests per second
     duration: 1,
 });
 

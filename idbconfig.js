@@ -59,23 +59,18 @@ async function startMongoDB() {
         { projection: { status: 1, public_message: 1 } } // Only retrieve the maintenanceStatus field
       );
 
-  
-
-
-
-  
+       const cached_shopdata = await shopcollection.findOne(
+        { _id: "dailyItems" }, // Only retrieve the maintenanceStatus field
+      );
 
 // You might want to handle null "stats.sp" later in JS, since find projection doesn't do $ifNull
-
-
-
-     
 
 
       UpdateMaintenance(result.status, result.public_message)
 
       global.maintenance = result.status
-      global.maintenance_publicinfomessage = result.public_message
+      global.maintenance_publicinfomessage = result.public_message,
+      global.cached_shopdata = cached_shopdata
 
  
     } catch (error) {
