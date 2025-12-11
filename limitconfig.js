@@ -47,7 +47,7 @@ const ConnectionOptionsRateLimit = {
 };
 
 const apiRateLimiter = new RateLimiterMemory({
-    points: 2,  // 10 requests per second
+    points: 3,  // 10 requests per second
     duration: 1,
 });
 
@@ -91,4 +91,5 @@ module.exports = {
   allowedOrigins,
   friendUpdatesTime,
   WS_MSG_SIZE_LIMIT
+
 }
