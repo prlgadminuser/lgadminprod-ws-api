@@ -1,6 +1,6 @@
 const serverlist = {
   EU: [
-    "wss://s1-eu-sdgame.onrender.com"
+    "wss://s1-eu-sdgame.onrender.com",
     "wss://skilldowm-gameserver-eu-central-kld7k.ondigitalocean.app",
   ],
   AS: [
@@ -49,4 +49,5 @@ module.exports = {
   serverlist,
   getServerByCountry,
 };
+
 
