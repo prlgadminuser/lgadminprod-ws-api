@@ -57,6 +57,7 @@ const AccountRateLimiter = new RateLimiterMemory({
 });
 
 const allowedOrigins = [
+    "https://skilldown.io",
     "https://slcount.netlify.app",
     "https://slgame.netlify.app",
     "https://serve.gamejolt.net",
@@ -93,4 +94,5 @@ module.exports = {
   WS_MSG_SIZE_LIMIT
 
 }
+
 
