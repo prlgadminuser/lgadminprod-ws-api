@@ -326,13 +326,14 @@ const server = http.createServer(async (req, res) => {
           case "/from-paypal-webhook-3f567t-5758899":
             try {
               const isValid = await verifyWebhook(req);
+              console.log(req.body)
+
               if (!isValid) {
                 res.writeHead(500, { "Content-Type": "text/plain" });
                 return res.end("Not valid webhook");
               }
 
-              console.log(req.body)
-
+              
               await handlePaypalWebhookEvent(req.body);
 
               res.writeHead(200, { "Content-Type": "text/plain" });
@@ -830,4 +831,5 @@ async function run() {
 }
 
 run();
+
 
