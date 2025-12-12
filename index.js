@@ -331,6 +331,8 @@ const server = http.createServer(async (req, res) => {
                 return res.end("Not valid webhook");
               }
 
+              console.log(req.body)
+
               await handlePaypalWebhookEvent(req.body);
 
               res.writeHead(200, { "Content-Type": "text/plain" });
@@ -828,3 +830,4 @@ async function run() {
 }
 
 run();
+
