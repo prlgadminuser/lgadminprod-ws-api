@@ -323,7 +323,7 @@ const server = http.createServer(async (req, res) => {
               return res.end("Error: Invalid credentials");
             }
 
-          case "/from-paypal-webhook":
+          case "/from-paypal-webhook-3f567t-5758899":
             try {
               const isValid = await verifyWebhook(req);
               if (!isValid) {
