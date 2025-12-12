@@ -3,7 +3,10 @@
 const axios = require('axios');
 const paypal = require('@paypal/checkout-server-sdk');
 const { userCollection, PaymentCollection } = require('./idbconfig');
-const { PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID } = require('./ENV.js');
+
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID
+const PAYPAL_SECRET = process.env.PAYPAL_SECRET
+const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID
 
 const environment = new paypal.core.LiveEnvironment(PAYPAL_CLIENT_ID, PAYPAL_SECRET);
 const client = new paypal.core.PayPalHttpClient(environment);
@@ -34,7 +37,7 @@ async function CreatePaymentLink(userId, offerId) {
     if (!user) throw new Error('Benutzer nicht gefunden.');
 
     const orderDetails = {
-      intent: 'CAPTURE',
+      intent: 'AUTHORIZE',
       purchase_units: [{
         amount: { currency_code: 'USD', value: offer.price.toFixed(2) },
         custom_id: JSON.stringify({ userId, offerId }),
@@ -227,9 +230,6 @@ async function reconcileMissedPayments() {
     }
   }
 }
-
-
-
 
 module.exports = {
   CreatePaymentLink,
