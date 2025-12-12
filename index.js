@@ -1,5 +1,7 @@
 "use strict";
 
+require('dotenv').config();
+
 const connectedPlayers = new Map();
 //const playerQueue = new Map();
 function serverid ()  {
@@ -32,7 +34,12 @@ const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require("rate-limiter-flexible");
 
+function isString(value) {
+  return typeof value === "string" || value instanceof String;
+}
+
 module.exports = {
+  isString,
   jwt,
   Limiter,
   bcrypt,
@@ -45,6 +52,7 @@ module.exports = {
   connectedPlayers,
   SERVER_INSTANCE_ID
 };
+
 const {
   startMongoDB,
   shopcollection,
@@ -99,14 +107,22 @@ const {
   CreatePaymentLink,
   verifyWebhook,
   handlePaypalWebhookEvent,
+  generateXsollaCheckoutURL,
 } = require("./paystation");
-const { sub, checkExistingSession, removeSession, addSession } = require("./redis");
+const { sub, checkExistingSession, removeSession, addSession, redisClient } = require("./redis");
+const { configDotenv } = require('dotenv');
+const { CheckUserIp } = require('./accounthandler/security');
+
+
+
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
   // const finalmessage = LZString.compressToBase64(json_message); // or compressToBase64 for safer transmission
   ws.send(json_message);
 }
+
+
 
 //setUserOnlineStatus("agag", "agg")
 
@@ -142,7 +158,7 @@ const webhookRawBodyParser = bodyParser.json({
 });
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === "/from-paypal-webhook") {
+  if (req.url === "/from-paypal-webhook-3f567t-5758899") {
     webhookRawBodyParser(req, res, (err) => {});
   }
 
@@ -150,7 +166,7 @@ const server = http.createServer(async (req, res) => {
   await setCommonHeaders(res, origin);
 
   try {
-    if (req.url !== "/from-paypal-webhook") {
+    if (req.url !== "/from-paypal-webhook-3f567t-5758899") {
       const ip = getClientIp(req);
       if (!ip) {
         res.writeHead(429, { "Content-Type": "text/plain" });
@@ -180,7 +196,7 @@ const server = http.createServer(async (req, res) => {
     let requestAborted = false;
 
     req.on("data", (chunk) => {
-      if (!req.url === "/from-paypal-webhook") {
+      if (!req.url === "/from-paypal-webhook-3f567t-5758899") {
         if (chunk.length && chunk.length > api_message_size_limit) {
           requestAborted = true;
           res.writeHead(429, { "Content-Type": "text/plain" });
@@ -239,7 +255,7 @@ const server = http.createServer(async (req, res) => {
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("token invalid");
             } else if (tokenResult.ban_until) {
-              res.writeHead(500, { "Content-Type": "text/plain" });
+              res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end(JSON.stringify(tokenResult));
             } else {
               res.writeHead(401, { "Content-Type": "text/plain" });
@@ -271,7 +287,8 @@ const server = http.createServer(async (req, res) => {
             const createResult = await CreateAccount(
               requestData.username,
               requestData.password,
-              userCountry
+              userCountry,
+              userIp,
             );
 
             if (createResult.token) {
@@ -353,9 +370,7 @@ const wss = new WebSocket.Server({
 });
 
 // Function to escape special characters in strings (for MongoDB safety)
-function escapeStringForMongo(input) {
-  return String(input).replace(/[§.]/g, "");
-}
+
 
 const deepSanitizeAndEscape = (value) => {
   // If value is an array, recursively sanitize and escape each element
@@ -376,12 +391,8 @@ const deepSanitizeAndEscape = (value) => {
   return escapeInput(sanitize(value));
 };
 
-function escapeInput(input, isJwt = false) {
+function escapeInput(input) {
   if (input === null || input === undefined) return "";
-
-  if (isJwt && typeof input === "string") {
-    return input.replace(/[$]/g, ""); // Return the JWT as is, no sanitization
-  }
 
   if (typeof input === "object") {
     return JSON.stringify(input, (key, value) => {
@@ -393,6 +404,7 @@ function escapeInput(input, isJwt = false) {
   }
   return String(input).replace(/[$]/g, "");
 }
+
 
 async function handleMessage(ws, message, playerVerified) {
   try {
@@ -599,15 +611,44 @@ wss.on("connection", async (ws, req) => {
 
   const playerVerified = ws.playerVerified;
 
-  // Check existing session (optional)
-  const existingSid = await checkExistingSession(playerVerified.playerId);
-  if (existingSid && existingSid !== SERVER_INSTANCE_ID) {
-    ws.close(4001, "already connected on another server");
-    return;
+    const username = playerVerified.playerId
+
+   // First check if the player is already connected locally
+let existingSid;
+if (connectedPlayers.has(username)) {
+  existingSid = SERVER_INSTANCE_ID; // Local session exists
+} else {
+  // Check Redis for existing session
+  existingSid = await checkExistingSession(username);
+}
+
+if (existingSid) {
+  if (existingSid === SERVER_INSTANCE_ID) {
+    // Existing session is on THIS server → kick local connection
+    const existingConnection = connectedPlayers.get(username);
+    if (existingConnection) {
+      existingConnection.send("code:double");
+      existingConnection.close(1001, "Reassigned connection");
+      //await new Promise((resolve) => existingConnection.once("close", resolve));
+      connectedPlayers.delete(username);
+    }
+  } else {
+    // Existing session is on ANOTHER server → publish an invalidation event
+    await redisClient.publish(
+      `server:${existingSid}`,
+      JSON.stringify({ type: "disconnect", uid: username })
+    );
   }
+}
+
+// Add the new session
+await addSession(username);
+
+// Update local state
+connectedPlayers.set(username, ws);
+connectedClientsCount++;
 
   // Add session for this server
-  await addSession(playerVerified.playerId);
 
   CompressAndSend(ws, "connection_success", playerVerified.inventory);
 
@@ -637,7 +678,6 @@ wss.on("connection", async (ws, req) => {
     removePlayerFromChat(ws.playerVerified.nickname);
 
     const playerId = ws.playerVerified?.playerId;
-
     if (playerId) {
       connectedPlayers.delete(playerId);
       connectedClientsCount--;
@@ -670,34 +710,17 @@ server.on("upgrade", async (request, socket, head) => {
     const token = request.url.split("/")[1];
     if (!token || token.trim() === "") throw new Error("Invalid token");
 
-    const sanitizedToken = escapeInput(token, true);
+    const sanitizedToken = escapeInput(token);
     const playerVerified = await verifyPlayer(sanitizedToken, 1);
 
+
     if (playerVerified === "disabled") throw new Error("Invalid token");
-
-    // Check for existing session
-    const existingSid = await checkExistingSession(playerVerified.playerId);
-    if (existingSid && existingSid !== SERVER_INSTANCE_ID) {
-      socket.write("HTTP/1.1 409 Conflict\r\n\r\n");
-      socket.destroy();
-      return;
-    }
-
-    const existingConnection = connectedPlayers.get(playerVerified.playerId);
-    if (existingConnection) {
-      existingConnection.send("code:double");
-      existingConnection.close(1001, "Reassigned connection");
-      await new Promise((resolve) => existingConnection.on("close", resolve));
-      connectedPlayers.delete(playerVerified.playerId);
-    }
 
     playerVerified.rateLimiter = createRateLimiter();
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       ws.playerVerified = playerVerified;
       ws.playerVerified.lastPongTime = Date.now();
-      connectedPlayers.set(playerVerified.playerId, ws);
-      connectedClientsCount++;
       wss.emit("connection", ws, request);
     });
 
@@ -707,7 +730,7 @@ server.on("upgrade", async (request, socket, head) => {
   }
 });
 
-const PORT = process.env.PORT || 3090;
+const PORT = 3090;
 
 startMongoDB().then(() => {
   server.listen(PORT, () => {
@@ -734,6 +757,7 @@ function watchItemShop() {
     changeStream.on("change", (change) => {
       const docId = change.fullDocument._id;
       if (docId === "dailyItems") {
+         global.cached_shopdata = change.fullDocument // cache to avoid database read
         broadcast("shopupdate");
       } else if (docId === "maintenance") {
         UpdateMaintenance(
@@ -779,6 +803,7 @@ function closeAllClients(code, reason) {
   });
 }
 
+
 process.on("SIGINT", () => {
   changeStream.close();
   process.exit();
@@ -786,8 +811,20 @@ process.on("SIGINT", () => {
 
 process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error);
+  process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
+    process.exit(1);
+
 });
+
+
+
+async function run() {
+  const create = await CreatePaymentLink("Lique", "1000_coins_pack");
+  console.log(create);
+}
+
+run();
