@@ -107,6 +107,8 @@ async function verifyWebhook(req) {
       }
     );
 
+    console.log(verifyRes.data)
+
     return verifyRes.data.verification_status === 'SUCCESS';
   } catch (err) {
     return false;
@@ -242,5 +244,6 @@ module.exports = {
   reconcileMissedPayments,
   FIXED_OFFERS
 };
+
 
 
