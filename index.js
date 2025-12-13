@@ -166,7 +166,7 @@ const server = http.createServer(async (req, res) => {
   await setCommonHeaders(res, origin);
 
   try {
-    if (req.url !== "/from-paypal-webhook-3f567t-5758899") {
+    if (req.url !== "/from-paypal-webhook") {
       const ip = getClientIp(req);
       if (!ip) {
         res.writeHead(429, { "Content-Type": "text/plain" });
@@ -196,7 +196,7 @@ const server = http.createServer(async (req, res) => {
     let requestAborted = false;
 
     req.on("data", (chunk) => {
-      if (!req.url === "/from-paypal-webhook-3f567t-5758899") {
+      if (!req.url === "/from-paypal-webhook") {
         if (chunk.length && chunk.length > api_message_size_limit) {
           requestAborted = true;
           res.writeHead(429, { "Content-Type": "text/plain" });
@@ -323,7 +323,7 @@ const server = http.createServer(async (req, res) => {
               return res.end("Error: Invalid credentials");
             }
 
-          case "/from-paypal-webhook-3f567t-5758899":
+          case "/from-paypal-webhook":
             try {
               const isValid = await verifyWebhook(req);
               console.log(req.body)
@@ -831,5 +831,6 @@ async function run() {
 }
 
 run();
+
 
 
