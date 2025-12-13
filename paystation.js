@@ -86,7 +86,7 @@ async function verifyWebhook(req) {
 
     console.log("checking")
 
-    console.log(headers)
+    console.log(webhookEventBody)
 
     const verifyRes = await axios.post(
       'https://api.paypal.com/v1/notifications/verify-webhook-signature',
@@ -244,6 +244,7 @@ module.exports = {
   reconcileMissedPayments,
   FIXED_OFFERS
 };
+
 
 
 
