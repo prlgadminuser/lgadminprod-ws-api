@@ -158,7 +158,7 @@ const webhookRawBodyParser = bodyParser.json({
 });
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === "/from-paypal-webhook-3f567t-5758899") {
+  if (req.url === "/from-paypal-webhook") {
     webhookRawBodyParser(req, res, (err) => {});
   }
 
@@ -831,6 +831,7 @@ async function run() {
 }
 
 run();
+
 
 
 
