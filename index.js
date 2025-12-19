@@ -183,7 +183,6 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // Handle preflight OPTIONS requests
     if (req.method === "OPTIONS") {
       res.writeHead(200);
       return res.end();
@@ -193,7 +192,7 @@ const server = http.createServer(async (req, res) => {
     let requestAborted = false;
 
     req.on("data", (chunk) => {
-      if (!req.url === "/xsolla-webhook") {
+      if (req.url !== "/xsolla-webhook") {
         if (chunk.length && chunk.length > api_message_size_limit) {
           requestAborted = true;
           res.writeHead(429, { "Content-Type": "text/plain" });
@@ -222,13 +221,10 @@ const server = http.createServer(async (req, res) => {
 
         if (global.maintenance == "true") {
           res.writeHead(400, { "Content-Type": "text/plain" });
-
-          const maintenancedata = {
+          return res.end(JSON.stringify({
             status: "maintenance",
             gmsg: global.maintenance_publicinfomessage,
-          };
-
-          return res.end(JSON.stringify(maintenancedata));
+          }));
         }
 
         switch (req.url) {
@@ -248,7 +244,7 @@ const server = http.createServer(async (req, res) => {
             if (tokenResult === "valid") {
               res.writeHead(200, { "Content-Type": "text/plain" });
               return res.end("true");
-            } else if (tokenResult === "invalid"){
+            } else if (tokenResult === "invalid") {
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("token invalid");
             } else if (tokenResult.ban_until) {
@@ -258,8 +254,6 @@ const server = http.createServer(async (req, res) => {
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("server error");
             }
-      
-            
 
           case "/register":
             if (req.method !== "POST") {
@@ -312,6 +306,7 @@ const server = http.createServer(async (req, res) => {
               requestData.username,
               requestData.password
             );
+
             if (loginResult) {
               res.writeHead(200, { "Content-Type": "application/json" });
               return res.end(JSON.stringify({ data: loginResult }));
@@ -321,91 +316,97 @@ const server = http.createServer(async (req, res) => {
             }
 
           case "/xsolla-webhook":
-  try {
-    // Ensure you have rawBody available (you probably set it earlier with a middleware)
-    const rawBodyStr = req.rawBody.toString('utf8');
+            try {
+              const rawBodyStr = req.rawBody.toString("utf8");
 
-    // Verify signature
-    const isValid = validateXsollaSignature(req, rawBodyStr);
-    if (!isValid) {
-      console.error('❌ Invalid Xsolla webhook signature');
-      res.writeHead(401);
-      return res.end(); // No body
-    }
+              if (!validateXsollaSignature(req, rawBodyStr)) {
+                res.writeHead(401);
+                return res.end();
+              }
 
-    console.log('✅ Xsolla Webhook Signature Verified');
+              let webhookBody;
+              try {
+                webhookBody = JSON.parse(rawBodyStr);
+              } catch {
+                res.writeHead(400);
+                return res.end();
 
-    // Parse the body only after signature check
-    let body;
-    try {
-      body = JSON.parse(rawBodyStr);
-    } catch (e) {
-      console.error('❌ Invalid JSON in webhook');
-      res.writeHead(400);
-      return res.end();
-    }
+               
+              }
 
-    // Handle user_validation specifically
-    if (body.notification_type === 'user_validation') {
-      const userId = body.user?.id;
+              
 
-      if (!userId) {
-        console.error('❌ Missing user ID in validation webhook');
-        res.writeHead(400);
-        return res.end();
-      }
+               console.log(webhookBody.user)
 
-      console.log(`✅ Validating user ID: ${userId}`);
+              if (webhookBody.notification_type === "user_validation") {
+                const userId = webhookBody.user?.id;
+                if (!userId) {
+                  res.writeHead(400);
+                  return res.end();
+                }
 
-      // TODO: In production, check if userId exists in your database
-      // For now (testing): accept all users
-      const userExists = true; // Replace with real DB check later
+                const userExists = await userCollection.findOne({
+                  "account.username": userId,
+                });
 
-      if (userExists) {
-        // CORRECT: 204 No Content, EMPTY BODY
-        res.writeHead(204);
-        return res.end();
-      } else {
-        // Invalid user → must return 400 with specific JSON
-        res.writeHead(400, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({
-          error: {
-            code: "INVALID_USER"
-          }
-        }));
-      }
-    }
+                if (userExists) {
+                  res.writeHead(204);
+                        console.log("validated")
+                  return res.end();
+            
+                } else {
+                  res.writeHead(400, { "Content-Type": "application/json" });
+                  return res.end(JSON.stringify({
+                    error: { code: "INVALID_USER" },
+                  }));
+                }
+              }
 
-    // Optional: Handle payment notifications (order paid, etc.)
-    if (body.notification_type === 'payment' || body.notification_type === 'order_paid') {
-      console.log('💰 Payment successful:', body.transaction?.id);
-      // TODO: Grant items to user here
-    }
+              if (
+                webhookBody.notification_type === "payment" ||
+                webhookBody.notification_type === "order_paid"
+              ) {
+                const userId = webhookBody.user?.id;
+                const offerId = webhookBody.custom_parameters?.offer_id;
 
-    // For all other valid webhooks (refund, etc.) — acknowledge with 204
-    res.writeHead(204);
-    return res.end();
+                if (!userId || !offerId) {
+                  res.writeHead(500);
+                  return res.end();
+                }
 
-  } catch (error) {
-    console.error('❌ Webhook error:', error);
-    res.writeHead(500);
-    return res.end();
-  }
-}
-      } catch (err) {
-        if (!res.headersSent) {
-          res.writeHead(500, { "Content-Type": "text/plain" });
+                const result = awardBuyer(userId, offerId);
+                if (!result) {
+                  res.writeHead(500);
+                  return res.end();
+                }
+
+                res.writeHead(204);
+                return res.end();
+              }
+
+              res.writeHead(204);
+              return res.end();
+            } catch {
+              res.writeHead(500);
+              return res.end();
+            }
+
+          default:
+            res.writeHead(404, { "Content-Type": "text/plain" });
+            return res.end("Not Found");
         }
-        return res.end("Error: Internal server error");
+      } catch {
+        res.writeHead(500);
+        return res.end("Server error");
       }
     });
-  } catch (err) {
-    if (!res.headersSent) {
-      res.writeHead(500, { "Content-Type": "text/plain" });
-    }
-    res.end("Error: Internal server error");
+  } catch {
+    res.writeHead(500);
+    res.end("Server error");
   }
 });
+
+ 
 
 // Loop through all headers and log their keys and value
 
