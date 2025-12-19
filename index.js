@@ -339,7 +339,7 @@ const server = http.createServer(async (req, res) => {
 
               
 
-               console.log(webhookBody.user)
+             //  console.log(webhookBody.user)
 
               if (webhookBody.notification_type === "user_validation") {
                 const userId = webhookBody.user?.id;
@@ -354,7 +354,7 @@ const server = http.createServer(async (req, res) => {
 
                 if (userExists) {
                   res.writeHead(204);
-                        console.log("validated")
+                   //     console.log("validated")
                   return res.end();
             
                 } else {
@@ -879,9 +879,6 @@ process.on("unhandledRejection", (reason, promise) => {
 
  const user = {
     id: 'Lique',
-
-    email: 'liam.heizmann@gmail.com',
-    country: 'DE',
   };
 
 async function run() {
@@ -889,4 +886,4 @@ async function run() {
   console.log(create);
 }
 
-run();
+//run();

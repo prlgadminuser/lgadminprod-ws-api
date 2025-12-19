@@ -6,22 +6,22 @@ const XSOLLA_WEBHOOK_SECRET = process.env.XSOLLA_WEBHOOK_SECRET
 function validateXsollaSignature(req, rawBodyStr) {
   const authHeader = req.headers['authorization'] || '';
   if (!authHeader.startsWith('Signature ')) {
-    console.log('Missing or invalid Authorization header');
+  //  console.log('Missing or invalid Authorization header');
     return false;
   }
 
   const receivedSignature = authHeader.substring('Signature '.length);
 
   if (!req.rawBody) {
-    console.log('No rawBody available');
+  //  console.log('No rawBody available');
     return false;
   }
 
 
  
 
-  console.log('Raw body length:', rawBodyStr.length);
-  console.log('Raw body preview:', rawBodyStr); // first 200 chars
+  //console.log('Raw body length:', rawBodyStr.length);
+ // console.log('Raw body preview:', rawBodyStr); // first 200 chars
 
   let calculated;
   try {
@@ -33,8 +33,8 @@ function validateXsollaSignature(req, rawBodyStr) {
     return false;
   }
 
-  console.log('Calculated:', calculated);
-  console.log('Received:  ', receivedSignature);
+ // console.log('Calculated:', calculated);
+ // console.log('Received:  ', receivedSignature);
 
  return crypto.timingSafeEqual(
     Buffer.from(calculated),
@@ -58,7 +58,7 @@ try {
         const userId = body.user?.id;
 
         if (!userId) {
-          console.log('user_validation: No user ID provided');
+        //  console.log('user_validation: No user ID provided');
           return false
         }
 
@@ -79,16 +79,16 @@ try {
 
     case 'payment':
       // payment completed
-      console.log('Payment successful:', payload);
+    //  console.log('Payment successful:', payload);
 
     case 'refund':
-      console.log('Refund issued:', payload);
+    //  console.log('Refund issued:', payload);
 
     case 'chargeback':
-      console.log('Chargeback:', payload);
+    //  console.log('Chargeback:', payload);
 
     default:
-      console.log('Unhandled event:', payload.notification_type);
+     // console.log('Unhandled event:', payload.notification_type);
   }
 } catch (err) {
     console.error('Error handling webhook:', err);
