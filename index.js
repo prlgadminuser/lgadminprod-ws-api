@@ -330,7 +330,13 @@ const server = http.createServer(async (req, res) => {
               } catch {
                 res.writeHead(400);
                 return res.end();
+
+               
               }
+
+              
+
+               console.log(webhookBody.user)
 
               if (webhookBody.notification_type === "user_validation") {
                 const userId = webhookBody.user?.id;
