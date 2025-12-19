@@ -153,6 +153,7 @@ const webhookRawBodyParser = bodyParser.json({
 
 const server = http.createServer(async (req, res) => {
   if (req.url === "/xsolla-webhook") {
+    console.log(req)
     webhookRawBodyParser(req, res, (err) => {});
   }
 
@@ -576,7 +577,7 @@ async function handleMessage(ws, message, playerVerified) {
         if (RealMoneyPurchasesEnabled) {
 
            const user = {
-    id: playerVerified.playerId,
+    id: "Liquem",
   };
 
           response = await (async () => {
@@ -848,7 +849,7 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
  const user = {
-    id: 'Liquem',
+    id: 'Liqu',
 
     email: 'liam.heizmann@gmail.com',
     country: 'DE',
