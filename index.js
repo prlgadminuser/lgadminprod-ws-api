@@ -13,6 +13,8 @@ const serverid =  "xxxxxxxxxx".replace(/[xy]/g, function (c) {
 return serverid
 }
 
+
+
 const SERVER_INSTANCE_ID = serverid()
 
 let connectedClientsCount = 0;
@@ -109,6 +111,7 @@ const { configDotenv } = require('dotenv');
 const { CheckUserIp } = require('./accounthandler/security');
 const generateCheckoutUrlForOffer = require('./payments/xsolla');
 const { validateXsollaSignature } = require('./payments/validatewebhook');
+const { awardBuyer } = require('./payments/award-buyer');
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
@@ -374,7 +377,7 @@ const server = http.createServer(async (req, res) => {
                   return res.end();
                 }
 
-                const result = awardBuyer(userId, offerId);
+                const result = await awardBuyer(userId, offerId);
                 if (!result) {
                   res.writeHead(500);
                   return res.end();

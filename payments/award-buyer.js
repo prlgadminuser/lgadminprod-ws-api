@@ -41,3 +41,7 @@ async function awardBuyer(userid, offerid) {
     return false;
   }
 }
+
+module.exports = {
+    awardBuyer
+}
