@@ -320,6 +320,8 @@ const server = http.createServer(async (req, res) => {
           case "/xsolla-webhook":
             try {
 
+              console.log(req.headers)
+
                const isValid = validateXsollaSignature(req);
 
               if (!isValid) {
