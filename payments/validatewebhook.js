@@ -3,14 +3,12 @@ const { userCollection } = require('../idbconfig');
 
 const XSOLLA_WEBHOOK_SECRET = process.env.XSOLLA_WEBHOOK_SECRET
 
-function validateXsollaSignature(req) {
+function validateXsollaSignature(req, rawBodyStr) {
   const authHeader = req.headers['authorization'] || '';
   if (!authHeader.startsWith('Signature ')) {
     console.log('Missing or invalid Authorization header');
     return false;
   }
-
-  console.log("1");
 
   const receivedSignature = authHeader.substring('Signature '.length);
 
@@ -19,23 +17,8 @@ function validateXsollaSignature(req) {
     return false;
   }
 
-  console.log("2");
 
-  // ── Critical fix: safely convert to string ──
-  let rawBodyStr;
-  try {
-    if (Buffer.isBuffer(req.rawBody)) {
-      rawBodyStr = req.rawBody.toString('utf8');
-    } else if (typeof req.rawBody === 'string') {
-      rawBodyStr = req.rawBody;  // already string
-    } else {
-     // console.log('req.rawBody is invalid type:', typeof req.rawBody);
-      return false;
-    }
-  } catch (err) {
-   // console.error('Error converting rawBody to string:', err);
-    return false;
-  }
+ 
 
   console.log('Raw body length:', rawBodyStr.length);
   console.log('Raw body preview:', rawBodyStr); // first 200 chars
@@ -53,16 +36,10 @@ function validateXsollaSignature(req) {
   console.log('Calculated:', calculated);
   console.log('Received:  ', receivedSignature);
 
-  const isWebhookValid =  crypto.timingSafeEqual(
+ return crypto.timingSafeEqual(
     Buffer.from(calculated),
     Buffer.from(receivedSignature)
   );
-
-  if (!isWebhookValid) return false
-
- const RequestResult = HandleWebookRequest(rawBodyStr)
-
- return RequestResult
 
 
   // Safe comparison
@@ -87,10 +64,7 @@ try {
 
         // Check if user exists in your DB
         const user = await userCollection.findOne({
-          "account.username": userId  // or whatever field you use for Xsolla user ID
-          // Example alternatives:
-          // "xsolla_user_id": userId
-          // "account.userId": userId
+          "account.username": userId 
         });
 
         if (user) {
