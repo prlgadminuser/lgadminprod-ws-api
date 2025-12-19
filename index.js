@@ -108,8 +108,7 @@ const { sub, checkExistingSession, removeSession, addSession, redisClient } = re
 const { configDotenv } = require('dotenv');
 const { CheckUserIp } = require('./accounthandler/security');
 const generateCheckoutUrlForOffer = require('./payments/xsolla');
-const validateXsollaSignature = require('./payments/validatewebhook');
-
+const { validateXsollaSignature } = require('./payments/validatewebhook');
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
@@ -501,7 +500,7 @@ async function handleMessage(ws, message, playerVerified) {
     switch (data.id) {
       case "ping":
         ws.playerVerified.lastPongTime = Date.now();
-        break;
+       // break;
 
       case "equip_item":
         response = await equipItem(
@@ -511,12 +510,12 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.items
         );
         //CompressAndSend(ws, "equipitem", response)
-        break;
+        //break;
 
       case "buy_weapon":
         response = await buyWeapon(playerVerified.playerId, data.wid,  playerVerified.items);
         CompressAndSend(ws, "buyweapon", response);
-        break;
+       // break;
 
       case "equip_weapon":
         response = await equipWeapon(
@@ -526,7 +525,7 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.items,
         );
         // CompressAndSend(ws, "equipweapon", response)
-        break;
+       // break;
 
       case "equip_color":
         response = await equipColor(
@@ -535,7 +534,7 @@ async function handleMessage(ws, message, playerVerified) {
           data.color
         );
         CompressAndSend(ws, "equipcolor", response);
-        break;
+      //  break;
 
       case "dailyreward":
         response = await getdailyreward(
@@ -543,17 +542,17 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.items
         );
         CompressAndSend(ws, "dailyreward", response);
-        break;
+       // break;
 
       case "change_name":
         response = await updateNickname(playerVerified.playerId, data.new);
         CompressAndSend(ws, "nickname", response);
-        break;
+       // break;
 
       case "shopdata":
         response = await getshopdata();
         CompressAndSend(ws, "shopdata", response);
-        break;
+       // break;
 
       case "buyitem":
         response = await buyItem(
@@ -562,12 +561,12 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.items
         );
         CompressAndSend(ws, "buyitem", response);
-        break;
+       // break;
 
       case "profile":
         response = await getUserProfile(data.pid, playerVerified.playerId);
         CompressAndSend(ws, "profile", response);
-        break;
+       // break;
 
       case "openbox":
         response = await buyRarityBox(
@@ -575,29 +574,29 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.items
         );
         CompressAndSend(ws, "openbox", response);
-        break;
+       // break;
 
       case "highscore":
         response = await gethighscores();
         CompressAndSend(ws, "highscore", response);
-        break;
+       // break;
 
       // chat functions
 
       case "joinchat":
         response = await addPlayerToChat(playerVerified.nickname, ws);
         CompressAndSend(ws, "joinchat", response);
-        break;
+      //  break;
 
       case "leavechat":
         response = await removePlayerFromChat(playerVerified.nickname);
         CompressAndSend(ws, "leavechat", response);
-        break;
+       // break;
 
       case "sendchatmsg":
         response = await sendMessage(playerVerified.nickname, data.msg);
         //  CompressAndSend(ws, "sendchatmsg", response)
-        break;
+       // break;
 
       case "get-paystation":
         if (RealMoneyPurchasesEnabled) {
@@ -615,7 +614,7 @@ async function handleMessage(ws, message, playerVerified) {
 
           CompressAndSend(ws, "get-paystation", response);
         }
-        break;
+       // break;
 
       default:
         ws.close(1007, "error");
