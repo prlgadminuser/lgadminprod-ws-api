@@ -155,15 +155,22 @@ const webhookRawBodyParser = bodyParser.json({
 
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === "/xsolla-webhook") {
-    webhookRawBodyParser(req, res, (err) => {});
-  }
-
   const origin = req.headers.origin;
   await setCommonHeaders(res, origin);
 
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    res.writeHead(200);
+    return res.end();
+  }
+
+  const isWebhook = req.url === "/xsolla-webhook";
+
   try {
-    if (req.url !== "/xsolla-webhook") {
+    // =========================
+    // NON-WEBHOOK SECURITY
+    // =========================
+    if (!isWebhook) {
       const ip = getClientIp(req);
       if (!ip) {
         res.writeHead(429, { "Content-Type": "text/plain" });
@@ -173,239 +180,228 @@ const server = http.createServer(async (req, res) => {
       try {
         await apiRateLimiter.consume(ip);
       } catch {
-        res.writeHead(400, { "Content-Type": "text/plain" });
-        return res.end("Too many requests. Try again later");
+        res.writeHead(429, { "Content-Type": "text/plain" });
+        return res.end("Too many requests");
       }
 
       if (!origin || origin.length > 50 || !allowedOrigins.includes(origin)) {
-        res.writeHead(400, { "Content-Type": "text/plain" });
+        res.writeHead(401, { "Content-Type": "text/plain" });
         return res.end("Unauthorized");
       }
     }
 
-    // Handle preflight OPTIONS requests
-    if (req.method === "OPTIONS") {
-      res.writeHead(200);
-      return res.end();
-    }
-
-    let body = "";
-    let requestAborted = false;
+    // =========================
+    // RAW BODY HANDLING
+    // =========================
+    let rawBody = Buffer.alloc(0);
+    let bodyStr = "";
 
     req.on("data", (chunk) => {
-      if (!req.url === "/xsolla-webhook") {
-        if (chunk.length && chunk.length > api_message_size_limit) {
-          requestAborted = true;
-          res.writeHead(429, { "Content-Type": "text/plain" });
-          res.end("Unauthorized");
-          req.destroy();
-          return;
-        }
+      if (!isWebhook && chunk.length > api_message_size_limit) {
+        res.writeHead(413);
+        res.end("Payload too large");
+        req.destroy();
+        return;
       }
-      body += chunk.toString();
-      body = escapeInput(body);
+
+      rawBody = Buffer.concat([rawBody, chunk]);
+      bodyStr += chunk.toString("utf8");
     });
 
     req.on("end", async () => {
-      if (requestAborted) return;
+      // =========================
+      // WEBHOOK HANDLER
+      // =========================
+      if (isWebhook) {
+        const rawBodyStr = rawBody.toString("utf8");
 
-      try {
-        let requestData = {};
-        if (body) {
+        if (!validateXsollaSignature(req, rawBodyStr)) {
+          console.error("❌ Invalid Xsolla signature");
+          res.writeHead(401);
+          return res.end();
+        }
+
+        let data;
+        try {
+          data = JSON.parse(rawBodyStr);
+        } catch {
+          res.writeHead(400);
+          return res.end();
+        }
+
+        // User validation
+        if (data.notification_type === "user_validation") {
+          const userId = data.user?.id;
+          if (!userId) {
+            res.writeHead(400);
+            return res.end();
+          }
+
+          // TODO: real DB check
+          const userExists = true;
+
+          if (userExists) {
+            res.writeHead(204);
+            return res.end();
+          }
+
+          res.writeHead(400, { "Content-Type": "application/json" });
+          return res.end(JSON.stringify({
+            error: { code: "INVALID_USER" }
+          }));
+        }
+
+        // Payment notification
+        if (data.notification_type === "payment" || data.notification_type === "order_paid") {
+          const userId = data.user?.id;
+          const offerId = data.custom_parameters?.offer_id;
+
+          if (!userId || !offerId) {
+            res.writeHead(500);
+            return res.end();
+          }
+
           try {
-            requestData = JSON.parse(body);
-          } catch {
-            res.writeHead(400, { "Content-Type": "text/plain" });
-            return res.end("Error: Invalid JSON");
+            await awardBuyer(userId, offerId);
+            res.writeHead(204);
+            return res.end();
+          } catch (err) {
+            console.error("❌ awardBuyer failed", err);
+            res.writeHead(500);
+            return res.end();
           }
         }
 
-        if (global.maintenance == "true") {
-          res.writeHead(400, { "Content-Type": "text/plain" });
-
-          const maintenancedata = {
-            status: "maintenance",
-            gmsg: global.maintenance_publicinfomessage,
-          };
-
-          return res.end(JSON.stringify(maintenancedata));
-        }
-
-        switch (req.url) {
-          case "/token":
-            if (req.method !== "POST") {
-              res.writeHead(405, { "Content-Type": "text/plain" });
-              return res.end("Method Not Allowed");
-            }
-
-            if (!requestData.token) {
-              res.writeHead(400, { "Content-Type": "text/plain" });
-              return res.end("token invalid");
-            }
-
-            const tokenResult = await verifyToken(requestData.token, 2);
-
-            if (tokenResult === "valid") {
-              res.writeHead(200, { "Content-Type": "text/plain" });
-              return res.end("true");
-            } else if (tokenResult === "invalid"){
-              res.writeHead(401, { "Content-Type": "text/plain" });
-              return res.end("token invalid");
-            } else if (tokenResult.ban_until) {
-              res.writeHead(401, { "Content-Type": "text/plain" });
-              return res.end(JSON.stringify(tokenResult));
-            } else {
-              res.writeHead(401, { "Content-Type": "text/plain" });
-              return res.end("server error");
-            }
-      
-            
-
-          case "/register":
-            if (req.method !== "POST") {
-              res.writeHead(405, { "Content-Type": "text/plain" });
-              return res.end("Method Not Allowed");
-            }
-
-            if (!requestData.username || !requestData.password) {
-              res.writeHead(400, { "Content-Type": "text/plain" });
-              return res.end("Error: Missing username or password");
-            }
-
-            const userIp = getClientIp(req);
-            const userCountry = getClientCountry(req);
-            const rateLimitData = await AccountRateLimiter.get(userIp);
-
-            if (rateLimitData && rateLimitData.remainingPoints <= 0) {
-              res.writeHead(429, { "Content-Type": "text/plain" });
-              return res.end("You can't create more accounts.");
-            }
-
-            const createResult = await CreateAccount(
-              requestData.username,
-              requestData.password,
-              userCountry,
-              userIp,
-            );
-
-            if (createResult.token) {
-              await AccountRateLimiter.consume(userIp);
-              res.writeHead(200, { "Content-Type": "application/json" });
-              return res.end(JSON.stringify({ data: createResult }));
-            } else {
-              res.writeHead(400, { "Content-Type": "application/json" });
-              return res.end(JSON.stringify({ data: createResult }));
-            }
-
-          case "/login":
-            if (req.method !== "POST") {
-              res.writeHead(405, { "Content-Type": "text/plain" });
-              return res.end("Method Not Allowed");
-            }
-
-            if (!requestData.username || !requestData.password) {
-              res.writeHead(400, { "Content-Type": "text/plain" });
-              return res.end("Error: Missing username or password");
-            }
-
-            const loginResult = await Login(
-              requestData.username,
-              requestData.password
-            );
-            if (loginResult) {
-              res.writeHead(200, { "Content-Type": "application/json" });
-              return res.end(JSON.stringify({ data: loginResult }));
-            } else {
-              res.writeHead(401, { "Content-Type": "text/plain" });
-              return res.end("Error: Invalid credentials");
-            }
-
-          case "/xsolla-webhook":
-  try {
-    // Ensure you have rawBody available (you probably set it earlier with a middleware)
-    const rawBodyStr = req.rawBody.toString('utf8');
-
-    // Verify signature
-    const isValid = validateXsollaSignature(req, rawBodyStr);
-    if (!isValid) {
-      console.error('❌ Invalid Xsolla webhook signature');
-      res.writeHead(401);
-      return res.end(); // No body
-    }
-
-    console.log('✅ Xsolla Webhook Signature Verified');
-
-    // Parse the body only after signature check
-    let body;
-    try {
-      body = JSON.parse(rawBodyStr);
-    } catch (e) {
-      console.error('❌ Invalid JSON in webhook');
-      res.writeHead(400);
-      return res.end();
-    }
-
-    // Handle user_validation specifically
-    if (body.notification_type === 'user_validation') {
-      const userId = body.user?.id;
-
-      if (!userId) {
-        console.error('❌ Missing user ID in validation webhook');
-        res.writeHead(400);
-        return res.end();
-      }
-
-      console.log(`✅ Validating user ID: ${userId}`);
-
-      // TODO: In production, check if userId exists in your database
-      // For now (testing): accept all users
-      const userExists = true; // Replace with real DB check later
-
-      if (userExists) {
-        // CORRECT: 204 No Content, EMPTY BODY
+        // Acknowledge other events
         res.writeHead(204);
         return res.end();
-      } else {
-        // Invalid user → must return 400 with specific JSON
+      }
+
+      // =========================
+      // NORMAL API BODY
+      // =========================
+      let requestData = {};
+      if (bodyStr) {
+        try {
+          requestData = JSON.parse(escapeInput(bodyStr));
+        } catch {
+          res.writeHead(400, { "Content-Type": "text/plain" });
+          return res.end("Invalid JSON");
+        }
+      }
+
+      if (global.maintenance === "true") {
         res.writeHead(400, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({
-          error: {
-            code: "INVALID_USER"
-          }
+          status: "maintenance",
+          gmsg: global.maintenance_publicinfomessage,
         }));
       }
-    }
 
-    // Optional: Handle payment notifications (order paid, etc.)
-    if (body.notification_type === 'payment' || body.notification_type === 'order_paid') {
-      console.log('💰 Payment successful:', body.transaction?.id);
-      // TODO: Grant items to user here
-    }
+      // =========================
+      // ROUTES
+      // =========================
+      switch (req.url) {
+        case "/token": {
+          if (req.method !== "POST") {
+            res.writeHead(405);
+            return res.end();
+          }
 
-    // For all other valid webhooks (refund, etc.) — acknowledge with 204
-    res.writeHead(204);
-    return res.end();
+          if (!requestData.token) {
+            res.writeHead(400);
+            return res.end("token invalid");
+          }
 
-  } catch (error) {
-    console.error('❌ Webhook error:', error);
-    res.writeHead(500);
-    return res.end();
-  }
-}
-      } catch (err) {
-        if (!res.headersSent) {
-          res.writeHead(500, { "Content-Type": "text/plain" });
+          const result = await verifyToken(requestData.token, 2);
+
+          if (result === "valid") {
+            res.writeHead(200);
+            return res.end("true");
+          }
+
+          if (result?.ban_until) {
+            res.writeHead(401);
+            return res.end(JSON.stringify(result));
+          }
+
+          res.writeHead(401);
+          return res.end("token invalid");
         }
-        return res.end("Error: Internal server error");
+
+        case "/register": {
+          if (req.method !== "POST") {
+            res.writeHead(405);
+            return res.end();
+          }
+
+          if (!requestData.username || !requestData.password) {
+            res.writeHead(400);
+            return res.end("Missing fields");
+          }
+
+          const ip = getClientIp(req);
+          const country = getClientCountry(req);
+          const rate = await AccountRateLimiter.get(ip);
+
+          if (rate?.remainingPoints <= 0) {
+            res.writeHead(429);
+            return res.end("Account limit reached");
+          }
+
+          const result = await CreateAccount(
+            requestData.username,
+            requestData.password,
+            country,
+            ip
+          );
+
+          if (result.token) {
+            await AccountRateLimiter.consume(ip);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            return res.end(JSON.stringify({ data: result }));
+          }
+
+          res.writeHead(400, { "Content-Type": "application/json" });
+          return res.end(JSON.stringify({ data: result }));
+        }
+
+        case "/login": {
+          if (req.method !== "POST") {
+            res.writeHead(405);
+            return res.end();
+          }
+
+          const result = await Login(
+            requestData.username,
+            requestData.password
+          );
+
+          if (!result) {
+            res.writeHead(401);
+            return res.end("Invalid credentials");
+          }
+
+          res.writeHead(200, { "Content-Type": "application/json" });
+          return res.end(JSON.stringify({ data: result }));
+        }
+
+        default:
+          res.writeHead(404);
+          return res.end("Not found");
       }
     });
+
   } catch (err) {
+    console.error("❌ Server error:", err);
     if (!res.headersSent) {
-      res.writeHead(500, { "Content-Type": "text/plain" });
+      res.writeHead(500);
     }
-    res.end("Error: Internal server error");
+    res.end("Internal server error");
   }
 });
+
+    
 
 // Loop through all headers and log their keys and value
 
@@ -626,6 +622,7 @@ async function handleMessage(ws, message, playerVerified) {
     // console.log(error)
   }
 }
+  
 
 const rateLimiterConnection = new RateLimiterMemory(ConnectionOptionsRateLimit);
 
