@@ -603,7 +603,7 @@ async function handleMessage(ws, message, playerVerified) {
         if (RealMoneyPurchasesEnabled) {
 
            const user = {
-    id: "Liquem",
+    id: playerVerified.playerId,
   };
 
           response = await (async () => {
@@ -875,7 +875,7 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
  const user = {
-    id: 'Liqu',
+    id: 'Lique',
 
     email: 'liam.heizmann@gmail.com',
     country: 'DE',
