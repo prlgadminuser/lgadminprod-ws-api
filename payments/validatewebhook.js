@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 
 
 const XSOLLA_WEBHOOK_SECRET = process.env.XSOLLA_WEBHOOK_SECRET
