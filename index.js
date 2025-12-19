@@ -144,12 +144,15 @@ async function setCommonHeaders(res, origin) {
 }
 
 const webhookRawBodyParser = bodyParser.json({
-  verify: (req, res, buf) => {
-    // This crucial line attaches the raw buffer of the request body to req.rawBody
-    // Your verifyWebhook function will use req.rawBody.toString('utf8')
-    req.rawBody = buf;
-  },
+  type: 'application/json',
+  verify: (req, res, buf, encoding) => {
+    // Only save raw body for Xsolla webhook
+    if (req.url === '/xsolla-webhook') {
+      req.rawBody = buf;  // buf is Buffer
+    }
+  }
 });
+
 
 const server = http.createServer(async (req, res) => {
   if (req.url === "/xsolla-webhook") {
