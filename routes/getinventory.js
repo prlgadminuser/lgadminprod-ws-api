@@ -4,6 +4,7 @@ const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');
 const { loadout_allowed_items } = require('./updateLoadout');
 const { RealMoneyPurchasesEnabled } = require('./../index');
+const OFFERS = require('../payments/offers');
 loadout_allowed_items
 
 async function getPlayerItems(username) {
@@ -154,7 +155,7 @@ async function getUserInventory(username) {
             nearestRegion: getServerByCountry(userRow.account.country_code || "Unknown"),
             weaponcatalog: WeaponsToBuy,
             loadout_allowed_items: loadout_allowed_items,
-            in_app_purchases: RealMoneyPurchasesEnabled ? FIXED_OFFERS : "disabled" ,
+            in_app_purchases: RealMoneyPurchasesEnabled ? OFFERS : "disabled" ,
         };
   
         // Return the constructed object

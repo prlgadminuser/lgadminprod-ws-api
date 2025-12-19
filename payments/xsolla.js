@@ -14,7 +14,7 @@ const TOKEN_ENDPOINT = `${TOKEN_API_BASE_URL}/merchants/${XSOLLA_MERCHANT_ID}/to
     // return_url: 'https://your-site.com/success'
   };
 
-  const isSandbox = false
+  const isSandbox = true
 
 // --- Main function: Generate checkout URL for a specific offer ID ---
 async function generateCheckoutUrlForOffer(offerId, userData) {
@@ -34,9 +34,8 @@ async function generateCheckoutUrlForOffer(offerId, userData) {
 
     user: {
       id: { value: userData.id },
-      email: { value: userData.email },
-      country: { value: userData.country },
     },
+
     settings: {
       project_id: parseInt(XSOLLA_PROJECT_ID),
      // return_url: settings.return_url || "https://skilldown.io/payment/success",

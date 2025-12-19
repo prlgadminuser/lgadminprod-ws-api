@@ -26,7 +26,7 @@ function UpdateMaintenance(change, msg) {
   }
 }
 
-const RealMoneyPurchasesEnabled = false;
+const RealMoneyPurchasesEnabled = true;
 
 const jwt = require("jsonwebtoken");
 const Limiter = require("limiter").RateLimiter;
@@ -152,7 +152,7 @@ const webhookRawBodyParser = bodyParser.json({
 });
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === "/from-paypal-webhook-3f567t-5758899") {
+  if (req.url === "/xsolla-webhook") {
     webhookRawBodyParser(req, res, (err) => {});
   }
 
@@ -160,7 +160,7 @@ const server = http.createServer(async (req, res) => {
   await setCommonHeaders(res, origin);
 
   try {
-    if (req.url !== "/from-paypal-webhook-3f567t-5758899") {
+    if (req.url !== "/xsolla-webhook") {
       const ip = getClientIp(req);
       if (!ip) {
         res.writeHead(429, { "Content-Type": "text/plain" });
@@ -190,7 +190,7 @@ const server = http.createServer(async (req, res) => {
     let requestAborted = false;
 
     req.on("data", (chunk) => {
-      if (!req.url === "/from-paypal-webhook-3f567t-5758899") {
+      if (!req.url === "/xsolla-webhook") {
         if (chunk.length && chunk.length > api_message_size_limit) {
           requestAborted = true;
           res.writeHead(429, { "Content-Type": "text/plain" });
@@ -317,15 +317,43 @@ const server = http.createServer(async (req, res) => {
               return res.end("Error: Invalid credentials");
             }
 
-          case "/from-paypal-webhook-3f567t-5758899":
+          case "/xsolla-webhook":
             try {
-              const isValid = await verifyWebhook(req);
-              if (!isValid) {
-                res.writeHead(500, { "Content-Type": "text/plain" });
-                return res.end("Not valid webhook");
-              }
 
-              await handlePaypalWebhookEvent(req.body);
+               const signature = req.headers['x-signature'];
+              const rawBody = req.body;
+
+               const isValid = validateXsollaSignature(rawBody, signature);
+
+              if (!isValid) {
+                console.error('❌ Invalid Xsolla webhook signature');
+              return res.status(401).send('Invalid signature');
+               }
+
+            const payload = JSON.parse(rawBody.toString());
+
+  console.log('✅ Xsolla Webhook Verified');
+  console.log('Event:', payload.notification_type);
+
+  // Example handling
+  switch (payload.notification_type) {
+    case 'payment':
+      // payment completed
+      console.log('Payment successful:', payload);
+      break;
+
+    case 'refund':
+      console.log('Refund issued:', payload);
+      break;
+
+    case 'chargeback':
+      console.log('Chargeback:', payload);
+      break;
+
+    default:
+      console.log('Unhandled event:', payload.notification_type);
+  }
+
 
               res.writeHead(200, { "Content-Type": "text/plain" });
               return res.end("success");
@@ -546,10 +574,15 @@ async function handleMessage(ws, message, playerVerified) {
 
       case "get-paystation":
         if (RealMoneyPurchasesEnabled) {
+
+           const user = {
+    id: playerVerified.playerId,
+  };
+
           response = await (async () => {
-            return await CreatePaymentLink(
-              playerVerified.playerId,
-              data.packid
+            return await generateCheckoutUrlForOffer(
+              data.packid,
+              user,
             );
           })();
 
