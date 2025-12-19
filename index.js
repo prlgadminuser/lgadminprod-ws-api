@@ -153,7 +153,7 @@ const webhookRawBodyParser = bodyParser.json({
 
 const server = http.createServer(async (req, res) => {
   if (req.url === "/xsolla-webhook") {
-    console.log(req)
+    console.log(req.body)
     webhookRawBodyParser(req, res, (err) => {});
   }
 
