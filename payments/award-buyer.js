@@ -14,7 +14,7 @@ async function awardBuyer(userid, offerid) {
 
       case "coins_1000":
         result = await userCollection.updateOne(
-          { "account.username": userid },
+          { "account.usernme": userid },
           { $inc: { "currency.coins": 1000 } }
         );
         break;
@@ -44,4 +44,5 @@ async function awardBuyer(userid, offerid) {
 
 module.exports = {
     awardBuyer
+
 }
