@@ -30,7 +30,7 @@ async function generateCheckoutUrlForOffer(offerId, userData) {
 
   const tokenPayload = {
 
-   
+
 
     user: {
       id: { value: userData.id },

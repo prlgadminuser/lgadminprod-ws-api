@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-
+const { userCollection } = require('../idbconfig');
 
 const XSOLLA_WEBHOOK_SECRET = process.env.XSOLLA_WEBHOOK_SECRET
 
@@ -29,16 +29,16 @@ function validateXsollaSignature(req) {
     } else if (typeof req.rawBody === 'string') {
       rawBodyStr = req.rawBody;  // already string
     } else {
-      console.log('req.rawBody is invalid type:', typeof req.rawBody);
+     // console.log('req.rawBody is invalid type:', typeof req.rawBody);
       return false;
     }
   } catch (err) {
-    console.error('Error converting rawBody to string:', err);
+   // console.error('Error converting rawBody to string:', err);
     return false;
   }
 
   console.log('Raw body length:', rawBodyStr.length);
-  console.log('Raw body preview:', rawBodyStr.substring(0, 200)); // first 200 chars
+  console.log('Raw body preview:', rawBodyStr); // first 200 chars
 
   let calculated;
   try {
@@ -53,11 +53,74 @@ function validateXsollaSignature(req) {
   console.log('Calculated:', calculated);
   console.log('Received:  ', receivedSignature);
 
-  // Safe comparison
-  return crypto.timingSafeEqual(
+  const isWebhookValid =  crypto.timingSafeEqual(
     Buffer.from(calculated),
     Buffer.from(receivedSignature)
   );
+
+  if (!isWebhookValid) return
+
+  HandleWebookRequest(rawBodyStr)
+
+
+
+  // Safe comparison
+//  return isWebhookValid
+}
+
+
+
+async function HandleWebookRequest(payload) {
+
+// Example handling
+try {
+ switch (payload.notification_type) {
+      case 'user_validation': {
+        const userId = body.user?.id;
+
+        if (!userId) {
+          console.log('user_validation: No user ID provided');
+          return res.status(400).json({ error: { code: 'INVALID_USER' } });
+        }
+
+        // Check if user exists in your DB
+        const user = await userCollection.findOne({
+          "account.username": userId  // or whatever field you use for Xsolla user ID
+          // Example alternatives:
+          // "xsolla_user_id": userId
+          // "account.userId": userId
+        });
+
+        if (user) {
+          //console.log('User validated successfully:', userId);
+          return res.status(204).send(); // Success: user exists
+        } else {
+         // console.log('User not found:', userId);
+          return res.status(400).json({ error: { code: 'INVALID_USER' } });
+        }
+      }
+
+
+    case 'payment':
+      // payment completed
+      console.log('Payment successful:', payload);
+      break;
+
+    case 'refund':
+      console.log('Refund issued:', payload);
+      break;
+
+    case 'chargeback':
+      console.log('Chargeback:', payload);
+      break;
+
+    default:
+      console.log('Unhandled event:', payload.notification_type);
+  }
+} catch (err) {
+    console.error('Error handling webhook:', err);
+    return res.status(500).send();
+  }
 }
 
 module.exports = validateXsollaSignature

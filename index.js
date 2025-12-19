@@ -334,29 +334,7 @@ const server = http.createServer(async (req, res) => {
 
                console.log("verified")
 
-            const payload = rawBody//.toString();
-
   console.log('✅ Xsolla Webhook Verified');
-  console.log('Event:', payload.notification_type);
-
-  // Example handling
-  switch (payload.notification_type) {
-    case 'payment':
-      // payment completed
-      console.log('Payment successful:', payload);
-      break;
-
-    case 'refund':
-      console.log('Refund issued:', payload);
-      break;
-
-    case 'chargeback':
-      console.log('Chargeback:', payload);
-      break;
-
-    default:
-      console.log('Unhandled event:', payload.notification_type);
-  }
 
 
               res.writeHead(200, { "Content-Type": "text/plain" });
