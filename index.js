@@ -154,8 +154,6 @@ const webhookRawBodyParser = bodyParser.json({
 const server = http.createServer(async (req, res) => {
   if (req.url === "/xsolla-webhook") {
     webhookRawBodyParser(req, res, (err) => {});
-
-    console.log(req.rawBody)
   }
 
   const origin = req.headers.origin;
@@ -322,10 +320,7 @@ const server = http.createServer(async (req, res) => {
           case "/xsolla-webhook":
             try {
 
-               const signature = req.headers['x-signature'];
-              const rawBody = req.body;
-
-               const isValid = validateXsollaSignature(rawBody, signature);
+               const isValid = validateXsollaSignature(req);
 
               if (!isValid) {
                 console.error('❌ Invalid Xsolla webhook signature');
