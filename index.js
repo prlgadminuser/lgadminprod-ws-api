@@ -351,7 +351,9 @@ const server = http.createServer(async (req, res) => {
 
                 if (userExists) {
                   res.writeHead(204);
+                        console.log("validated")
                   return res.end();
+            
                 } else {
                   res.writeHead(400, { "Content-Type": "application/json" });
                   return res.end(JSON.stringify({
