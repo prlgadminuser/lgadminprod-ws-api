@@ -334,7 +334,7 @@ const server = http.createServer(async (req, res) => {
 
                console.log("verified")
 
-            const payload = JSON.parse(rawBody.toString());
+            const payload = rawBody//.toString();
 
   console.log('✅ Xsolla Webhook Verified');
   console.log('Event:', payload.notification_type);
