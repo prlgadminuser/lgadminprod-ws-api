@@ -11,9 +11,7 @@ async function buyRarityBox(username, owned_items) {
 
         // Determine rarity and rewards
         const rarityType = rollForRarity();
-        //const rarity = determineRarity(rarityType);
-        const rarity = "legendary"
-        
+        const rarity = determineRarity(rarityType);
 
         if (rarity === "legendary") {
         
@@ -156,4 +154,3 @@ async function getUserDetails(username) {
 module.exports = {
     buyRarityBox
 };
-

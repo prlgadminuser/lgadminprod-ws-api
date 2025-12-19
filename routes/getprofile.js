@@ -1,4 +1,4 @@
-const { isString } = require('..');
+
 const { userCollection, userSocialCollection } = require('./../idbconfig');
 const { UpdateInterval } = require('./leaderboard');
 

@@ -103,17 +103,11 @@ const {
   removePlayerFromChat,
   sendMessage,
 } = require("./playerchat/chat");
-const {
-  CreatePaymentLink,
-  verifyWebhook,
-  handlePaypalWebhookEvent,
-  generateXsollaCheckoutURL,
-} = require("./paystation");
+
 const { sub, checkExistingSession, removeSession, addSession, redisClient } = require("./redis");
 const { configDotenv } = require('dotenv');
 const { CheckUserIp } = require('./accounthandler/security');
-
-
+const generateCheckoutUrlForOffer = require('./payments/xsolla');
 
 
 function CompressAndSend(ws, type, message) {
@@ -158,8 +152,7 @@ const webhookRawBodyParser = bodyParser.json({
 });
 
 const server = http.createServer(async (req, res) => {
-
-  if (req.url === "/from-paypal-webhook") {
+  if (req.url === "/from-paypal-webhook-3f567t-5758899") {
     webhookRawBodyParser(req, res, (err) => {});
   }
 
@@ -167,7 +160,7 @@ const server = http.createServer(async (req, res) => {
   await setCommonHeaders(res, origin);
 
   try {
-    if (req.url !== "/from-paypal-webhook") {
+    if (req.url !== "/from-paypal-webhook-3f567t-5758899") {
       const ip = getClientIp(req);
       if (!ip) {
         res.writeHead(429, { "Content-Type": "text/plain" });
@@ -197,7 +190,7 @@ const server = http.createServer(async (req, res) => {
     let requestAborted = false;
 
     req.on("data", (chunk) => {
-      if (!req.url === "/from-paypal-webhook") {
+      if (!req.url === "/from-paypal-webhook-3f567t-5758899") {
         if (chunk.length && chunk.length > api_message_size_limit) {
           requestAborted = true;
           res.writeHead(429, { "Content-Type": "text/plain" });
@@ -324,18 +317,14 @@ const server = http.createServer(async (req, res) => {
               return res.end("Error: Invalid credentials");
             }
 
-          case "/from-paypal-webhook":
+          case "/from-paypal-webhook-3f567t-5758899":
             try {
               const isValid = await verifyWebhook(req);
-              
               if (!isValid) {
                 res.writeHead(500, { "Content-Type": "text/plain" });
                 return res.end("Not valid webhook");
               }
 
-              console.log(req.body)
-
-              
               await handlePaypalWebhookEvent(req.body);
 
               res.writeHead(200, { "Content-Type": "text/plain" });
@@ -825,18 +814,16 @@ process.on("unhandledRejection", (reason, promise) => {
 
 });
 
+ const user = {
+    id: 'Liquem',
 
+    email: 'liam.heizmann@gmail.com',
+    country: 'DE',
+  };
 
 async function run() {
-  const create = await CreatePaymentLink("Lique", "1000_coins_pack");
+  const create = await  generateCheckoutUrlForOffer("coins_1000", user);
   console.log(create);
 }
 
 run();
-
-
-
-
-
-
-

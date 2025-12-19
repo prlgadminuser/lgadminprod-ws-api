@@ -4,10 +4,12 @@ const { userCollection, shopcollection, userInventoryCollection, client } = requ
 async function buyItem(username, offerKey, owneditems) {
   try {
     // Fetch shop data and the selected offer using offerKey
-    const shopData = await shopcollection.findOne(
-      { _id: "dailyItems" },
-      { projection: { [`items.${offerKey}`]: 1 } }
-    );
+  //  const shopData = await shopcollection.findOne(
+   //   { _id: "dailyItems" },
+   //   { projection: { [`items.${offerKey}`]: 1 } }
+   // );
+
+   const shopData = global.cached_shopdata
     // If the offer is not found, throw an error
     const selectedOffer = shopData?.items?.[offerKey];
     if (!selectedOffer) {
