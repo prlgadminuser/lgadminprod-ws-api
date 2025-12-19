@@ -108,6 +108,7 @@ const { sub, checkExistingSession, removeSession, addSession, redisClient } = re
 const { configDotenv } = require('dotenv');
 const { CheckUserIp } = require('./accounthandler/security');
 const generateCheckoutUrlForOffer = require('./payments/xsolla');
+const validateXsollaSignature = require('./payments/validatewebhook');
 
 
 function CompressAndSend(ws, type, message) {
