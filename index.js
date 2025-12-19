@@ -322,33 +322,77 @@ const server = http.createServer(async (req, res) => {
             }
 
           case "/xsolla-webhook":
-            try {
+  try {
+    // Ensure you have rawBody available (you probably set it earlier with a middleware)
+    const rawBodyStr = req.rawBody.toString('utf8');
 
+    // Verify signature
+    const isValid = validateXsollaSignature(req, rawBodyStr);
+    if (!isValid) {
+      console.error('❌ Invalid Xsolla webhook signature');
+      res.writeHead(401);
+      return res.end(); // No body
+    }
 
-               const isValid = validateXsollaSignature(req);
+    console.log('✅ Xsolla Webhook Signature Verified');
 
-              if (!isValid) {
-                console.error('❌ Invalid Xsolla webhook signature');
-              return res.status(401).send('Invalid signature');
-               }
-               
+    // Parse the body only after signature check
+    let body;
+    try {
+      body = JSON.parse(rawBodyStr);
+    } catch (e) {
+      console.error('❌ Invalid JSON in webhook');
+      res.writeHead(400);
+      return res.end();
+    }
 
-               console.log("verified")
+    // Handle user_validation specifically
+    if (body.notification_type === 'user_validation') {
+      const userId = body.user?.id;
 
-  console.log('✅ Xsolla Webhook Verified');
+      if (!userId) {
+        console.error('❌ Missing user ID in validation webhook');
+        res.writeHead(400);
+        return res.end();
+      }
 
+      console.log(`✅ Validating user ID: ${userId}`);
 
-              res.writeHead(200, { "Content-Type": "text/plain" });
-              return res.end("success");
-            } catch (error) {
-              res.writeHead(500, { "Content-Type": "text/plain" });
-              return res.end("Not valid webhook");
-            }
+      // TODO: In production, check if userId exists in your database
+      // For now (testing): accept all users
+      const userExists = true; // Replace with real DB check later
 
-          default:
-            res.writeHead(500, { "Content-Type": "text/plain" });
-            return res.end("Error: Not Found");
-        }
+      if (userExists) {
+        // CORRECT: 204 No Content, EMPTY BODY
+        res.writeHead(204);
+        return res.end();
+      } else {
+        // Invalid user → must return 400 with specific JSON
+        res.writeHead(400, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({
+          error: {
+            code: "INVALID_USER"
+          }
+        }));
+      }
+    }
+
+    // Optional: Handle payment notifications (order paid, etc.)
+    if (body.notification_type === 'payment' || body.notification_type === 'order_paid') {
+      console.log('💰 Payment successful:', body.transaction?.id);
+      // TODO: Grant items to user here
+    }
+
+    // For all other valid webhooks (refund, etc.) — acknowledge with 204
+    res.writeHead(204);
+    return res.end();
+
+  } catch (error) {
+    console.error('❌ Webhook error:', error);
+    res.writeHead(500);
+    return res.end();
+  }
+}
       } catch (err) {
         if (!res.headersSent) {
           res.writeHead(500, { "Content-Type": "text/plain" });
