@@ -58,10 +58,11 @@ function validateXsollaSignature(req) {
     Buffer.from(receivedSignature)
   );
 
-  if (!isWebhookValid) return
+  if (!isWebhookValid) return false
 
-  HandleWebookRequest(rawBodyStr)
+ const RequestResult = HandleWebookRequest(rawBodyStr)
 
+ return RequestResult
 
 
   // Safe comparison
@@ -70,9 +71,10 @@ function validateXsollaSignature(req) {
 
 
 
-async function HandleWebookRequest(payload) {
+async function HandleWebookRequest(rawBodyStr) {
 
-// Example handling
+  const payload  = JSON.parse(rawBodyStr)
+
 try {
  switch (payload.notification_type) {
       case 'user_validation': {
@@ -80,7 +82,7 @@ try {
 
         if (!userId) {
           console.log('user_validation: No user ID provided');
-          return res.status(400).json({ error: { code: 'INVALID_USER' } });
+          return false
         }
 
         // Check if user exists in your DB
@@ -93,10 +95,10 @@ try {
 
         if (user) {
           //console.log('User validated successfully:', userId);
-          return res.status(204).send(); // Success: user exists
+        return true // Success: user exists
         } else {
          // console.log('User not found:', userId);
-          return res.status(400).json({ error: { code: 'INVALID_USER' } });
+        return false
         }
       }
 
@@ -104,15 +106,12 @@ try {
     case 'payment':
       // payment completed
       console.log('Payment successful:', payload);
-      break;
 
     case 'refund':
       console.log('Refund issued:', payload);
-      break;
 
     case 'chargeback':
       console.log('Chargeback:', payload);
-      break;
 
     default:
       console.log('Unhandled event:', payload.notification_type);
@@ -123,4 +122,7 @@ try {
   }
 }
 
-module.exports = validateXsollaSignature
+module.exports = {
+  validateXsollaSignature,
+  HandleWebookRequest
+}
