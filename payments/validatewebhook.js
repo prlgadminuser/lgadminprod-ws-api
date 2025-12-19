@@ -2,23 +2,33 @@
 
 const XSOLLA_WEBHOOK_SECRET = process.env.XSOLLA_WEBHOOK_SECRET
 
-
-
 function validateXsollaSignature(req) {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Signature ')) {
+  const authHeader = req.headers['authorization'] || '';
+  if (!authHeader.startsWith('Signature ')) {
     console.log('Missing or invalid Authorization header');
     return false;
   }
 
-  const receivedSignature = authHeader.substring('Signature '.length); // Extract the hex part
+  const receivedSignature = authHeader.substring('Signature '.length);
 
-  // Calculate expected signature: SHA1(rawBody + secret)
+  if (!req.rawBody) {
+    console.log('No rawBody available');
+    return false;
+  }
+
+  const rawBodyStr = req.rawBody.toString('utf8');
+
   const calculated = crypto.createHash('sha1')
-                          .update(req.rawBody + XSOLLA_WEBHOOK_SECRET)
-                          .digest('hex');
+    .update(rawBodyStr + XSOLLA_WEBHOOK_SECRET)
+    .digest('hex');
 
-  // Compare (use timing-safe if possible, but this is fine for most cases)
-  return calculated === receivedSignature;
+  console.log('Calculated:', calculated);
+  console.log('Received:  ', receivedSignature);
+
+  return crypto.timingSafeEqual(
+    Buffer.from(calculated),
+    Buffer.from(receivedSignature)
+  );
 }
+
 module.exports = validateXsollaSignature
