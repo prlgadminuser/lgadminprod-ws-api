@@ -9,12 +9,16 @@ function validateXsollaSignature(req) {
     return false;
   }
 
+  console.log("1")
+
   const receivedSignature = authHeader.substring('Signature '.length);
 
   if (!req.rawBody) {
     console.log('No rawBody available');
     return false;
   }
+
+   console.log("2")
 
   const rawBodyStr = req.rawBody.toString('utf8');
 
