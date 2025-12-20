@@ -817,11 +817,12 @@ function watchItemShop() {
          global.cached_shopdata = change.fullDocument // cache to avoid database read
         broadcast("shopupdate");
       } else if (docId === "maintenance") {
+        console.log(change.fullDocument)
         UpdateMaintenance(
           change.fullDocument.status,
           change.fullDocument.public_message
         );
-        if (global.maintenance == "true") closeAllClients(4001, "maintenance"); // broadcast("maintenanceupdate");
+        if (change.fullDocument.status === "true") closeAllClients(4001, "maintenance"); // broadcast("maintenanceupdate");
       }
     });
 
@@ -851,11 +852,10 @@ function closeAllClients(code, reason) {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send("maintenance_active");
 
-      setTimeout(() => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.close(code, reason);
         }
-      }, 100); // 100 ms delay to allow message flush
+     // 100 ms delay to allow message flush
     }
   });
 }
