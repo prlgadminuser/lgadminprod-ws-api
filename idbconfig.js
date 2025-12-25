@@ -71,7 +71,7 @@ async function startMongoDB() {
       global.maintenance = result.status
       global.maintenance_publicinfomessage = result.public_message,
       global.cached_shopdata = cached_shopdata
-      global.cached_shopdata_lzstring = LZString.compress(cached_shopdata)
+      //global.cached_shopdata_lzstring = LZString.compress(cached_shopdata)
 
  
     } catch (error) {

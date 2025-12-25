@@ -817,7 +817,7 @@ function watchItemShop() {
       const docId = change.fullDocument._id;
       if (docId === "ItemShop") {
          global.cached_shopdata = change.fullDocument // cache to avoid database read
-         global.cached_shopdata_lzstring = LZString.compress(change.fullDocument)
+       //  global.cached_shopdata_lzstring = LZString.compress(change.fullDocument)
         broadcast("shopupdate");
       } else if (docId === "maintenance") {
       //  console.log(change.fullDocument)
