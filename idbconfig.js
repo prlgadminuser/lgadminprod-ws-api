@@ -1,7 +1,7 @@
 
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const { UpdateMaintenance } = require("./index");
+const { UpdateMaintenance, LZString } = require("./index");
 const { createChallenge, verifySolution } = require("./accounthandler/security");
 
 const lgconnecturi = process.env.MONGO_URI
@@ -60,10 +60,10 @@ async function startMongoDB() {
       );
 
        const cached_shopdata = await shopcollection.findOne(
-        { _id: "ItemShop" }, // Only retrieve the maintenanceStatus field
+        { _id: "ItemShop" }, 
       );
 
-// You might want to handle null "stats.sp" later in JS, since find projection doesn't do $ifNull
+
 
 
       UpdateMaintenance(result.status, result.public_message)
@@ -71,6 +71,7 @@ async function startMongoDB() {
       global.maintenance = result.status
       global.maintenance_publicinfomessage = result.public_message,
       global.cached_shopdata = cached_shopdata
+      global.cached_shopdata_lzstring = LZString.compress(cached_shopdata)
 
  
     } catch (error) {
