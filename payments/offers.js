@@ -38,7 +38,10 @@ const OFFERS = {
   },
 };
 
-const offerkeys = Object.keys(OFFERS)
+const OFFERKEYS = Object.keys(OFFERS)
 
 
-module.exports = OFFERS
+module.exports = {
+  OFFERS,
+  OFFERKEYS
+}
