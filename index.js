@@ -813,11 +813,11 @@ function watchItemShop() {
 
     changeStream.on("change", (change) => {
       const docId = change.fullDocument._id;
-      if (docId === "dailyItems") {
+      if (docId === "ItemShop") {
          global.cached_shopdata = change.fullDocument // cache to avoid database read
         broadcast("shopupdate");
       } else if (docId === "maintenance") {
-        console.log(change.fullDocument)
+      //  console.log(change.fullDocument)
         UpdateMaintenance(
           change.fullDocument.status,
           change.fullDocument.public_message
@@ -882,7 +882,7 @@ process.on("unhandledRejection", (reason, promise) => {
   };
 
 async function run() {
-  const create = await  generateCheckoutUrlForOffer("coins_1000", user);
+  const create = await  generateCheckoutUrlForOffer("coins_bonus", user);
   console.log(create);
 }
 

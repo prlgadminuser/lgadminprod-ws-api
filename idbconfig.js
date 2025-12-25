@@ -60,7 +60,7 @@ async function startMongoDB() {
       );
 
        const cached_shopdata = await shopcollection.findOne(
-        { _id: "dailyItems" }, // Only retrieve the maintenanceStatus field
+        { _id: "ItemShop" }, // Only retrieve the maintenanceStatus field
       );
 
 // You might want to handle null "stats.sp" later in JS, since find projection doesn't do $ifNull

@@ -129,7 +129,11 @@ async function getUserInventory(username) {
             boxes: userRow.currency.boxes,
             sp: userRow.stats.sp,
             items: userInventory,
-            skillpass: skillpassdata,
+            seasondata: {
+            season_end: configrow ? configrow.season_end : null,
+            skillpass: skillpassdata
+            },
+
             weapons: userRow.inventory.weapons,
            // weapondata: userWeaponData,
             loadout: userRow.inventory.loadout,
@@ -146,7 +150,6 @@ async function getUserInventory(username) {
             server_timestamp: currentTimestampInGMT,
             server_nexttime: currentTimestamp0am,
             lbtheme: configrow ? configrow.lobbytheme : null,
-            season_end: configrow ? configrow.season_end : null,
             boxrarities: rarityPercentages,
             lastnameupdate: userRow.account.nameupdate || 0,
             //  friends: userRow.social.friends || [],

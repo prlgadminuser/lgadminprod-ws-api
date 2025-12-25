@@ -56,8 +56,8 @@ async function generateCheckoutUrlForOffer(offerId, userData) {
         lineitems: itemsData.map(item => ({
           id: item.id,
           name: item.name,
-          description: item.description || offer.description,
-          image_url: item.image_url || offer.image_url,
+          description: item.description,
+          image_url: item.image_url,
           price: { amount: item.price.toString() },
           is_bonus: item.is_bonus || false,
           quantity: item.quantity || 1,

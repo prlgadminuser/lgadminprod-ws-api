@@ -1,149 +1,136 @@
+const { rarityConfig } = require('../boxrarityconfig');
 const { userCollection } = require('./../idbconfig');
-
 // === CONFIGURATION ===
 const rewardConfig = {
-    rewardsPerClaim: 2, // number of rewards to give per daily claim
+    rewardsPerClaim: 2,
     rewardsPool: [
         { type: "coins", min: 5, max: 10, chance: 90 },
         { type: "boxes", min: 1, max: 2, chance: 8 },
-       // { type: "item", value: ["A001", "A002"], chance: 2 },
-        // { type: "item", value: "Lucky Token", weight: 5 }
+        // { type: "item", value: ["A001", "A002"], chance: 2 },
     ]
 };
 
-const bonusitems = ["A001", "A002"]
+const bonusItems = rarityConfig.rare1.customItems
 
-// === HELPERS ===
-function canCollectCoins(lastCollected) {
-    const hoursPassed = (Date.now() - lastCollected) / (1000 * 60 * 60);
-    return hoursPassed >= 24;
-}
+// === GENERIC HELPERS ===
+const hoursBetween = (a, b) => (a - b) / (1000 * 60 * 60);
 
-function pickRandomFromArray(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-}
+const canCollectDaily = (lastCollected) =>
+    hoursBetween(Date.now(), lastCollected) >= 24;
 
-function generateRandomNumber(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+const randomInt = (min, max) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
 
-// Weighted random reward selector
+const randomFromArray = (arr) =>
+    arr[Math.floor(Math.random() * arr.length)];
+
+const filterUnowned = (items, ownedItems) =>
+    items.filter(item => !ownedItems.has(item));
+
+// Formats rewards as [type, value]
+const formatReward = (type, value) => [type, value];
+
+// === REWARD GENERATION ===
 function getRandomReward(pool, ownedItems) {
-    const totalChance = pool.reduce((sum, reward) => sum + reward.chance, 0);
-    const rand = Math.random() * totalChance;
-
-    let cumulativeChance = 0;
+    const totalChance = pool.reduce((sum, r) => sum + r.chance, 0);
+    let roll = Math.random() * totalChance;
 
     for (const reward of pool) {
-        cumulativeChance += reward.chance;
-        if (rand < cumulativeChance) {
-            switch (reward.type) {
-                case "item":
-                    if (Array.isArray(reward.value)) {
-                        const available = reward.value.filter(item => !ownedItems.has(item));
-                        if (available.length === 0) {
-                            return false;
-                        }
-                        return {
-                            type: "item",
-                            value: pickRandomFromArray(available),
-                        };
-                    }
-                    break;
+        roll -= reward.chance;
+        if (roll > 0) continue;
 
-                case "coins":
-                case "boxes":
-                    return {
-                        type: reward.type,
-                        value: generateRandomNumber(reward.min, reward.max),
-                    };
+        switch (reward.type) {
+            case "coins":
+            case "boxes":
+                return formatReward(
+                    reward.type,
+                    randomInt(reward.min, reward.max)
+                );
 
-                default:
-                    return false; // unknown reward type
+            case "item": {
+                if (!Array.isArray(reward.value)) return false;
+                const available = filterUnowned(reward.value, ownedItems);
+                if (!available.length) return false;
+                return formatReward("item", randomFromArray(available));
             }
+
+            default:
+                return false;
         }
     }
 
-    return false; // fallback if nothing is selected
+    return false;
 }
 
+function maybeGetBonusItem(ownedItems, chancePercent) {
+    if (Math.random() >= chancePercent / 100) return null;
+
+    const available = filterUnowned(bonusItems, ownedItems);
+    if (!available.length) return null;
+
+    return formatReward("item", randomFromArray(available));
+}
+
+// === DB UPDATE HELPERS ===
+function applyRewardToUpdate(update, [type, value], itemsToPush) {
+    if (type === "coins" || type === "boxes") {
+        update.$inc ??= {};
+        update.$inc[`currency.${type}`] =
+            (update.$inc[`currency.${type}`] || 0) + value;
+    }
+
+    if (type === "item") {
+        itemsToPush.push(value);
+    }
+}
 
 // === MAIN FUNCTION ===
 async function getdailyreward(username, ownedItems) {
-    try {
-        const user = await userCollection.findOne(
-            { "account.username": username },
-            { projection: { _id: 0, "account.username": 1, "inventory.last_collected": 1 } }
-        );
+    const user = await userCollection.findOne(
+        { "account.username": username },
+        { projection: { _id: 0, "inventory.last_collected": 1 } }
+    );
 
-        if (!user) {
-            throw new Error("User not found.");
-        }
-
-        const lastCollected = user.inventory.last_collected;
-
-        if (!canCollectCoins(lastCollected)) {
-            throw new Error("You can only collect rewards once every 24 hours.");
-        }
-
-        const rewards = [];
-
-        for (let i = 0; i < rewardConfig.rewardsPerClaim; i++) {
-            const reward = getRandomReward(rewardConfig.rewardsPool, ownedItems)
-            if (reward) rewards.push(reward);
-        }
-
-
-        const bonuschance = 2
-
-        if (Math.random() < bonuschance / 100) {
-
-            const available = bonusitems.filter(item => !ownedItems.has(item));
-
-            if (available.length > 0) {
-                const bonusreward = { type: "item", value: pickRandomFromArray(available) };
-                rewards.push(bonusreward);
-            }
-        }
-
-
-
-        // Build update object
-        const update = {
-            $set: { "inventory.last_collected": Date.now() }
-        };
-
-        const itemsToPush = [];
-
-        for (const reward of rewards) {
-            if (reward.type === "coins") {
-                update.$inc = update.$inc || {};
-                update.$inc["currency.coins"] = (update.$inc["currency.coins"] || 0) + reward.value;
-            } else if (reward.type === "boxes") {
-                update.$inc = update.$inc || {};
-                update.$inc["currency.boxes"] = (update.$inc["currency.boxes"] || 0) + reward.value;
-            } else if (reward.type === "item") {
-                itemsToPush.push(reward.value);
-            }
-        }
-
-       // if (itemsToPush.length > 0) {
-        //    update.$push = {
-        //        "inventory.items": { $each: itemsToPush }
-       //     };
-       // }
-
-        await userCollection.updateOne({ "account.username": username }, update);
-
-        return {
-            time: Date.now(),
-            rewards: rewards,
-        };
-
-    } catch (error) {
-        throw new Error("An error occurred while processing your request.");
-        
+    if (!user) throw new Error("User not found.");
+    if (!canCollectDaily(user.inventory.last_collected)) {
+        throw new Error("You can only collect rewards once every 24 hours.");
     }
+
+    const rewards = [];
+
+    for (let i = 0; i < rewardConfig.rewardsPerClaim; i++) {
+        const reward = getRandomReward(rewardConfig.rewardsPool, ownedItems);
+        if (reward) rewards.push(reward);
+    }
+
+    const bonusReward = maybeGetBonusItem(ownedItems, 100);
+    if (bonusReward) rewards.push(bonusReward);
+
+    const update = {
+        $set: { "inventory.last_collected": Date.now() }
+    };
+
+    const itemsToPush = [];
+
+    for (const reward of rewards) {
+        applyRewardToUpdate(update, reward, itemsToPush);
+    }
+
+     if (itemsToPush.length) {
+        update.$push = {
+            "inventory.items": { $each: itemsToPush }
+         };
+     }
+
+    await userCollection.updateOne(
+        { "account.username": username },
+        update
+    );
+
+    return {
+        time: Date.now(),
+        rewards // now always [[type, value], ...]
+    };
 }
 
 module.exports = {

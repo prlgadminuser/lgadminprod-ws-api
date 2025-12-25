@@ -44,6 +44,4 @@ async function awardBuyer(userid, offerid) {
 
 module.exports = {
     awardBuyer
-
 }
-

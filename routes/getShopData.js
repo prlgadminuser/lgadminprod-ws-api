@@ -1,9 +1,6 @@
 const { shopcollection } = require('./../idbconfig');
 
 async function getshopdata() {
-  const currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0); // Reset time to 00:00:00 for consistency
-  const t0am = currentDate.getTime();
 
   try {
     // Fetch the shop data for the daily items
@@ -16,9 +13,9 @@ async function getshopdata() {
     }
 
     return {
-      dailyItems: itemshop.items || [], // Return the daily items, ensuring there's a default empty array if not found
-      shoptheme: itemshop.theme || null,  // Return shop theme, defaulting to null if not found
-      server_nexttime: t0am  // Server's shop next reset time
+      offers: itemshop.offers || [], // Return the daily items, ensuring there's a default empty array if not found
+      shoptheme: itemshop.shop_background_theme || null,  // Return shop theme, defaulting to null if not found
+      next_update: itemshop.next_shop_update  // Server's shop next reset time
     };
   } catch (error) {
     // Log error if necessary, but for now throw the error to propagate it

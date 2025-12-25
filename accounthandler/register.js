@@ -66,7 +66,9 @@ async function CreateAccount(username, password, user_country, userIp) {
 
     const isUsingVpn = await CheckUserIp(userIp)
 
-    if (isUsingVpn.isVPN) {
+    console.log(isUsingVpn)
+
+    if (isUsingVpn.isVPN && isUsingVpn.type !== "Compromised Server") {
       return { status: "VPNs/Proxies are not allowed. Please disable them and try again" };
     }
   }

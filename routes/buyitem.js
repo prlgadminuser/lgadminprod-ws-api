@@ -5,13 +5,15 @@ async function buyItem(username, offerKey, owneditems) {
   try {
     // Fetch shop data and the selected offer using offerKey
   //  const shopData = await shopcollection.findOne(
-   //   { _id: "dailyItems" },
+   //   { _id: "ItemShop" },
    //   { projection: { [`items.${offerKey}`]: 1 } }
    // );
 
    const shopData = global.cached_shopdata
+
+   if (Date.now() > shopData.next_shop_update)  throw new Error("Offer is expired.");
     // If the offer is not found, throw an error
-    const selectedOffer = shopData?.items?.[offerKey];
+    const selectedOffer = shopData?.offers?.[offerKey];
     if (!selectedOffer) {
       throw new Error("Offer is not valid.");
     }
@@ -19,9 +21,8 @@ async function buyItem(username, offerKey, owneditems) {
     const { currency = "coins" } = selectedOffer; // Default to "coins" if currency is not specified
 
     // Normalize itemIds to an array (handle single or bundled items)
-    const itemIds = Array.isArray(selectedOffer.itemId)
-      ? selectedOffer.itemId
-      : [selectedOffer.itemId];
+    const itemIds = selectedOffer.items
+
 
     const OwnsOfferItems = await userInventoryCollection.findOne(
       {
@@ -36,7 +37,7 @@ async function buyItem(username, offerKey, owneditems) {
     //const user = itemIds.some(id => owneditems.has(id));
 
     if (OwnsOfferItems) {
-      throw new Error("You already own an item from this offer.");
+      throw new Error("You already own one or more items from this offer.");
     }
 
     const userRow = await userCollection.findOne(
@@ -53,10 +54,10 @@ async function buyItem(username, offerKey, owneditems) {
       throw new Error(`Not enough ${currency} to buy the offer.`);
     }
 
-    const isItemPurchase = true
+
     let updateFields = {};
 
-    if (!isItemPurchase) {
+    if (selectedOffer.type === "boxes") {
       updateFields = {
         $inc: { "currency.boxes": quantity }, // Increment the 'boxes' field by the quantity
       };

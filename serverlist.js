@@ -1,6 +1,6 @@
 const serverlist = {
   EU: [
-    "wss://eu.skilldown.io"
+    "wss://s1-eu-sdgame.onrender.com"
   ],
   AS: [
     "wss://s1-as-sdgame.onrender.com",     
@@ -48,4 +48,3 @@ module.exports = {
   serverlist,
   getServerByCountry,
 };
-
