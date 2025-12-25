@@ -1,7 +1,6 @@
 
-
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const { UpdateMaintenance, LZString } = require("./index");
+const { UpdateMaintenance, LZString, UpdateItemShopCached } = require("./index");
 const { createChallenge, verifySolution } = require("./accounthandler/security");
 
 const lgconnecturi = process.env.MONGO_URI
@@ -70,8 +69,7 @@ async function startMongoDB() {
 
       global.maintenance = result.status
       global.maintenance_publicinfomessage = result.public_message,
-      global.cached_shopdata = cached_shopdata
-      //global.cached_shopdata_lzstring = LZString.compress(cached_shopdata)
+      await UpdateItemShopCached(cached_shopdata);
 
  
     } catch (error) {

@@ -13,20 +13,32 @@ const serverid =  "xxxxxxxxxx".replace(/[xy]/g, function (c) {
 return serverid
 }
 
-
-
 const SERVER_INSTANCE_ID = serverid()
 
 let connectedClientsCount = 0;
 
 let maintenanceMode = false;
 
-function UpdateMaintenance(change, msg) {
+async function UpdateMaintenance(change, msg) {
   global.maintenance = change;
   if (msg) {
     global.maintenance_publicinfomessage = msg;
   }
 }
+
+async function UpdateItemShopCached(itemshop) {
+  const shopdataraw = {
+    offers: itemshop.offers || [], // Return the daily items, ensuring there's a default empty array if not found
+    shoptheme: itemshop.shop_background_theme || null, // Return shop theme, defaulting to null if not found
+    next_update: itemshop.next_shop_update,
+  };
+
+  global.cached_shopdata = itemshop
+  global.cached_shopdata_compressed = LZString.compress(JSON.stringify(shopdataraw));
+}
+
+
+
 
 const RealMoneyPurchasesEnabled = true;
 
@@ -54,7 +66,8 @@ module.exports = {
   RealMoneyPurchasesEnabled,
   connectedPlayers,
   SERVER_INSTANCE_ID,
-  LZString
+  LZString,
+  UpdateItemShopCached
 };
 
 const {
@@ -806,6 +819,7 @@ function watchItemShop() {
       },
     },
   ];
+
   let changeStream;
 
   const startChangeStream = () => {
@@ -813,25 +827,33 @@ function watchItemShop() {
       fullDocument: "updateLookup",
     });
 
-    changeStream.on("change", (change) => {
-      const docId = change.fullDocument._id;
-      if (docId === "ItemShop") {
-         global.cached_shopdata = change.fullDocument // cache to avoid database read
-       //  global.cached_shopdata_lzstring = LZString.compress(change.fullDocument)
-        broadcast("shopupdate");
-      } else if (docId === "maintenance") {
-      //  console.log(change.fullDocument)
-        UpdateMaintenance(
-          change.fullDocument.status,
-          change.fullDocument.public_message
-        );
-        if (change.fullDocument.status === "true") closeAllClients(4001, "maintenance"); // broadcast("maintenanceupdate");
+    changeStream.on("change", async (change) => {
+      try {
+        const docId = change.fullDocument._id;
+
+        if (docId === "ItemShop") {
+          await UpdateItemShopCached(change.fullDocument);
+          broadcast("shopupdate");
+        } 
+        else if (docId === "maintenance") {
+
+          await UpdateMaintenance(
+            change.fullDocument.status,
+            change.fullDocument.public_message
+          );
+
+          if (change.fullDocument.status === "true") {
+            closeAllClients(4001, "maintenance");
+          }
+        }
+      } catch (err) {
+        console.error("Error processing change:", err);
       }
     });
 
     changeStream.on("error", (err) => {
       console.error("Change stream error:", err);
-      setTimeout(startChangeStream, 5000); // Retry after delay
+      setTimeout(startChangeStream, 5000);
     });
   };
 
