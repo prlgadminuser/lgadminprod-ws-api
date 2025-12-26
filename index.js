@@ -815,7 +815,7 @@ async function watchServerConfig() {
   const pipeline = [
     {
       $match: {
-        "fullDocument._id": { $in: ["dailyItems", "maintenance"] },
+        "fullDocument._id": { $in: ["ItemShop", "maintenance"] },
         operationType: "update",
       },
     },
@@ -831,22 +831,24 @@ async function watchServerConfig() {
     changeStream.on("change", async (change) => {
       try {
         const docId = change.fullDocument._id;
+        
 
-        if (docId === "ItemShop") {
-          await UpdateItemShopCached(change.fullDocument);
-          broadcast("shopupdate");
-        } 
-        else if (docId === "maintenance") {
+        switch (docId) {
+          case "ItemShop":
+            await UpdateItemShopCached(change.fullDocument);
+            broadcast("shopupdate");
 
-          await UpdateMaintenance(
-            change.fullDocument.status,
-            change.fullDocument.public_message
-          );
-
-          if (change.fullDocument.status === "true") {
-            closeAllClients(4001, "maintenance");
-          }
+          case "maintenance":
+            await UpdateMaintenance(
+              change.fullDocument.status,
+              change.fullDocument.public_message
+            );
+            if (change.fullDocument.status === "true") {
+              closeAllClients(4001, "maintenance");
+            }
         }
+
+
       } catch (err) {
         console.error("Error processing change:", err);
       }
