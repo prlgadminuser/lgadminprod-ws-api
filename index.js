@@ -2,6 +2,9 @@
 
 require('dotenv').config();
 
+const LZString = require("lz-string")
+
+
 const connectedPlayers = new Map();
 //const playerQueue = new Map();
 function serverid ()  {
@@ -47,8 +50,6 @@ const Limiter = require("limiter").RateLimiter;
 const bcrypt = require("bcrypt");
 const Discord = require("discord.js");
 const { RateLimiterMemory } = require("rate-limiter-flexible");
-const LZString = require("lz-string")
-
 function isString(value) {
   return typeof value === "string" || value instanceof String;
 }
@@ -810,7 +811,7 @@ startMongoDB().then(() => {
   });
 });
 
-function watchItemShop() {
+async function watchServerConfig() {
   const pipeline = [
     {
       $match: {
@@ -861,7 +862,7 @@ function watchItemShop() {
 }
 
 // Example usage:
-watchItemShop();
+ watchServerConfig();
 
 setupHighscores();
 
