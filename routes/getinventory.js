@@ -5,22 +5,25 @@ const { WeaponsToBuy } = require('./buyWeapon');
 const { loadout_allowed_items } = require('./updateLoadout');
 const { RealMoneyPurchasesEnabled } = require('./../index');
 const { OFFERKEYS } = require('../payments/offers');
-loadout_allowed_items
+
 
 async function getPlayerItems(username) {
 
     const itemDocuments = await userInventoryCollection.find(
-        { uid: username },
-        { projection: { id: 1, _id: 0 } } // Project only the itemId field and exclude the _id
+        { userid: username },
+        { projection: { _id: 0, itemid: 1, time: 1 } } // Project only the itemId field and exclude the _id
     )
     .limit(100)
     //.hint("player_item_unique")
-    .hint("player_unique_sorted")
+    .hint("player_item_unique")
+    //.explain()
     .toArray();
 
-    const itemIdsArray = itemDocuments.map(doc => doc.id);
-    return itemIdsArray
-   
+    itemDocuments.sort((a, b) => b.time - a.time);
+
+    const itemsArray = itemDocuments.map(doc => doc.itemid);
+
+    return itemsArray
 }
 
 async function getPlayerWeaponsData(username) {
@@ -46,10 +49,10 @@ async function getPlayerWeaponsData(username) {
 
 
 
-//getPlayerItems("Lique")
- //.then(items => {
-  // console.log("Player items:", items);
-//})
+getPlayerItems("Lique")
+ .then(items => {
+   console.log("Player items:", items);
+})
 
 
    
