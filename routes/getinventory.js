@@ -14,11 +14,9 @@ async function getPlayerItems(username) {
         { projection: { _id: 0, itemid: 1, time: 1 } } // Project only the itemId field and exclude the _id
     )
     .limit(100)
-    //.hint("player_item_unique")
     .hint("player_item_unique")
-    //.explain()
     .toArray();
-
+    
     //itemDocuments.sort((a, b) => b.time - a.time); //descending
     itemDocuments.sort((a, b) => a.time - b.time); //ascending
 
@@ -50,10 +48,10 @@ async function getPlayerWeaponsData(username) {
 
 
 
-getPlayerItems("Lique")
- .then(items => {
-   console.log("Player items:", items);
-})
+//getPlayerItems("Lique")
+// .then(items => {
+ //  console.log("Player items:", items);
+//})
 
 
    
@@ -179,4 +177,3 @@ async function getUserInventory(username) {
 module.exports = {
     getUserInventory,
 };
-
