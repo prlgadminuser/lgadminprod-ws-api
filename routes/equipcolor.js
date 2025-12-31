@@ -1,5 +1,12 @@
 const { userCollection } = require('./../idbconfig');
 
+ const validTypes = {
+      HAT: "hat_color",
+      TOP: "top_color",
+      BANNER: "banner_color",
+      POSE: "color", // Assuming 'P' is for a general color or another item color
+    };
+
 async function equipColor(username, type, color) {
     const parsedColor = parseInt(color, 10);
 
@@ -9,12 +16,6 @@ async function equipColor(username, type, color) {
     }
 
     // Map the type to the database field under "equipped"
-    const validTypes = {
-      "A": "hat_color",
-      "B": "top_color",
-      "I": "banner_color",
-      "P": "color", // Assuming 'P' is for a general color or another item color
-    };
 
     const dbField = validTypes[type];
 

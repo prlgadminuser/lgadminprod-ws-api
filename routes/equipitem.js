@@ -1,10 +1,10 @@
 const { userCollection } = require("./../idbconfig");
 
 const itemTypeMap = {
-  A: "hat",
-  B: "top",
-  I: "banner",
-  P: "pose", // Assuming 'p' stands for pose (or other item)
+  HAT: "hat",
+  TOP: "top",
+  BANNER: "banner",
+  POSE: "pose", // Assuming 'p' stands for pose (or other item)
 };
 
 async function equipItem(username, itemtype, itemid, owneditems) {
@@ -25,7 +25,7 @@ async function equipItem(username, itemtype, itemid, owneditems) {
     }
 
     // Determine actual item type from item ID (first character)
-    const itemTypeFromId = itemTypeMap[itemid[0]];
+    const itemTypeFromId = itemTypeMap[itemid.split(":")[0]];
     if (!itemTypeFromId) {
       throw new Error("Invalid item type.");
     }
