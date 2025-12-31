@@ -1,4 +1,4 @@
-const { battlePassCollection, userCollection, userInventoryCollection, shopcollection, userWeaponsCollection } = require('./../idbconfig');
+const { battlePassCollection, userCollection, userItemsCollection, shopcollection, userWeaponsCollection } = require('./../idbconfig');
 const { rarityPercentages } = require('./../boxrarityconfig');
 const { serverlist, getServerByCountry } = require('./../serverlist');
 const { WeaponsToBuy } = require('./buyWeapon');
@@ -9,7 +9,7 @@ const { OFFERKEYS } = require('../payments/offers');
 
 async function getPlayerItems(username) {
 
-    const itemDocuments = await userInventoryCollection.find(
+    const itemDocuments = await userItemsCollection.find(
         { userid: username },
         { projection: { _id: 0, itemid: 1, time: 1 } } // Project only the itemId field and exclude the _id
     )
@@ -52,6 +52,8 @@ async function getPlayerWeaponsData(username) {
 // .then(items => {
  //  console.log("Player items:", items);
 //})
+
+
 
 
    

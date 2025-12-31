@@ -41,6 +41,7 @@ async function verifyPlayer(token) {
     const inventory = await getUserInventory(username);
 
     return {
+      userId: userInformation._id,
       playerId: username,
       nickname: userInformation.account.nickname,
       inventory: inventory,

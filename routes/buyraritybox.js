@@ -1,4 +1,4 @@
-const { userCollection, userInventoryCollection } = require('./../idbconfig');
+const { userCollection, userItemsCollection } = require('./../idbconfig');
 const { rarityConfig } = require('./../boxrarityconfig');
 const { webhook } = require('./..//discordwebhook');
 
@@ -40,7 +40,7 @@ async function buyRarityBox(username, owned_items) {
                 ts: baseTimestamp + index
             }));
             
-            await userInventoryCollection.insertMany(docs);
+            await userItemsCollection.insertMany(docs);
         }
 
         return rewards;

@@ -1,4 +1,4 @@
-const { userCollection, userInventoryCollection, userWeaponsCollection, client } = require("./../idbconfig");
+const { userCollection, userItemsCollection, userWeaponsCollection, client } = require("./../idbconfig");
 
 const WeaponsToBuy = new Map([
   ["W4", 500],
@@ -65,7 +65,7 @@ async function buyWeapon(username, weaponId, ownedItems) {
     try {
       await session.withTransaction(async () => {
         // Insert weapon into user's inventory
-        await userInventoryCollection.insertOne(weaponUserInventory, { session });
+        await userItemsCollection.insertOne(weaponUserInventory, { session });
         await userWeaponsCollection.insertOne(weapondata, { session });
         // Deduct the user's balance
         await userCollection.updateOne(

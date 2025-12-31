@@ -1,8 +1,8 @@
-const { SaveUserGrantedItems } = require("../utils/utils");
+const { SaveUserGrantedItems, UserOwnsAnyItemsOfArray } = require("../utils/utils");
 const {
   userCollection,
   shopcollection,
-  userInventoryCollection,
+  userItemsCollection,
   client,
 } = require("./../idbconfig");
 
@@ -45,17 +45,7 @@ async function buyItem(username, offerKey, owneditems) {
       throw new Error(`Not enough ${currency} to buy the offer.`);
     }
 
-    const OwnsOneOrMoreOfferItems = await userInventoryCollection.findOne(
-      {
-        userid: username,
-        itemid: { $in: items }, // Checks if any itemid matches in the array
-      },
-      {
-        hint: "player_item_unique",
-        projection: { userid: 1, _id: 0 }, // Optionally return only the matching itemid
-      }
-    );
-    //const user = itemIds.some(id => owneditems.has(id));
+    const OwnsOneOrMoreOfferItems = await UserOwnsAnyItemsOfArray(username, items)
 
     if (OwnsOneOrMoreOfferItems) {
       throw new Error("You already own one or more items from this offer.");
@@ -80,7 +70,7 @@ async function buyItem(username, offerKey, owneditems) {
 
     try {
       await session.withTransaction(async () => {
-
+        
       await SaveUserGrantedItems(username, items, owneditems, session)
 
         if (Object.keys(updateFields).length > 0) {
@@ -102,7 +92,7 @@ async function buyItem(username, offerKey, owneditems) {
     };
   } catch (error) {
     throw new Error(
-      error.message || "An error occurred while processing your request."
+      error || "An error occurred while processing your request."
     );
   }
 }

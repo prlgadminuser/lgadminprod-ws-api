@@ -29,7 +29,7 @@ const client = new MongoClient(uri, {
 
 const db = client.db(DB_name);
 const userCollection = db.collection("users");
-const userInventoryCollection = db.collection("users_items");
+const userItemsCollection = db.collection("users_items");
 const userWeaponsCollection = db.collection("users_weapons");
 const userQuestCollection = db.collection("users_quests");
 const userSocialCollection = db.collection("users_social");
@@ -95,7 +95,7 @@ module.exports = {
    webhookURL,
    userSocialCollection,
    PaymentCollection,
-   userInventoryCollection,
+   userItemsCollection,
    userWeaponsCollection,
    userQuestCollection,
 }

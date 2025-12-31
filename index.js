@@ -75,7 +75,7 @@ const {
   startMongoDB,
   shopcollection,
   userCollection,
-  userInventoryCollection,
+  userItemsCollection,
 } = require("./idbconfig");
 var sanitize = require("mongo-sanitize");
 const WebSocket = require("ws");
@@ -809,7 +809,19 @@ startMongoDB().then(() => {
   server.listen(PORT, () => {
     console.log(`Server started on Port ${PORT}`);
   });
+ /* buyItem("Lique", 6, new Set())
+  .then(items => {
+    console.log("buy response:", items);
+  })
+  .catch(error => {
+    console.error("buy failed:", error);
+  });
+*/
 });
+
+
+
+
 
 async function watchServerConfig() {
   const pipeline = [
@@ -831,9 +843,10 @@ async function watchServerConfig() {
     changeStream.on("change", async (change) => {
       try {
         const docId = change.fullDocument._id;
-        
+
 
         switch (docId) {
+          
           case "ItemShop":
             await UpdateItemShopCached(change.fullDocument);
             broadcast("shopupdate");
