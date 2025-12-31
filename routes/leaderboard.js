@@ -3,7 +3,7 @@ const LZString = require("lz-string");
 
 const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
 const limit = 50
-const UpdateInterval = 5 * 1000 * 60 // minutes between highscore updates
+const UpdateInterval = 60 * 1000 * 60 // minutes between highscore updates
 
 
 const updateUserDocumentsPlaces = true
@@ -127,4 +127,5 @@ module.exports = {
   gethighscores,
   UpdateInterval
 };
+
 
