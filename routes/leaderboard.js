@@ -96,7 +96,7 @@ const updateHighscores = async () => {
     const finalHighscores = highscores.map((player) => {
       const details = playerDetailsMap[player.username] || {};
 
-      return `${details.nickname}:${player.username}:${player.score}:${details.hat}:${details.color}:${details.hat_color}`;
+      return `${details.nickname}$${player.username}$${player.score}$${details.hat}$${details.color}$${details.hat_color}`;
     });
 
     const highscoresString = JSON.stringify(finalHighscores);
