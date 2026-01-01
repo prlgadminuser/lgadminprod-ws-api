@@ -1,36 +1,24 @@
 const { rarityConfig } = require("../boxrarityconfig");
 const { SaveUserGrantedItems } = require("../utils/utils");
-const { userCollection } = require("./../idbconfig");
+const { userCollection, client } = require("./../idbconfig");
 
 // === CONFIGURATION ===
-const rewardConfig = {
-  rewardsPerClaim: 50,
-  rewardsPool: [
-    { type: "coins", min: 5, max: 10, chance: 100 },
-    // { type: "boxes", min: 1, max: 2, chance: 8 },
-    { type: "item", value: rarityConfig.rare1.customItems, chance: 90 },
-  ],
-};
+const REWARDS_PER_CLAIM = 3;
+const REWARDS_POOL = [
+  { type: "coins", min: 5, max: 10, chance: 100 },
+  // { type: "boxes", min: 1, max: 2, chance: 8 },
+  { type: "item", value: rarityConfig.rare1.customItems, chance: 90 },
+];
 
-// === GENERIC HELPERS ===
-const hoursBetween = (a, b) => (a - b) / (1000 * 60 * 60);
+// === HELPERS ===
+const hoursSince = (timestamp) => (Date.now() - timestamp) / (1000 * 60 * 60);
+const canCollectDaily = (lastCollected) => hoursSince(lastCollected) >= 24;
 
-const canCollectDaily = (lastCollected) =>
-  hoursBetween(Date.now(), lastCollected) >= 24;
-
-const randomInt = (min, max) =>
-  Math.floor(Math.random() * (max - min + 1)) + min;
-
+const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const randomFromArray = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-const filterUnowned = (items, ownedItems) =>
-  items.filter((item) => !ownedItems.has(item));
-
-// Formats rewards as [type, value]
-const formatReward = (type, value) => [type, value];
-
-// === REWARD GENERATION ===
-function getRandomReward(pool, ownedItems) {
+// === REWARD SELECTION ===
+function selectRandomReward(pool, ownedItemsSet, alreadyGrantedThisClaim) {
   const totalChance = pool.reduce((sum, r) => sum + r.chance, 0);
   let roll = Math.random() * totalChance;
 
@@ -41,74 +29,90 @@ function getRandomReward(pool, ownedItems) {
     switch (reward.type) {
       case "coins":
       case "boxes":
-        return formatReward(reward.type, randomInt(reward.min, reward.max));
+        return [reward.type, randomInt(reward.min, reward.max)];
 
       case "item": {
-        if (!Array.isArray(reward.value)) return false;
-        const available = filterUnowned(reward.value, ownedItems);
-        if (!available.length) return false;
-        return formatReward("item", randomFromArray(available));
+        if (!Array.isArray(reward.value)) return null;
+
+        // Filter out items the user already owns OR received in this claim
+        const available = reward.value.filter(
+          (item) => !ownedItemsSet.has(item) && !alreadyGrantedThisClaim.has(item)
+        );
+
+        if (available.length === 0) return ["coins", randomInt(reward.min, reward.max)];
+
+        const selected = randomFromArray(available);
+        alreadyGrantedThisClaim.add(selected); // Mark as granted this session
+        return ["item", selected];
       }
 
       default:
-        return false;
+        return null;
     }
   }
 
-  return false;
-}
-
-// === DB UPDATE HELPERS ===
-function applyRewardToUpdate(update, [type, value], itemsToPush) {
-  if (type === "coins" || type === "boxes") {
-    update.$inc ??= {};
-    update.$inc[`currency.${type}`] =
-      (update.$inc[`currency.${type}`] || 0) + value;
-  }
-
-  if (type === "item") {
-    itemsToPush.push(value);
-  }
+  return null;
 }
 
 // === MAIN FUNCTION ===
 async function getdailyreward(username, owneditems) {
+  // owneditems is assumed to be an array or iterable of owned item IDs/strings
+  const ownedItemsSet = new Set(owneditems);
+  const alreadyGrantedThisClaim = new Set(); // Track items given in this claim
+
+  // Check user existence and cooldown
   const user = await userCollection.findOne(
     { "account.username": username },
-    { projection: { _id: 0, "inventory.last_collected": 1 } }
+    { projection: { "inventory.last_collected": 1 } }
   );
 
   if (!user) throw new Error("User not found.");
-  if (!canCollectDaily(user.inventory.last_collected)) {
+  if (!canCollectDaily(user.inventory.last_collected || 0)) {
     throw new Error("You can only collect rewards once every 24 hours.");
   }
 
+  // Generate rewards
   const rewards = [];
-
-  for (let i = 0; i < rewardConfig.rewardsPerClaim; i++) {
-    const reward = getRandomReward(rewardConfig.rewardsPool, owneditems);
+  for (let i = 0; i < REWARDS_PER_CLAIM; i++) {
+    const reward = selectRandomReward(REWARDS_POOL, ownedItemsSet, alreadyGrantedThisClaim);
     if (reward) rewards.push(reward);
   }
 
+  // Prepare DB updates
   const update = {
     $set: { "inventory.last_collected": Date.now() },
+    $inc: { "currency.coins": 0, "currency.boxes": 0 }, // Initialize for increment
   };
 
-  const itemsToPush = [];
+  const itemsToGrant = [];
 
-  for (const reward of rewards) {
-    applyRewardToUpdate(update, reward, itemsToPush);
+  for (const [type, value] of rewards) {
+    if (type === "coins") {
+      update.$inc["currency.coins"] += value;
+    } else if (type === "boxes") {
+      update.$inc["currency.boxes"] += value;
+    } else if (type === "item") {
+      itemsToGrant.push(value);
+    }
   }
 
+  // Remove zero increments to keep update clean (optional)
+  if (update.$inc["currency.coins"] === 0) delete update.$inc["currency.coins"];
+  if (update.$inc["currency.boxes"] === 0) delete update.$inc["currency.boxes"];
+
+  // Execute transaction
+  const session = client.startSession();
   try {
     await session.withTransaction(async () => {
-      if (itemsToPush.length) {
-        await SaveUserGrantedItems(username, itemsToPush, owneditems, session);
+      if (itemsToGrant.length > 0) {
+        await SaveUserGrantedItems(username, itemsToGrant, owneditems, session);
       }
 
-      await userCollection.updateOne({ "account.username": username }, update, {
-        session,
-      });
+      await userCollection.updateOne(
+        { "account.username": username },
+        update,
+        { session }
+      );
     });
   } finally {
     await session.endSession();
@@ -116,10 +120,8 @@ async function getdailyreward(username, owneditems) {
 
   return {
     time: Date.now(),
-    rewards,
+    rewards, // Array of [type, value]
   };
 }
 
-module.exports = {
-  getdailyreward,
-};
+module.exports = { getdailyreward };
