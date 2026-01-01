@@ -4,6 +4,7 @@ const { userCollection, client } = require("./../idbconfig");
 
 // === CONFIGURATION ===
 const REWARDS_PER_CLAIM = 3;
+const COIN_FALLBACK = { min: 5, max: 10 };
 const REWARDS_POOL = [
   { type: "coins", min: 5, max: 10, chance: 100 },
   // { type: "boxes", min: 1, max: 2, chance: 8 },
@@ -39,7 +40,7 @@ function selectRandomReward(pool, ownedItemsSet, alreadyGrantedThisClaim) {
           (item) => !ownedItemsSet.has(item) && !alreadyGrantedThisClaim.has(item)
         );
 
-        if (available.length === 0) return ["coins", randomInt(reward.min, reward.max)];
+        if (available.length === 0) return ["coins", randomInt(COIN_FALLBACK.min, COIN_FALLBACK.max)];
 
         const selected = randomFromArray(available);
         alreadyGrantedThisClaim.add(selected); // Mark as granted this session
