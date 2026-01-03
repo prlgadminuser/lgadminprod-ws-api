@@ -76,6 +76,7 @@ const {
   shopcollection,
   userCollection,
   userItemsCollection,
+  tokenkey,
 } = require("./idbconfig");
 var sanitize = require("mongo-sanitize");
 const WebSocket = require("ws");
@@ -260,15 +261,11 @@ const server = http.createServer(async (req, res) => {
 
             const tokenResult = await verifyToken(requestData.token, 2);
 
-            if (tokenResult === "valid") {
+            if (tokenResult) {
               res.writeHead(200, { "Content-Type": "text/plain" });
-              return res.end("true");
-            } else if (tokenResult === "invalid") {
-              res.writeHead(401, { "Content-Type": "text/plain" });
-              return res.end("token invalid");
-            } else if (tokenResult.ban_until) {
-              res.writeHead(401, { "Content-Type": "text/plain" });
-              return res.end(JSON.stringify(tokenResult));
+
+              return res.end(tokenResult)
+
             } else {
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("server error");
@@ -638,12 +635,12 @@ async function handleMessage(ws, message, playerVerified) {
 
       default:
         ws.close(1007, "error");
-        //  console.log(error)
+       //  console.log(error)
         break;
     }
   } catch (error) {
     ws.close(1007, "error");
-    // console.log(error)
+   //  console.log(error)
   }
 }
 
@@ -780,11 +777,15 @@ server.on("upgrade", async (request, socket, head) => {
       return;
     }
 
+   
+
     const token = request.url.split("/")[1];
     if (!token || token.trim() === "") throw new Error("Invalid token");
 
     const sanitizedToken = escapeInput(token);
+
     const playerVerified = await verifyPlayer(sanitizedToken, 1);
+
 
 
     if (playerVerified === "disabled") throw new Error("Invalid token");
@@ -816,7 +817,8 @@ startMongoDB().then(() => {
   .catch(error => {
     console.error("buy failed:", error);
   });
-*/
+
+  */
 });
 
 
@@ -926,5 +928,7 @@ async function run() {
   const create = await  generateCheckoutUrlForOffer("coins_bonus", user);
   console.log(create);
 }
+
+
 
 //run();

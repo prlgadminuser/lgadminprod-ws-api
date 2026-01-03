@@ -38,6 +38,8 @@ const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
 const PaymentCollection = db.collection("payments")
 
+ // never run this!!!!!
+
 //console.log(createChallenge(4))
 
 //const challange = `{"difficulty":4,"salt":"45fc8a49a5e017023ad45e1b888037eb","expiry":1763166498797}.a749d2b63d9282c49e5e0798e09a3ba2048feaa6cddda5d5ce93e416564ddeef`

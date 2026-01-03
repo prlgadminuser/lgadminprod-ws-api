@@ -11,7 +11,7 @@ async function verifyToken(token, source) {
     try {
         // Verify the JWT token
         const decodedToken = jwt.verify(token, process.env.TOKEN_KEY || tokenkey);
-        const username = decodedToken.username;
+        const username = decodedToken
            
         if (!decodedToken || !username) return "invalid";
 
@@ -29,21 +29,32 @@ async function verifyToken(token, source) {
 
       const time = Date.now()
 
-      const daysBanned = Math.floor((bannedUntil - time) / 86400) + 1
+      const daysBanned = Math.floor((bannedUntil - time) / 86400000) + 1
 
-      if (source === 2) if (time < bannedUntil) return { bantype: bantype, reason: banreason, ban_until: bannedUntil, time: time };
-      if (source === 1) if (time < bannedUntil) return "disabled";
+      switch (source) {
 
+      case 1:
+        if (time < bannedUntil) {
+          return "disabled";
+        }
+       case 2:
+         if (time < bannedUntil) {
+           return JSON.stringify({ status: "banned", bantype: bantype, reason: banreason, days: daysBanned });
+         }
+
+      }
 
         if (token !== userInformation.account.token) {
-            return "invalid"
+            return JSON.stringify({ status: "invalid" });
         }
 
-        return "valid"// Token is valid and matches the database
+
+        return JSON.stringify({ status: "success" });// Token is valid and matches the database
      } catch (error) {
+
     // Handle JWT-specific errors
     if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-      return "invalid";
+      return JSON.stringify({ status: "invalid" });
     }
     // Unexpected server-side error
     return "server error";

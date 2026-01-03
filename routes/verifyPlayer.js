@@ -13,8 +13,9 @@ async function verifyPlayer(token) {
   try {
     // 1. Verify the token to ensure it's a valid, unexpired token.
     const decodedToken = jwt.verify(token, process.env.TOKEN_KEY || tokenkey);
-    const { username } = decodedToken;
-    if (!username) {
+
+    const userId = decodedToken;
+    if (!userId) {
       throw new Error("Invalid token");
     }
     
@@ -29,7 +30,8 @@ async function verifyPlayer(token) {
       }
     );
 
-    if (!userInformation || userInformation.account.username !== username) {
+
+    if (!userInformation || userInformation.account.username !== userId) {
       throw new Error("Invalid token or user not found");
     }
 
@@ -38,11 +40,11 @@ async function verifyPlayer(token) {
     if (time < bannedUntil)  return "disabled";
     
 
-    const inventory = await getUserInventory(username);
+    const inventory = await getUserInventory(userId);
 
     return {
       userId: userInformation._id,
-      playerId: username,
+      playerId: userId,
       nickname: userInformation.account.nickname,
       inventory: inventory,
       items: new Set(inventory.items),

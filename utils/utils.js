@@ -33,4 +33,19 @@ module.exports = {
 
     return OwnsOneOrMoreOfferItems;
   },
+
+   async UserNameExists(userId, itemsToCheck) {
+    const OwnsOneOrMoreOfferItems = await userItemsCollection.findOne(
+      {
+        userid: userId,
+        itemid: { $in: itemsToCheck }, // Checks if any itemid matches in the array
+      },
+      {
+        hint: "player_item_unique",
+        projection: { userid: 1, _id: 0 }, // Optionally return only the matching itemid
+      }
+    );
+
+    return OwnsOneOrMoreOfferItems;
+  },
 };

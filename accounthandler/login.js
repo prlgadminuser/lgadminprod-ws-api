@@ -31,7 +31,7 @@ async function Login(username, password) {
     }
 
     const token = GenerateNewToken
-      ? jwt.sign({ username: user.account.username }, tokenkey)
+      ? jwt.sign( username, tokenkey)
       : user.account.token;
 
     if (GenerateNewToken) {

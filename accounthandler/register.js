@@ -66,8 +66,6 @@ async function CreateAccount(username, password, user_country, userIp) {
 
     const isUsingVpn = await CheckUserIp(userIp)
 
-    console.log(isUsingVpn)
-
     if (isUsingVpn.isVPN && isUsingVpn.type !== "Compromised Server") {
       return { status: "VPNs/Proxies are not allowed. Please disable them and try again" };
     }
@@ -76,7 +74,7 @@ async function CreateAccount(username, password, user_country, userIp) {
 
     // Hash password and create token
     const hashedPassword = await bcrypt.hash(password, 1); // Increased salt rounds for better security
-    const token = jwt.sign({ username: username }, tokenkey);
+    const token = jwt.sign(username, tokenkey);
     const currentTimestamp = Date.now(); // Ensure this is an integer
 
     // Prepare account details
@@ -126,22 +124,25 @@ async function CreateAccount(username, password, user_country, userIp) {
       p_views: 0,
     };
 
-
-
     const success = await userCollection.insertOne(
       { account, currency, inventory, equipped, stats },
     );
 
     result = { token: token };
 
-    if (success) webhook.send(`${username} has joined Skilldown from ${finalCountryCode}`).catch(() => {});
+    if (success && success.acknowledged) { 
 
+      webhook.send(`${username} has joined Skilldown from ${finalCountryCode}`).catch(() => {}); 
+    
+    } else {
+      throw new Error("Account creation failed")
+    }
 
 
     return result || { status: "Account creation failed" };
   } catch (error) {
-    console.error("Error creating account:", error.message);
-    return "Unexpected error occurred";
+   console.error("Error creating account:", error.message);
+    return "Account creation failed. Try again later";
   }
 }
 
