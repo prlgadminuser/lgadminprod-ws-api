@@ -21,7 +21,7 @@ async function verifyToken(token, source) {
             { projection: { "account.token": 1, "account.ban_data": 1 } }
         );
 
-        if (!userInformation) return "invalid"
+        if (!userInformation) return JSON.stringify({ status: "invalid" });
 
       const bantype = userInformation.account.ban_data.type || "noreason"
       const banreason = userInformation.account.ban_data.reason || "noreason"
