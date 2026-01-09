@@ -16,7 +16,7 @@ async function InsertStarterWeapons(username, session) {
 
     // Insert inventory + weapons
     if (WeaponIdsToInsert .length > 0) {
-      await userInventoryCollection.insertMany(WeaponIdsToInsert, { session });
+      await userItemsCollection.insertMany(WeaponIdsToInsert, { session });
     }
     if (WeaponsDataToInsert.length > 0) {
       await userWeaponsCollection.insertMany(WeaponsDataToInsert, { session });

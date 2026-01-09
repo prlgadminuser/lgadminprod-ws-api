@@ -1,22 +1,21 @@
 "use strict";
 
-require('dotenv').config();
+require("dotenv").config();
 
-const LZString = require("lz-string")
-
+const LZString = require("lz-string");
 
 const connectedPlayers = new Map();
 //const playerQueue = new Map();
-function serverid ()  {
-const serverid =  "xxxxxxxxxx".replace(/[xy]/g, function (c) {
-  const r = (Math.random() * 16) | 0;
-  const v = c === "x" ? r : (r & 0x3) | 0x8; // Ensures UUID version 4
-  return v.toString(16);
-}) 
-return serverid
+function serverid() {
+  const serverid = "xxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8; // Ensures UUID version 4
+    return v.toString(16);
+  });
+  return serverid;
 }
 
-const SERVER_INSTANCE_ID = serverid()
+const SERVER_INSTANCE_ID = serverid();
 
 let connectedClientsCount = 0;
 
@@ -36,12 +35,11 @@ async function UpdateItemShopCached(itemshop) {
     next_update: itemshop.next_shop_update,
   };
 
-  global.cached_shopdata = itemshop
-  global.cached_shopdata_compressed = LZString.compress(JSON.stringify(shopdataraw));
+  global.cached_shopdata = itemshop;
+  global.cached_shopdata_compressed = LZString.compress(
+    JSON.stringify(shopdataraw)
+  );
 }
-
-
-
 
 const RealMoneyPurchasesEnabled = true;
 
@@ -68,7 +66,7 @@ module.exports = {
   connectedPlayers,
   SERVER_INSTANCE_ID,
   LZString,
-  UpdateItemShopCached
+  UpdateItemShopCached,
 };
 
 const {
@@ -82,23 +80,8 @@ var sanitize = require("mongo-sanitize");
 const WebSocket = require("ws");
 const bodyParser = require("body-parser");
 const http = require("http");
-const { verifyPlayer } = require("./routes/verifyPlayer");
-const { getUserInventory } = require("./routes/getinventory");
-const { updateNickname } = require("./routes/updatename");
-const { getshopdata } = require("./routes/getShopData");
-const { equipItem } = require("./routes/equipitem");
-const { equipColor } = require("./routes/equipcolor");
-const { getdailyreward } = require("./routes/dailyreward");
-const { buyItem } = require("./routes/buyitem");
-const { equipWeapon } = require("./routes/updateLoadout");
-const { buyWeapon } = require("./routes/buyWeapon");
-const { buyRarityBox } = require("./routes/buyraritybox");
-const { getUserProfile } = require("./routes/getprofile");
-const {
-  GetFriendsDataLocal,
-  UpdateSelfPingTime,
-} = require("./routes/FriendsOnlineSystem");
-const { setupHighscores, gethighscores } = require("./routes/leaderboard");
+const { verifyPlayer } = require("./routes/verifyUser/verifyPlayer");
+const { setupHighscores, gethighscores } = require("./routes/social/leaderboard");
 const {
   createRateLimiter,
   ConnectionOptionsRateLimit,
@@ -116,27 +99,43 @@ const {
 } = require("./limitconfig");
 const { CreateAccount } = require("./accounthandler/register");
 const { Login } = require("./accounthandler/login");
-const { verifyToken } = require("./routes/verifyToken");
+const { verifyToken } = require("./routes/verifyUser/verifyToken");
 const {
   addPlayerToChat,
   removePlayerFromChat,
   sendMessage,
 } = require("./playerchat/chat");
 
-const { sub, checkExistingSession, removeSession, addSession, redisClient } = require("./redis");
-const { configDotenv } = require('dotenv');
-const { CheckUserIp } = require('./accounthandler/security');
-const generateCheckoutUrlForOffer = require('./payments/xsolla');
-const { validateXsollaSignature } = require('./payments/validatewebhook');
-const { awardBuyer } = require('./payments/award-buyer');
+const {
+  sub,
+  checkExistingSession,
+  removeSession,
+  addSession,
+  redisClient,
+} = require("./redis");
+const { configDotenv } = require("dotenv");
+const { CheckUserIp } = require("./accounthandler/security");
+const generateCheckoutUrlForOffer = require("./payments/xsolla");
+const { validateXsollaSignature } = require("./payments/validatewebhook");
+const { awardBuyer } = require("./payments/award-buyer");
+const { DoesUserIdExist } = require("./utils/utils");
+const { getUserInventory } = require("./routes/main/getinventory");
+const { updateNickname } = require("./routes/main/updatename");
+const { getshopdata } = require("./routes/shop/getShopData");
+const { equipItem } = require("./routes/locker/equipitem");
+const { equipColor } = require("./routes/locker/equipcolor");
+const { getdailyreward } = require("./routes/main/dailyreward");
+const { buyItem } = require("./routes/shop/buyitem");
+const { equipWeapon } = require("./routes/main/updateLoadout");
+const { buyWeapon } = require("./routes/main/buyWeapon");
+const { buyRarityBox } = require("./routes/main/buyraritybox");
+const { getUserProfile } = require("./routes/social/getprofile");
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
   // const finalmessage = LZString.compressToBase64(json_message); // or compressToBase64 for safer transmission
   ws.send(json_message);
 }
-
-
 
 //setUserOnlineStatus("agag", "agg")
 
@@ -164,15 +163,14 @@ async function setCommonHeaders(res, origin) {
 }
 
 const webhookRawBodyParser = bodyParser.json({
-  type: 'application/json',
+  type: "application/json",
   verify: (req, res, buf, encoding) => {
     // Only save raw body for Xsolla webhook
-    if (req.url === '/xsolla-webhook') {
-      req.rawBody = buf;  // buf is Buffer
+    if (req.url === "/xsolla-webhook") {
+      req.rawBody = buf; // buf is Buffer
     }
-  }
+  },
 });
-
 
 const server = http.createServer(async (req, res) => {
   if (req.url === "/xsolla-webhook") {
@@ -241,10 +239,12 @@ const server = http.createServer(async (req, res) => {
 
         if (global.maintenance == "true") {
           res.writeHead(400, { "Content-Type": "text/plain" });
-          return res.end(JSON.stringify({
-            status: "maintenance",
-            gmsg: global.maintenance_publicinfomessage,
-          }));
+          return res.end(
+            JSON.stringify({
+              status: "maintenance",
+              gmsg: global.maintenance_publicinfomessage,
+            })
+          );
         }
 
         switch (req.url) {
@@ -264,8 +264,7 @@ const server = http.createServer(async (req, res) => {
             if (tokenResult) {
               res.writeHead(200, { "Content-Type": "text/plain" });
 
-              return res.end(tokenResult)
-
+              return res.end(tokenResult);
             } else {
               res.writeHead(401, { "Content-Type": "text/plain" });
               return res.end("server error");
@@ -295,7 +294,7 @@ const server = http.createServer(async (req, res) => {
               requestData.username,
               requestData.password,
               userCountry,
-              userIp,
+              userIp
             );
 
             if (createResult.token) {
@@ -346,13 +345,9 @@ const server = http.createServer(async (req, res) => {
               } catch {
                 res.writeHead(400);
                 return res.end();
-
-               
               }
 
-              
-
-             //  console.log(webhookBody.user)
+              //  console.log(webhookBody.user)
 
               if (webhookBody.notification_type === "user_validation") {
                 const userId = webhookBody.user?.id;
@@ -361,20 +356,19 @@ const server = http.createServer(async (req, res) => {
                   return res.end();
                 }
 
-                const userExists = await userCollection.findOne({
-                  "account.username": userId,
-                });
+                const userExists = await DoesUserIdExist();
 
                 if (userExists) {
                   res.writeHead(204);
-                   //     console.log("validated")
+                  //     console.log("validated")
                   return res.end();
-            
                 } else {
                   res.writeHead(400, { "Content-Type": "application/json" });
-                  return res.end(JSON.stringify({
-                    error: { code: "INVALID_USER" },
-                  }));
+                  return res.end(
+                    JSON.stringify({
+                      error: { code: "INVALID_USER" },
+                    })
+                  );
                 }
               }
 
@@ -422,8 +416,6 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
- 
-
 // Loop through all headers and log their keys and value
 
 const wss = new WebSocket.Server({
@@ -435,7 +427,6 @@ const wss = new WebSocket.Server({
 });
 
 // Function to escape special characters in strings (for MongoDB safety)
-
 
 const deepSanitizeAndEscape = (value) => {
   // If value is an array, recursively sanitize and escape each element
@@ -469,7 +460,6 @@ function escapeInput(input) {
   }
   return String(input).replace(/[$]/g, "");
 }
-
 
 async function handleMessage(ws, message, playerVerified) {
   try {
@@ -530,19 +520,23 @@ async function handleMessage(ws, message, playerVerified) {
         break;
 
       case "buy_weapon":
-        response = await buyWeapon(playerVerified.playerId, data.wid,  playerVerified.items);
+        response = await buyWeapon(
+          playerVerified.playerId,
+          data.wid,
+          playerVerified.items
+        );
         CompressAndSend(ws, "buyweapon", response);
-      break;
+        break;
 
       case "equip_weapon":
         response = await equipWeapon(
           playerVerified.playerId,
           data.slot,
           data.wid,
-          playerVerified.items,
+          playerVerified.items
         );
         // CompressAndSend(ws, "equipweapon", response)
-       break;
+        break;
 
       case "equip_color":
         response = await equipColor(
@@ -551,7 +545,7 @@ async function handleMessage(ws, message, playerVerified) {
           data.color
         );
         CompressAndSend(ws, "equipcolor", response);
-      break;
+        break;
 
       case "dailyreward":
         response = await getdailyreward(
@@ -564,7 +558,7 @@ async function handleMessage(ws, message, playerVerified) {
       case "change_name":
         response = await updateNickname(playerVerified.playerId, data.new);
         CompressAndSend(ws, "nickname", response);
-       break;
+        break;
 
       case "shopdata":
         response = await getshopdata();
@@ -578,12 +572,12 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.items
         );
         CompressAndSend(ws, "buyitem", response);
-      break;
+        break;
 
       case "profile":
         response = await getUserProfile(data.pid, playerVerified.playerId);
         CompressAndSend(ws, "profile", response);
-       break;
+        break;
 
       case "openbox":
         response = await buyRarityBox(
@@ -591,7 +585,7 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.items
         );
         CompressAndSend(ws, "openbox", response);
-       break;
+        break;
 
       case "highscore":
         response = await gethighscores();
@@ -603,7 +597,7 @@ async function handleMessage(ws, message, playerVerified) {
       case "joinchat":
         response = await addPlayerToChat(playerVerified.nickname, ws);
         CompressAndSend(ws, "joinchat", response);
-       break;
+        break;
 
       case "leavechat":
         response = await removePlayerFromChat(playerVerified.nickname);
@@ -617,35 +611,30 @@ async function handleMessage(ws, message, playerVerified) {
 
       case "get-paystation":
         if (RealMoneyPurchasesEnabled) {
-
-           const user = {
-    id: playerVerified.playerId,
-  };
+          const user = {
+            id: playerVerified.playerId,
+          };
 
           response = await (async () => {
-            return await generateCheckoutUrlForOffer(
-              data.packid,
-              user,
-            );
+            return await generateCheckoutUrlForOffer(data.packid, user);
           })();
 
           CompressAndSend(ws, "get-paystation", response);
         }
-       break;
+        break;
 
       default:
         ws.close(1007, "error");
-       //  console.log(error)
+        //  console.log(error)
         break;
     }
   } catch (error) {
     ws.close(1007, "error");
-   //  console.log(error)
+    //  console.log(error)
   }
 }
 
 const rateLimiterConnection = new RateLimiterMemory(ConnectionOptionsRateLimit);
-
 
 const PING_INTERVAL = 15000; // 10 seconds
 const TIMEOUT = 50000; // 50 seconds
@@ -670,9 +659,6 @@ setInterval(() => {
   }
 }, PING_INTERVAL);
 
-
-
-
 wss.on("connection", async (ws, req) => {
   if (global.maintenance === "true") {
     ws.close(4000, "maintenance");
@@ -681,42 +667,42 @@ wss.on("connection", async (ws, req) => {
 
   const playerVerified = ws.playerVerified;
 
-    const username = playerVerified.playerId
+  const username = playerVerified.playerId;
 
-   // First check if the player is already connected locally
-let existingSid;
-if (connectedPlayers.has(username)) {
-  existingSid = SERVER_INSTANCE_ID; // Local session exists
-} else {
-  // Check Redis for existing session
-  existingSid = await checkExistingSession(username);
-}
-
-if (existingSid) {
-  if (existingSid === SERVER_INSTANCE_ID) {
-    // Existing session is on THIS server → kick local connection
-    const existingConnection = connectedPlayers.get(username);
-    if (existingConnection) {
-      existingConnection.send("code:double");
-      existingConnection.close(1001, "Reassigned connection");
-      //await new Promise((resolve) => existingConnection.once("close", resolve));
-      connectedPlayers.delete(username);
-    }
+  // First check if the player is already connected locally
+  let existingSid;
+  if (connectedPlayers.has(username)) {
+    existingSid = SERVER_INSTANCE_ID; // Local session exists
   } else {
-    // Existing session is on ANOTHER server → publish an invalidation event
-    await redisClient.publish(
-      `server:${existingSid}`,
-      JSON.stringify({ type: "disconnect", uid: username })
-    );
+    // Check Redis for existing session
+    existingSid = await checkExistingSession(username);
   }
-}
 
-// Add the new session
-await addSession(username);
+  if (existingSid) {
+    if (existingSid === SERVER_INSTANCE_ID) {
+      // Existing session is on THIS server → kick local connection
+      const existingConnection = connectedPlayers.get(username);
+      if (existingConnection) {
+        existingConnection.send("code:double");
+        existingConnection.close(1001, "Reassigned connection");
+        //await new Promise((resolve) => existingConnection.once("close", resolve));
+        connectedPlayers.delete(username);
+      }
+    } else {
+      // Existing session is on ANOTHER server → publish an invalidation event
+      await redisClient.publish(
+        `server:${existingSid}`,
+        JSON.stringify({ type: "disconnect", uid: username })
+      );
+    }
+  }
 
-// Update local state
-connectedPlayers.set(username, ws);
-connectedClientsCount++;
+  // Add the new session
+  await addSession(username);
+
+  // Update local state
+  connectedPlayers.set(username, ws);
+  connectedClientsCount++;
 
   // Add session for this server
 
@@ -744,7 +730,6 @@ connectedClientsCount++;
   });
 
   ws.on("close", async () => {
-
     removePlayerFromChat(ws.playerVerified.nickname);
 
     const playerId = ws.playerVerified?.playerId;
@@ -755,7 +740,6 @@ connectedClientsCount++;
     }
   });
 });
-
 
 server.on("upgrade", async (request, socket, head) => {
   try {
@@ -777,16 +761,12 @@ server.on("upgrade", async (request, socket, head) => {
       return;
     }
 
-   
-
     const token = request.url.split("/")[1];
     if (!token || token.trim() === "") throw new Error("Invalid token");
 
     const sanitizedToken = escapeInput(token);
 
     const playerVerified = await verifyPlayer(sanitizedToken, 1);
-
-
 
     if (playerVerified === "disabled") throw new Error("Invalid token");
 
@@ -797,7 +777,6 @@ server.on("upgrade", async (request, socket, head) => {
       ws.playerVerified.lastPongTime = Date.now();
       wss.emit("connection", ws, request);
     });
-
   } catch (error) {
     socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
     socket.destroy();
@@ -810,7 +789,7 @@ startMongoDB().then(() => {
   server.listen(PORT, () => {
     console.log(`Server started on Port ${PORT}`);
   });
- /* buyItem("Lique", 6, new Set())
+  /* buyItem("Lique", 6, new Set())
   .then(items => {
     console.log("buy response:", items);
   })
@@ -820,10 +799,6 @@ startMongoDB().then(() => {
 
   */
 });
-
-
-
-
 
 async function watchServerConfig() {
   const pipeline = [
@@ -846,9 +821,7 @@ async function watchServerConfig() {
       try {
         const docId = change.fullDocument._id;
 
-
         switch (docId) {
-          
           case "ItemShop":
             await UpdateItemShopCached(change.fullDocument);
             broadcast("shopupdate");
@@ -862,8 +835,6 @@ async function watchServerConfig() {
               closeAllClients(4001, "maintenance");
             }
         }
-
-
       } catch (err) {
         console.error("Error processing change:", err);
       }
@@ -879,7 +850,7 @@ async function watchServerConfig() {
 }
 
 // Example usage:
- watchServerConfig();
+watchServerConfig();
 
 setupHighscores();
 
@@ -895,14 +866,13 @@ function closeAllClients(code, reason) {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send("maintenance_active");
 
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.close(code, reason);
-        }
-     // 100 ms delay to allow message flush
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close(code, reason);
+      }
+      // 100 ms delay to allow message flush
     }
   });
 }
-
 
 process.on("SIGINT", () => {
   changeStream.close();
@@ -916,19 +886,16 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason, promise);
-    process.exit(1);
-
+  process.exit(1);
 });
 
- const user = {
-    id: 'Lique',
-  };
+const user = {
+  id: "Lique",
+};
 
 async function run() {
-  const create = await  generateCheckoutUrlForOffer("coins_bonus", user);
+  const create = await generateCheckoutUrlForOffer("coins_bonus", user);
   console.log(create);
 }
-
-
 
 //run();

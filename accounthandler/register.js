@@ -8,8 +8,8 @@ const {
 } = require("./..//idbconfig");
 const { jwt, bcrypt } = require("./..//index");
 const { webhook } = require("./..//discordwebhook");
-const { InsertStarterWeaponsData } = require("./../routes/buyWeapon");
 const { CheckUserIp } = require("./security");
+const { NameAlreadyExists } = require("../utils/utils");
 
 const allow_bad_words = false;
 const allowVPNS = false
@@ -50,13 +50,7 @@ async function CreateAccount(username, password, user_country, userIp) {
     }
 
     // Check if username already exists
-    const existingUser = await userCollection.findOne(
-      { "account.username": username },
-      {
-        collation: { locale: "en", strength: 2 },
-      }
-    );
-
+    const existingUser = await NameAlreadyExists(username)
     if (existingUser) {
       return { status: "Name already taken. Please choose another one." };
     }

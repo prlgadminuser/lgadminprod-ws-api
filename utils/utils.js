@@ -17,6 +17,8 @@ module.exports = {
     });
 
     if (result) rewarditems.forEach((item) => local_owned_items.add(item));
+
+    return result;
   },
 
   async UserOwnsAnyItemsOfArray(userId, itemsToCheck) {
@@ -34,18 +36,21 @@ module.exports = {
     return OwnsOneOrMoreOfferItems;
   },
 
-   async UserNameExists(userId, itemsToCheck) {
-    const OwnsOneOrMoreOfferItems = await userItemsCollection.findOne(
+  async DoesUserIdExist(userId) {
+    const userIdExist = await userCollection.findOne({ _id: userId });
+
+    return userIdExist;
+  },
+
+  async DoesUserNameExist(nameToCheck) {
+    const nameExists = await userCollection.findOne(
+      { "account.nickname": nameToCheck },
       {
-        userid: userId,
-        itemid: { $in: itemsToCheck }, // Checks if any itemid matches in the array
-      },
-      {
-        hint: "player_item_unique",
-        projection: { userid: 1, _id: 0 }, // Optionally return only the matching itemid
+        collation: { locale: "en", strength: 2 },
+        hint: { "account.nickname": 1 },
       }
     );
 
-    return OwnsOneOrMoreOfferItems;
+    return nameExists;
   },
 };
