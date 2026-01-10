@@ -120,7 +120,7 @@ const { validateXsollaSignature } = require("./payments/validatewebhook");
 const { awardBuyer } = require("./payments/award-buyer");
 const { DoesUserIdExist } = require("./utils/utils");
 const { getUserInventory } = require("./routes/main/getinventory");
-const { updateNickname } = require("./routes/main/updatename");
+const { updateUserName } = require("./routes/main/updatename");
 const { getshopdata } = require("./routes/shop/getShopData");
 const { equipItem } = require("./routes/locker/equipitem");
 const { equipColor } = require("./routes/locker/equipcolor");
@@ -406,11 +406,13 @@ const server = http.createServer(async (req, res) => {
             return res.end("Not Found");
         }
       } catch {
+      //  console.log(error)
         res.writeHead(500);
         return res.end("Server error");
       }
     });
   } catch {
+   //    console.log(error)
     res.writeHead(500);
     res.end("Server error");
   }
@@ -556,7 +558,7 @@ async function handleMessage(ws, message, playerVerified) {
         break;
 
       case "change_name":
-        response = await updateNickname(playerVerified.playerId, data.new);
+        response = await updateUserName(playerVerified.playerId, data.new);
         CompressAndSend(ws, "nickname", response);
         break;
 
@@ -625,12 +627,12 @@ async function handleMessage(ws, message, playerVerified) {
 
       default:
         ws.close(1007, "error");
-        //  console.log(error)
+       //  console.log(error)
         break;
     }
   } catch (error) {
     ws.close(1007, "error");
-    //  console.log(error)
+   //  console.log(error)
   }
 }
 
@@ -778,6 +780,7 @@ server.on("upgrade", async (request, socket, head) => {
       wss.emit("connection", ws, request);
     });
   } catch (error) {
+   // console.log(error)
     socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
     socket.destroy();
   }
@@ -893,9 +896,25 @@ const user = {
   id: "Lique",
 };
 
-async function run() {
-  const create = await generateCheckoutUrlForOffer("coins_bonus", user);
-  console.log(create);
+function randomNumber(minDigits = 4, maxDigits = 15) {
+  const digits =
+    Math.floor(Math.random() * (maxDigits - minDigits + 1)) + minDigits;
+
+  const min = 10 ** (digits - 1);
+  const max = 10 ** digits - 1;
+
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-//run();
+async function run() {
+
+  const create = 
+   await CreateAccount(
+              randomNumber(),
+              "passdata",
+              "US",
+              "0"
+            );
+ // console.log(create);
+}
+

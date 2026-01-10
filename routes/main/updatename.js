@@ -1,27 +1,28 @@
 const { userCollection, nicknameRegex, badWords } = require('../..//idbconfig'); 
+const { getUserIdPrefix } = require('../../utils/utils');
 
 const cooldownPeriod = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-async function updateNickname(username, newName) {
+async function updateUserName(userId, newname) {
     try {
-        const newNickname = newName;
+        const newName = newname;
 
         // Validate the newNickname parameter
-        if (!newNickname) {
+        if (!newName) {
             return { status: "not allowed5" };
         }
 
         // Verify newNickname against the nicknameRegex
-        if (!nicknameRegex.test(newNickname)) {
+        if (!nicknameRegex.test(newName)) {
             return { status: "not allowed" };
         }
 
-        if (badWords.test(newNickname)) {
+        if (badWords.test(newName)) {
             return { status: "not allowed" };
         }
 
         const user = await userCollection.findOne(
-            { "account.username": username },
+            getUserIdPrefix(userId),
             { projection: { "account.nameupdate": 1 } } // Only return the nicknameUpdatedAt field
         );
 
@@ -39,24 +40,25 @@ async function updateNickname(username, newName) {
             return { status: "cooldown" };
         }
         
-             const nicknameExists = await userCollection.findOne(
-            { "account.nickname": newName },
+             const nameTaken = await userCollection.findOne(
+            { "account.username": newName },
             {
                 collation: { locale: "en", strength: 2 },
+                hint: { "account.username": 1 }
             }
         );
 
 
-        if (nicknameExists) {
+        if (nameTaken) {
             return { status: "taken" };
         }
 
         // Update the nickname and the timestamp in the database
         await userCollection.updateOne(
-            { "account.username": username },
+             getUserIdPrefix(userId),
             { 
                 $set: { 
-                    "account.nickname": newNickname, 
+                    "account.username": newName, 
                     "account.nameupdate": Date.now() // Set current timestamp as nicknameUpdatedAt 
                 } 
             }
@@ -64,10 +66,11 @@ async function updateNickname(username, newName) {
 
         return { status: "success", t: Date.now() };
     } catch (error) {
+      //  console.log(error)
         throw new Error("Err");
     }
 }
 
 module.exports = {
-    updateNickname
+   updateUserName 
 };

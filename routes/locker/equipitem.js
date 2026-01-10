@@ -1,4 +1,5 @@
 const { userCollection } = require("../..//idbconfig");
+const { getUserIdPrefix } = require('../../utils/utils');
 
 const itemTypeMap = {
   HAT: "hat",
@@ -7,7 +8,7 @@ const itemTypeMap = {
   POSE: "pose", // Assuming 'p' stands for pose (or other item)
 };
 
-async function equipItem(username, itemtype, itemid, owneditems) {
+async function equipItem(userId, itemtype, itemid, owneditems) {
   try {
     // Validate provided item type
     const mappedType = itemTypeMap[itemtype];
@@ -18,7 +19,7 @@ async function equipItem(username, itemtype, itemid, owneditems) {
     // If equipping default item "0"
     if (itemid === "0") {
       await userCollection.updateOne(
-        { "account.username": username },
+         getUserIdPrefix(userId),
         { $set: { [`equipped.${mappedType}`]: itemid } }
       );
       return { message: "success" };
@@ -37,7 +38,7 @@ async function equipItem(username, itemtype, itemid, owneditems) {
 
     // Equip item
     await userCollection.updateOne(
-      { "account.username": username },
+       getUserIdPrefix(userId),
       { $set: { [`equipped.${itemTypeFromId}`]: itemid } }
     );
 

@@ -5,6 +5,8 @@ const { loadout_allowed_items } = require('./updateLoadout');
 const { RealMoneyPurchasesEnabled } = require('../../index');
 const { rarityPercentages } = require('../../boxrarityconfig');
 const { OFFERKEYS } = require('../../payments/offers');
+const { getUserIdPrefix } = require('../../utils/utils');
+
 
 
 async function getPlayerItems(username) {
@@ -58,12 +60,12 @@ async function getPlayerWeaponsData(username) {
 
    
 
-async function getUserInventory(username) {
+async function getUserInventory(userId) {
     try {
         // Prepare promises for parallel execution
         const promises = [
             await userCollection.findOneAndUpdate(
-                { "account.username": username },
+                 getUserIdPrefix(userId),
                 { $set: { "account.last_login": Date.now() } },
                 {
                   //  returnDocument: "after", // Return the document after update
@@ -74,7 +76,7 @@ async function getUserInventory(username) {
                         "inventory": 1,
                         "stats.sp": 1,
                     },
-                    hint: "account.username_1"
+                  //  hint: "account.username_1"
                 }
             ),
             
@@ -82,7 +84,7 @@ async function getUserInventory(username) {
 
         promises.push(
             await battlePassCollection.findOne(
-                { username },
+                { userId },
                 {
                     projection: {
                         ss_passtier: 1,
@@ -116,7 +118,7 @@ async function getUserInventory(username) {
         const season_coins = bpuserRow ? bpuserRow.ss_coins || 0 : 0;
         const bonusitem_damage = bpuserRow ? bpuserRow.ss_damage || 0 : 0;
 
-        const userInventory = await getPlayerItems(username)
+        const userInventory = await getPlayerItems(userId)
        // const userWeaponData = await getPlayerWeaponsData(username)
 
         const skillpassdata = {
@@ -127,8 +129,8 @@ async function getUserInventory(username) {
           
 
         const inventory = {
-            nickname: userRow.account.nickname,
-            username: username,
+            userId: userRow._id,
+            username: userRow.account.username,
             coins: userRow.currency.coins,
             boxes: userRow.currency.boxes,
             sp: userRow.stats.sp,

@@ -1,12 +1,13 @@
 const { userCollection } = require('./../idbconfig');
 const { rarityConfig } = require('./../boxrarityconfig');
 const { webhook } = require('./..//discordwebhook');
+const { getUserIdPrefix } = require('../../utils/utils');
 
 const ReplaceAlreadyOwnedItemsWithCoins = true
 
-async function buyRarityBox(username, owned_items) {
+async function buyRarityBox(userId, owned_items) {
     try {
-      const user = await getUserDetails(username);
+      const user = await getUserDetails(userId);
       if (user.currency.boxes < 1) throw new Error("no boxes left");
 
       const rarityRoll = Math.random();
@@ -14,7 +15,7 @@ async function buyRarityBox(username, owned_items) {
       const config = rarityConfig[rarity];
 
       if (rarity === "legendary") {
-        const joinedMessage = `${username} got the chrono rarity!`;
+        const joinedMessage = `${userId} got the chrono rarity!`;
 
           webhook.send(joinedMessage).catch(() => {});
 
@@ -134,15 +135,15 @@ async function updateUserFields(username, rewardStack) {
     }
 
     await userCollection.updateOne(
-        { "account.username": username },
+         getUserIdPrefix(userId),
         updateData
     );
 }
 
 // --- Fetch user data
-async function getUserDetails(username) {
+async function getUserDetails(userId) {
     return await userCollection.findOne(
-        { "account.username": username },
+         getUserIdPrefix(userId),
         { projection: { "currency.boxes": 1, "currency.coins": 1 } }
     );
 }

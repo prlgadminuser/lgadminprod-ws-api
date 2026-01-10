@@ -1,7 +1,9 @@
 
+const { ObjectId } = require('mongodb');
 const { tokenkey, userCollection } = require('../../idbconfig');
 const { jwt } = require('../../index');
 const { getUserInventory } = require('../main/getinventory');
+const { getUserIdPrefix } = require('../../utils/utils');
 
 async function verifyPlayer(token) {
 
@@ -21,7 +23,7 @@ async function verifyPlayer(token) {
     }
     
     const userInformation = await userCollection.findOne(
-      { "account.token": token },
+      { _id: new ObjectId(userId) },
       {
         projection: {
           "account.nickname": 1,
@@ -32,7 +34,7 @@ async function verifyPlayer(token) {
     );
 
 
-    if (!userInformation || userInformation.account.username !== userId) {
+    if (!userInformation) {
       throw new Error("Invalid token or user not found");
     }
 
@@ -44,13 +46,13 @@ async function verifyPlayer(token) {
     const inventory = await getUserInventory(userId);
 
     return {
-      userId: userInformation._id,
       playerId: userId,
       nickname: userInformation.account.nickname,
       inventory: inventory,
       items: new Set(inventory.items),
     };
   } catch (error) {
+ //   console.log(error)
     throw new Error("Token verification failed");
   }
 }

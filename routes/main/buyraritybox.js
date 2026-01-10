@@ -1,11 +1,12 @@
 const { userCollection, userItemsCollection } = require('../..//idbconfig');
 const { rarityConfig } = require('../..//boxrarityconfig');
 const { webhook } = require('../..//discordwebhook');
+const { getUserIdPrefix } = require('../../utils/utils');
 
-async function buyRarityBox(username, owned_items) {
+async function buyRarityBox(userId, owned_items) {
     try {
         // Fetch user details
-        const user = await getUserDetails(username);
+        const user = await getUserDetails(userId);
 
         if (1 > user.currency.boxes ) throw new Error("no boxes left")
 
@@ -35,7 +36,7 @@ async function buyRarityBox(username, owned_items) {
             const baseTimestamp = Date.now();
 
             const docs = rewards.items.map((id, index) => ({
-                uid: username,
+                uid: userId,
                 id: id,
                 ts: baseTimestamp + index
             }));
@@ -120,7 +121,7 @@ function rollForRarity() {
 }
 
 // Function to update all user fields in a single database operation
-async function updateUserFields(username, updateFields) {
+async function updateUserFields(userId, updateFields) {
     const updateData = {};
 
 
@@ -137,16 +138,16 @@ async function updateUserFields(username, updateFields) {
     // Update the database if there are changes
     if (Object.keys(updateData).length > 0) {
         await userCollection.updateOne(
-            { "account.username": username },  // Search by account.username
+             getUserIdPrefix(userId),  // Search by account.username
             updateData
         );
     }
 }
 
 // Function to get user details from the database
-async function getUserDetails(username) {
+async function getUserDetails(userId) {
     return await userCollection.findOne(
-        { "account.username": username }, // Search by account.username
+         getUserIdPrefix(userId), // Search by account.username
         { projection: { "currency.boxes": 1, "currency.coins": 1 } }
     );
 }

@@ -1,4 +1,5 @@
 const { userCollection } = require('../..//idbconfig');
+const { getUserIdPrefix } = require('../../utils/utils');
 
  const validTypes = {
       HAT: "hat_color",
@@ -7,7 +8,7 @@ const { userCollection } = require('../..//idbconfig');
       POSE: "color", // Assuming 'P' is for a general color or another item color
     };
 
-async function equipColor(username, type, color) {
+async function equipColor(userId, type, color) {
     const parsedColor = parseInt(color, 10);
 
     // Validate the color value
@@ -26,7 +27,7 @@ async function equipColor(username, type, color) {
     try {
         // Update the user document with the new color under 'equipped'
         const result = await userCollection.updateOne(
-            { "account.username": username },
+             getUserIdPrefix(userId),
             { $set: { [`equipped.${dbField}`]: parsedColor } }
         );
 

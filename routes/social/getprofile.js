@@ -1,22 +1,22 @@
 
 const { userCollection, userSocialCollection } = require('../..//idbconfig');
+const { getUserIdPrefix } = require('../../utils/utils');
 const { UpdateInterval } = require('./leaderboard');
 
 const joined_date_displaymode = 1;
 const count_profile_views = true;
 const ignore_user_already_viewed_profile = false
 
-async function getUserProfile(usernamed, selfusername) {
+async function getUserProfile(userId, selfId) {
 
   try {
     // Fetch user data from the database
     const userRow = await userCollection.findOne(
-      { "account.username": usernamed },
+       getUserIdPrefix(userId),
       {
         projection: {
           _id: 0, 
           "account.username": 1,
-          "account.nickname": 1,
           "equipped.hat": 1,
           "equipped.top": 1,
           "equipped.banner": 1,
@@ -36,7 +36,7 @@ async function getUserProfile(usernamed, selfusername) {
         },
 
         //hint: "playerProfileIndex",
-         hint: "account.username_1",
+       //  hint: "account.username_1",
       }
     );
 
@@ -45,7 +45,7 @@ async function getUserProfile(usernamed, selfusername) {
     }
 
     
-    if (count_profile_views && selfusername !== usernamed) TryIncreaseProfileViews(selfusername, usernamed)
+    if (count_profile_views && selfId !== userId) TryIncreaseProfileViews(selfId, userId)
 
 
     let displayString = null;
@@ -101,7 +101,6 @@ async function getUserProfile(usernamed, selfusername) {
 
     return [
       userRow.account.username,
-      userRow.account.nickname,
       userRow.equipped.hat,
       userRow.equipped.top,
       userRow.equipped.banner,
@@ -122,6 +121,7 @@ async function getUserProfile(usernamed, selfusername) {
     ].join("$");
 
   } catch (error) {
+  //  console.log(error)
     throw new Error("An error occurred while fetching user profile");
   }
 }
@@ -139,7 +139,7 @@ async function TryIncreaseProfileViews(selfusername, usernamed) {
 
   if (InsertViewEntry.upsertedCount > 0) {
     await userCollection.updateOne(
-      { "account.username": usernamed },
+       getUserIdPrefix(userId),
       { $inc: { "stats.p_views": 1 } }
     );
   }

@@ -1,4 +1,5 @@
 const { userCollection, userItemsCollection, userWeaponsCollection, client } = require("../../idbconfig");
+const { getUserIdPrefix } = require('../../utils/utils');
 
 const WeaponsToBuy = new Map([
   ["W4", 500],
@@ -22,7 +23,7 @@ function weapon_defaultstats(username, weaponId) {
 
 
 
-async function buyWeapon(username, weaponId, ownedItems) {
+async function buyWeapon(userId, weaponId, ownedItems) {
   try {
     // Validate weapon ID
     if (!WeaponsToBuy.has(weaponId)) {
@@ -39,7 +40,7 @@ async function buyWeapon(username, weaponId, ownedItems) {
 
     // Fetch user's balance
     const userRow = await userCollection.findOne(
-      { "account.username": username },
+       getUserIdPrefix(userId),
       { projection: { [`currency.${currency}`]: 1 } }
     );
 
@@ -53,7 +54,7 @@ async function buyWeapon(username, weaponId, ownedItems) {
 
     // Prepare weapon data
     const weaponUserInventory = {
-      uid: username,
+      uid: userId,
       id: weaponId,
       ts: Date.now(), // Unique timestamp
     };
@@ -69,7 +70,7 @@ async function buyWeapon(username, weaponId, ownedItems) {
         await userWeaponsCollection.insertOne(weapondata, { session });
         // Deduct the user's balance
         await userCollection.updateOne(
-          { "account.username": username },
+           getUserIdPrefix(userId),
           { $inc: { [`currency.${currency}`]: -price } },
           { session }
         );

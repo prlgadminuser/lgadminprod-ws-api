@@ -30,7 +30,7 @@ async function searchplayers(text) {
     .toArray()
    // .explain("executionStats");
 
-    console.log(JSON.stringify(users));
+   // console.log(JSON.stringify(users));
     return users;
   } catch (error) {
     console.error("Search error:", error);

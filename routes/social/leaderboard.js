@@ -1,7 +1,7 @@
 const { userCollection } = require('../../idbconfig');
 const LZString = require("lz-string");
+const { getUserIdPrefix } = require('../../utils/utils');
 
-const excludedNicknames = ["Liquem", "BotPlayer1", "Cheater42"];
 const limit = 50
 const UpdateInterval = 60 * 1000 * 60 // minutes between highscore updates
 
@@ -10,104 +10,74 @@ const updateUserDocumentsPlaces = true
 
 const now = Date.now();
 
+// ... other imports ...
+
 const updateHighscores = async () => {
   try {
+    const limit = 50;
+    const now = Date.now();
+
+    // Single query: get top 50 with ALL needed fields
     const highscores = await userCollection
       .find(
         {
-      //    $or: [{ "account.ban_data.until": { $lte: now } }],
+          // Optional: exclude banned (if you have ban_data in projection)
+          // "account.ban_data.until": { $lte: now }  // or use partial index for active only
         },
         {
           projection: {
-            _id: 0,
             score: "$stats.sp",
+            userId: "_id",
             username: "$account.username",
+            hat: "$equipped.hat",
+            color: "$equipped.color",
+            hat_color: "$equipped.hat_color",
+            // Add ban check if needed: "account.ban_data.until": 1
           },
         }
       )
-      .hint("highscores_skillpoints")
+      .hint("leaderboard_skillpoints") // your index on stats.sp (descending)
+      .sort({ "stats.sp": -1 })       // ← CRITICAL: add sort to use index properly
       .limit(limit)
-    .toArray();
+    //  .explain()
+     .toArray();
+
+     //console.log(JSON.stringify(highscores))
 
     if (!highscores.length) {
       console.error("No highscores found.");
       return;
     }
 
-    const usernames = highscores.map((player) => player.username);
-
-
-
+    // Optional: update places in DB (bulkWrite as before)
     if (updateUserDocumentsPlaces) {
       const timestamp = Date.now();
-      const bulkOps = highscores.map((player, index) => {
-        const place = index + 1;
-        const placedata = {
-          place: place,
-          updated: timestamp,
-        };
+      const bulkOps = highscores.map((player, index) => ({
+        updateOne: {
+          filter: getUserIdPrefix(player._id),
+          update: { $set: { "stats.place": { place: index + 1, updated: timestamp } } },
+        },
+      }));
 
-        return {
-          updateOne: {
-            filter: { "account.username": player.username },
-            update: { $set: { "stats.place": placedata } },
-            hint: "account.username_1",
-          },
-        };
-      });
-
-      if (bulkOps.length > 0) {
-        const result = await userCollection.bulkWrite(bulkOps);
-      } else {
-        console.log("bulkops highscore error");
-      }
+      await userCollection.bulkWrite(bulkOps);
     }
 
-    const playerdetails = await userCollection
-      .find(
-        { "account.username": { $in: usernames } },
-        {
-          projection: {
-            _id: 0,
-            username: "$account.username",
-            nickname: "$account.nickname",
-            hat: "$equipped.hat",
-            color: "$equipped.color",
-            hat_color: "$equipped.hat_color",
-          },
-        }
-      )
-      .hint("account.username_1")
-      .toArray();
-
-
-     // console.log(playerdetails)
-
-    const playerDetailsMap = playerdetails.reduce((map, player) => {
-      map[player.username] = {
-        nickname: player.nickname,
-        hat: player.hat,
-        color: player.color,
-        hat_color: player.hat_color,
-      };
-      return map;
-    }, {});
-
+    // No second query needed! All data is already here
     const finalHighscores = highscores.map((player) => {
-      const details = playerDetailsMap[player.username] || {};
-
-      return `${details.nickname}$${player.username}$${player.score}$${details.hat}$${details.color}$${details.hat_color}`;
+      return `${player._id}$${player.username}$${player.score}$${player.hat}$${player.color}$${player.hat_color}`;
     });
 
     const highscoresString = JSON.stringify(finalHighscores);
-
     const compressedString = LZString.compress(highscoresString);
 
     global.highscores = compressedString;
+   // console.log(`Highscores updated: ${highscores.length} players`);
   } catch (error) {
-    console.error("Error while updating highscores:", error);
+    console.error("Error updating highscores:", error);
   }
 };
+
+// Rest of your code (setup, gethighscores) remains the same
 
 async function gethighscores() {
   return global.highscores || [];

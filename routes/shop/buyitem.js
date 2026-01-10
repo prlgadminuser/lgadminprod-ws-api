@@ -6,9 +6,10 @@ const {
   userItemsCollection,
   client,
 } = require("../..//idbconfig");
+const { getUserIdPrefix } = require('../../utils/utils');
 
 
-async function buyItem(username, offerKey, owneditems) {
+async function buyItem(userId, offerKey, owneditems) {
   try {
     //  const shopData = await shopcollection.findOne(
     //   { _id: "ItemShop" },
@@ -34,7 +35,7 @@ async function buyItem(username, offerKey, owneditems) {
 
 
       const userRow = await userCollection.findOne(
-      { "account.username": username },
+       getUserIdPrefix(userId),
       { projection: { [`currency.${currency}`]: 1 } } // Fetch user's balance dynamically
     );
 
@@ -46,7 +47,7 @@ async function buyItem(username, offerKey, owneditems) {
       throw new Error(`Not enough ${currency} to buy the offer.`);
     }
 
-    const OwnsOneOrMoreOfferItems = await UserOwnsAnyItemsOfArray(username, items)
+    const OwnsOneOrMoreOfferItems = await UserOwnsAnyItemsOfArray(userId, items)
 
     if (OwnsOneOrMoreOfferItems) {
       throw new Error("You already own one or more items from this offer.");
@@ -72,11 +73,11 @@ async function buyItem(username, offerKey, owneditems) {
     try {
       await session.withTransaction(async () => {
         
-      await SaveUserGrantedItems(username, items, owneditems, session)
+      await SaveUserGrantedItems(userId, items, owneditems, session)
 
         if (Object.keys(updateFields).length > 0) {
           await userCollection.updateOne(
-            { "account.username": username },
+             getUserIdPrefix(userId),
             updateFields,
             { session }
           );

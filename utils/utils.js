@@ -1,6 +1,12 @@
-const { userItemsCollection } = require("../idbconfig");
+const { ObjectId } = require("mongodb");
+const { userItemsCollection, userCollection } = require("../idbconfig");
 
 module.exports = {
+
+  getUserIdPrefix(userId) {
+    return { _id: new ObjectId(userId) }
+  },
+
   async SaveUserGrantedItems(userId, rewarditems, local_owned_items, session) {
     if (!rewarditems.length) return;
 
@@ -37,7 +43,7 @@ module.exports = {
   },
 
   async DoesUserIdExist(userId) {
-    const userIdExist = await userCollection.findOne({ _id: userId });
+    const userIdExist = await userCollection.findOne(getUserIdPrefix(userId));
 
     return userIdExist;
   },
@@ -47,7 +53,7 @@ module.exports = {
       { "account.nickname": nameToCheck },
       {
         collation: { locale: "en", strength: 2 },
-        hint: { "account.nickname": 1 },
+        hint: { "account.username": 1 },
       }
     );
 

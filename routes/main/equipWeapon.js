@@ -1,5 +1,6 @@
 
 const { userCollection } = require('./..//idbconfig');
+const { getUserIdPrefix } = require('../../utils/utils');
 
 async function equipWeapon(username, type, itemid) {
 

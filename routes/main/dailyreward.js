@@ -1,6 +1,7 @@
 const { rarityConfig } = require("../../boxrarityconfig");
 const { SaveUserGrantedItems } = require("../../utils/utils");
 const { userCollection, client } = require("../..//idbconfig");
+const { getUserIdPrefix } = require('../../utils/utils');
 
 // === CONFIGURATION ===
 const REWARDS_PER_CLAIM = 3;
@@ -56,14 +57,14 @@ function selectRandomReward(pool, ownedItemsSet, alreadyGrantedThisClaim) {
 }
 
 // === MAIN FUNCTION ===
-async function getdailyreward(username, owneditems) {
+async function getdailyreward(userId, owneditems) {
   // owneditems is assumed to be an array or iterable of owned item IDs/strings
   const ownedItemsSet = new Set(owneditems);
   const alreadyGrantedThisClaim = new Set(); // Track items given in this claim
 
   // Check user existence and cooldown
   const user = await userCollection.findOne(
-    { "account.username": username },
+     getUserIdPrefix(userId),
     { projection: { "inventory.last_collected": 1 } }
   );
 
@@ -106,11 +107,11 @@ async function getdailyreward(username, owneditems) {
   try {
     await session.withTransaction(async () => {
       if (itemsToGrant.length > 0) {
-        await SaveUserGrantedItems(username, itemsToGrant, owneditems, session);
+        await SaveUserGrantedItems(userId, itemsToGrant, owneditems, session);
       }
 
       await userCollection.updateOne(
-        { "account.username": username },
+         getUserIdPrefix(userId),
         update,
         { session }
       );

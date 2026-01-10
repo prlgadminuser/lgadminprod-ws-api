@@ -9,7 +9,7 @@ const {
 const { jwt, bcrypt } = require("./..//index");
 const { webhook } = require("./..//discordwebhook");
 const { CheckUserIp } = require("./security");
-const { NameAlreadyExists } = require("../utils/utils");
+const { DoesUserNameExist, getUserIdPrefix } = require("../utils/utils");
 
 const allow_bad_words = false;
 const allowVPNS = false
@@ -50,9 +50,9 @@ async function CreateAccount(username, password, user_country, userIp) {
     }
 
     // Check if username already exists
-    const existingUser = await NameAlreadyExists(username)
+    const existingUser = await DoesUserNameExist(username)
     if (existingUser) {
-      return { status: "Name already taken. Please choose another one." };
+      return { status: "Name already taken. Choose another one." };
     }
     
 
@@ -68,15 +68,13 @@ async function CreateAccount(username, password, user_country, userIp) {
 
     // Hash password and create token
     const hashedPassword = await bcrypt.hash(password, 1); // Increased salt rounds for better security
-    const token = jwt.sign(username, tokenkey);
     const currentTimestamp = Date.now(); // Ensure this is an integer
 
     // Prepare account details
     const account = {
       username: String(username), // Ensure username is a string
-      nickname: String(username), // Ensure nickname is a string
       password: hashedPassword, // Ensure password is a string
-      token: token, // Ensure token is a string
+      token: "0",
       country_code: finalCountryCode, // Ensure country_code is a string
       created_at: currentTimestamp, // Cast to int
       last_login: currentTimestamp, // Cast to int
@@ -122,8 +120,6 @@ async function CreateAccount(username, password, user_country, userIp) {
       { account, currency, inventory, equipped, stats },
     );
 
-    result = { token: token };
-
     if (success && success.acknowledged) { 
 
       webhook.send(`${username} has joined Skilldown from ${finalCountryCode}`).catch(() => {}); 
@@ -132,10 +128,27 @@ async function CreateAccount(username, password, user_country, userIp) {
       throw new Error("Account creation failed")
     }
 
+    const userId = success.insertedId
+
+    const token = jwt.sign(userId.toString(), tokenkey);
+
+      if (token)  {
+
+        result = { status: "success", token: token };
+      const insertToken = await userCollection.updateOne(
+   getUserIdPrefix(userId),
+  {
+    $set: {
+      "account.token": token
+    }
+  }
+);
+    }
+
 
     return result || { status: "Account creation failed" };
   } catch (error) {
-   console.error("Error creating account:", error.message);
+   console.error("Error creating account:", error);
     return "Account creation failed. Try again later";
   }
 }

@@ -1,4 +1,5 @@
 const { userCollection } = require("../../idbconfig");
+const { getUserIdPrefix } = require("../../utils/utils");
 
 const allowed_weapons = new Set([
   "1", "2", "3", "4"
@@ -14,7 +15,7 @@ gadgets: Array.from(allowed_gadgets)
 }
 
 
-async function equipWeapon(username, slot, weaponid) {
+async function equipWeapon(userId, slot, weaponid) {
   try {
     if (!slot || !(slot >= 1 && slot <= 3)) {
       throw new Error(
@@ -31,7 +32,7 @@ async function equipWeapon(username, slot, weaponid) {
     if (!allowed_weapons.has(weaponid)) throw new Error("Item is not valid.");
 
     await userCollection.updateOne(
-      { "account.username": username },
+      getUserIdPrefix(userId),
       { $set: { [`inventory.loadout.slot${slot}`]: weaponid } } 
     );
 
@@ -43,7 +44,7 @@ async function equipWeapon(username, slot, weaponid) {
 
 
 
-async function equipGadget(username, gadgetid) {
+async function equipGadget(userId, gadgetid) {
   try {
     if (!gadgetid || gadgetid.length > 5) {
       throw new Error(
@@ -54,7 +55,7 @@ async function equipGadget(username, gadgetid) {
     if (!allowed_gadgets.has(gadgetid)) throw new Error("Item is not valid.");
 
     await userCollection.updateOne(
-      { "account.username": username }, 
+       getUserIdPrefix(userId),
       { $set: { [`inventory.loadout.gadget`]: gadgetid } } 
     );
 

@@ -1,4 +1,5 @@
 const { userCollection } = require('./..//idbconfig');
+const { getUserIdPrefix } = require('../../utils/utils');
 
 const dailyRewards = [
   { field: "coins", amount: 100, message: "Day 1: 100 coins!" },
