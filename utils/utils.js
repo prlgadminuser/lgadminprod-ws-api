@@ -53,7 +53,7 @@ module.exports = {
       { "account.nickname": nameToCheck },
       {
         collation: { locale: "en", strength: 2 },
-        hint: { "account.username": 1 },
+        hint: "account.username_1",
       }
     );
 
