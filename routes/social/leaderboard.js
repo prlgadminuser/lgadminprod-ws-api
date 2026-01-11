@@ -3,7 +3,7 @@ const LZString = require("lz-string");
 const { getUserIdPrefix } = require('../../utils/utils');
 
 const limit = 50
-const UpdateInterval = 60 * 1000 * 60 // minutes between highscore updates
+const UpdateInterval = 1 * 1000 * 60 // minutes between highscore updates
 
 
 const updateUserDocumentsPlaces = true
@@ -97,4 +97,5 @@ module.exports = {
   gethighscores,
   UpdateInterval
 };
+
 
