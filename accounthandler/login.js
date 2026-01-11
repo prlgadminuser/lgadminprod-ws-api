@@ -17,6 +17,7 @@ async function Login(username, password) {
           "account.password": 1,
           "account.token": 1,
         },
+        hint: "account.username_1",
       }
     );
 
