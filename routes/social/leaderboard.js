@@ -37,7 +37,7 @@ const updateHighscores = async () => {
         }
       )
       .hint("leaderboard_skillpoints") // your index on stats.sp (descending)
-      .sort({ "stats.sp": -1 })       // ← CRITICAL: add sort to use index properly
+      //.sort({ "stats.sp": -1 })       // ← CRITICAL: add sort to use index properly
       .limit(limit)
     //  .explain()
      .toArray();
@@ -97,5 +97,6 @@ module.exports = {
   gethighscores,
   UpdateInterval
 };
+
 
 
