@@ -27,12 +27,12 @@ async function updateUserName(userId, newname) {
         );
 
         // Check if the nickname can be updated based on the cooldown
-        const now = Date.now();
-        const lastUpdated = user?.account?.nameupdate || 0; // Default to epoch if no timestamp exists
-        const timeDiff = now - lastUpdated; // Difference in milliseconds
+        const now = Date.now()
+        const next_name_update_cooldown = now + cooldownPeriod
+        const next_allowed_update_time = user?.account?.nameupdate || 0; // Default to epoch if no timestamp exists
 
       
-        if (timeDiff < cooldownPeriod) { // Check if the cooldown is still in effect
+        if (now < next_allowed_update_time) { // Check if the cooldown is still in effect
            // const remainingTime = cooldownPeriod - timeDiff; // Remaining time in milliseconds
            // const remainingHours = Math.floor(remainingTime / (1000 * 60 * 60)); // Remaining hours
            // const remainingMinutes = Math.ceil((remainingTime % (1000 * 60 * 60)) / (1000 * 60)); // Remaining minutes
@@ -59,12 +59,12 @@ async function updateUserName(userId, newname) {
             { 
                 $set: { 
                     "account.username": newName, 
-                    "account.nameupdate": Date.now() // Set current timestamp as nicknameUpdatedAt 
+                    "account.nameupdate": next_name_update_cooldown // Set current timestamp as nicknameUpdatedAt 
                 } 
             }
         );
 
-        return { status: "success", t: Date.now() };
+        return { status: "success", next_allowed_namechange: next_name_update_cooldown };
     } catch (error) {
       //  console.log(error)
         throw new Error("Err");
