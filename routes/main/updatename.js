@@ -1,7 +1,9 @@
 const { userCollection, nicknameRegex, badWords } = require('../..//idbconfig'); 
 const { getUserIdPrefix } = require('../../utils/utils');
 
-const cooldownPeriod = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const oneDay = 86400000
+const DaysOfCooldown = 7
+const cooldownPeriod = DaysOfCooldown * oneDay; // 24 hours in milliseconds
 
 async function updateUserName(userId, newname) {
     try {
