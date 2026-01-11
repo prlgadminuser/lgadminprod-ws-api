@@ -128,8 +128,8 @@ async function getUserProfile(userId, selfId) {
 
 
 
-async function TryIncreaseProfileViews(selfusername, usernamed) {
-  const document = `p_view=${selfusername}$${usernamed}`;
+async function TryIncreaseProfileViews(selfid, userid) {
+  const document = `p_view=${selfid}$${userid}`;
 
   const InsertViewEntry = await userSocialCollection.updateOne(
     { _id: document },
@@ -139,7 +139,7 @@ async function TryIncreaseProfileViews(selfusername, usernamed) {
 
   if (InsertViewEntry.upsertedCount > 0) {
     await userCollection.updateOne(
-       getUserIdPrefix(userId),
+       getUserIdPrefix(userid),
       { $inc: { "stats.p_views": 1 } }
     );
   }
