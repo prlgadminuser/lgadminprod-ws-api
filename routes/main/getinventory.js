@@ -22,7 +22,7 @@ async function getPlayerItems(username) {
     //itemDocuments.sort((a, b) => b.time - a.time); //descending
     itemDocuments.sort((a, b) => a.time - b.time); //ascending
 
-    const itemsArray = itemDocuments
+    const itemsArray = itemDocuments.map(doc => doc.itemid);
 
     return itemsArray
 }
@@ -184,4 +184,5 @@ async function getUserInventory(userId) {
 module.exports = {
     getUserInventory,
 };
+
 
