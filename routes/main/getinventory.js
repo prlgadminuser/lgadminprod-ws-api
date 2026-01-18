@@ -95,13 +95,8 @@ async function getUserInventory(userId) {
             ).catch(() => null), // Handle battle pass collection errors
         );
 
-
-        promises.push(
-            shopcollection.findOne({ _id: "config" }).catch(() => null) // Handle shop collection errors
-        );
-
         // Wait for all promises to resolve
-        const [userRow, bpuserRow, configrow] = await Promise.all(promises);
+        const [userRow, bpuserRow] = await Promise.all(promises);
 
         if (!userRow) {
             throw new Error("User not found");
@@ -119,6 +114,8 @@ async function getUserInventory(userId) {
         const bonusitem_damage = bpuserRow ? bpuserRow.ss_damage || 0 : 0;
 
         const userInventory = await getPlayerItems(userId)
+
+        const globalConfig = global.config
        // const userWeaponData = await getPlayerWeaponsData(username)
 
         const skillpassdata = {
@@ -131,14 +128,19 @@ async function getUserInventory(userId) {
         const inventory = {
             userId: userRow._id,
             username: userRow.account.username,
+            lastnameupdate: userRow.account.nameupdate || 0,
+
+            items: userInventory,
             coins: userRow.currency.coins,
             boxes: userRow.currency.boxes,
             sp: userRow.stats.sp,
-            items: userInventory,
+
             seasondata: {
-            season_end: configrow ? configrow.season_end : null,
+            season_end: globalConfig.season_end,
             skillpass: skillpassdata
             },
+
+            globalConfig: globalConfig,
 
             weapons: userRow.inventory.weapons,
            // weapondata: userWeaponData,
@@ -153,11 +155,9 @@ async function getUserInventory(userId) {
             top_color: userRow.equipped.top_color,
             banner_color: userRow.equipped.banner_color,
             gadget: userRow.account.gadget || 1,
-            server_timestamp: currentTimestampInGMT,
-            server_nexttime: currentTimestamp0am,
-            lbtheme: configrow ? configrow.lobbytheme : null,
+
+
             boxrarities: rarityPercentages,
-            lastnameupdate: userRow.account.nameupdate || 0,
             //  friends: userRow.social.friends || [],
             // requests: userRow.social.requests || [],
             serverlist,
@@ -165,6 +165,9 @@ async function getUserInventory(userId) {
             weaponcatalog: WeaponsToBuy,
             loadout_allowed_items: loadout_allowed_items,
             in_app_purchases: RealMoneyPurchasesEnabled ? OFFERKEYS : "disabled" ,
+
+            server_timestamp: currentTimestampInGMT,
+            server_nexttime: currentTimestamp0am,
         };
   
         // Return the constructed object

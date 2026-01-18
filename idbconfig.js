@@ -1,6 +1,6 @@
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const { UpdateMaintenance, LZString, UpdateItemShopCached } = require("./index");
+const { UpdateMaintenance, LZString, UpdateItemShopCached, UpdateConfigData } = require("./index");
 const { createChallenge, verifySolution } = require("./accounthandler/security");
 
 const lgconnecturi = process.env.MONGO_URI
@@ -64,12 +64,17 @@ async function startMongoDB() {
         { _id: "ItemShop" }, 
       );
 
+       const configdata = await shopcollection.findOne(
+        { _id: "config" }
+      )
 
-
-
-      UpdateMaintenance(result.status, result.public_message)
+      await UpdateMaintenance(result.status, result.public_message)
 
       await UpdateItemShopCached(cached_shopdata);
+
+      if (configdata) await UpdateConfigData(configdata)
+
+
 
  
     } catch (error) {

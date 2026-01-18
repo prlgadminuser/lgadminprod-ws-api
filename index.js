@@ -41,6 +41,12 @@ async function UpdateItemShopCached(itemshop) {
   );
 }
 
+async function UpdateConfigData(data) {
+  if (data) {
+    global.config = data
+  }
+}
+
 const RealMoneyPurchasesEnabled = true;
 
 const jwt = require("jsonwebtoken");
@@ -67,6 +73,7 @@ module.exports = {
   SERVER_INSTANCE_ID,
   LZString,
   UpdateItemShopCached,
+  UpdateConfigData
 };
 
 const {
@@ -807,7 +814,7 @@ async function watchServerConfig() {
   const pipeline = [
     {
       $match: {
-        "fullDocument._id": { $in: ["ItemShop", "maintenance"] },
+        "fullDocument._id": { $in: ["ItemShop", "maintenance", "config"] },
         operationType: "update",
       },
     },
@@ -828,6 +835,12 @@ async function watchServerConfig() {
           case "ItemShop":
             await UpdateItemShopCached(change.fullDocument);
             broadcast("shopupdate");
+            break
+
+          case "config":
+            await UpdateConfigData(change.fullDocument);
+            broadcast("configupdate", global.config);
+            break
 
           case "maintenance":
             await UpdateMaintenance(
@@ -837,7 +850,10 @@ async function watchServerConfig() {
             if (change.fullDocument.status === "true") {
               closeAllClients(4001, "maintenance");
             }
-        }
+            break
+          }
+
+
       } catch (err) {
         console.error("Error processing change:", err);
       }
@@ -857,8 +873,8 @@ watchServerConfig();
 
 setupHighscores();
 
-function broadcast(message) {
-  const msg = JSON.stringify({ update: message });
+function broadcast(message, updatedData) {
+  const msg = JSON.stringify({ update: message, updatedData });
   connectedPlayers.forEach(
     (ws) => ws.readyState === WebSocket.OPEN && ws.send(msg)
   );
