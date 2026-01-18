@@ -69,8 +69,6 @@ async function startMongoDB() {
 
       UpdateMaintenance(result.status, result.public_message)
 
-      global.maintenance = result.status
-      global.maintenance_publicinfomessage = result.public_message,
       await UpdateItemShopCached(cached_shopdata);
 
  
