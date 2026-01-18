@@ -37,13 +37,16 @@ async function UpdateItemShopCached(itemshop) {
 
   global.cached_shopdata = itemshop;
   global.cached_shopdata_compressed = LZString.compress(
-    JSON.stringify(shopdataraw)
+    JSON.stringify(shopdataraw),
   );
 }
 
 async function UpdateConfigData(data) {
   if (data) {
-    global.config = data
+    global.config = {
+      season_end: data.season_end,
+      lobbytheme: data.lobbytheme,
+    };
   }
 }
 
@@ -73,7 +76,7 @@ module.exports = {
   SERVER_INSTANCE_ID,
   LZString,
   UpdateItemShopCached,
-  UpdateConfigData
+  UpdateConfigData,
 };
 
 const {
@@ -88,7 +91,10 @@ const WebSocket = require("ws");
 const bodyParser = require("body-parser");
 const http = require("http");
 const { verifyPlayer } = require("./routes/verifyUser/verifyPlayer");
-const { setupHighscores, gethighscores } = require("./routes/social/leaderboard");
+const {
+  setupHighscores,
+  gethighscores,
+} = require("./routes/social/leaderboard");
 const {
   createRateLimiter,
   ConnectionOptionsRateLimit,
@@ -151,11 +157,11 @@ async function setCommonHeaders(res, origin) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader(
     "Strict-Transport-Security",
-    "max-age=31536000; includeSubDomains; preload"
+    "max-age=31536000; includeSubDomains; preload",
   );
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'"
+    "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'",
   );
   res.setHeader("Referrer-Policy", "no-referrer");
   res.setHeader("Permissions-Policy", "geolocation=(), microphone=()");
@@ -164,7 +170,7 @@ async function setCommonHeaders(res, origin) {
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
+      "Content-Type, Authorization",
     );
   }
 }
@@ -250,7 +256,7 @@ const server = http.createServer(async (req, res) => {
             JSON.stringify({
               status: "maintenance",
               gmsg: global.maintenance_publicinfomessage,
-            })
+            }),
           );
         }
 
@@ -301,7 +307,7 @@ const server = http.createServer(async (req, res) => {
               requestData.username,
               requestData.password,
               userCountry,
-              userIp
+              userIp,
             );
 
             if (createResult.token) {
@@ -326,7 +332,7 @@ const server = http.createServer(async (req, res) => {
 
             const loginResult = await Login(
               requestData.username,
-              requestData.password
+              requestData.password,
             );
 
             if (loginResult) {
@@ -374,7 +380,7 @@ const server = http.createServer(async (req, res) => {
                   return res.end(
                     JSON.stringify({
                       error: { code: "INVALID_USER" },
-                    })
+                    }),
                   );
                 }
               }
@@ -413,13 +419,13 @@ const server = http.createServer(async (req, res) => {
             return res.end("Not Found");
         }
       } catch {
-      //  console.log(error)
+        //  console.log(error)
         res.writeHead(500);
         return res.end("Server error");
       }
     });
   } catch {
-   //    console.log(error)
+    //    console.log(error)
     res.writeHead(500);
     res.end("Server error");
   }
@@ -523,7 +529,7 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.playerId,
           data.type,
           data.itemid,
-          playerVerified.items
+          playerVerified.items,
         );
         //CompressAndSend(ws, "equipitem", response)
         break;
@@ -532,7 +538,7 @@ async function handleMessage(ws, message, playerVerified) {
         response = await buyWeapon(
           playerVerified.playerId,
           data.wid,
-          playerVerified.items
+          playerVerified.items,
         );
         CompressAndSend(ws, "buyweapon", response);
         break;
@@ -542,7 +548,7 @@ async function handleMessage(ws, message, playerVerified) {
           playerVerified.playerId,
           data.slot,
           data.wid,
-          playerVerified.items
+          playerVerified.items,
         );
         // CompressAndSend(ws, "equipweapon", response)
         break;
@@ -551,7 +557,7 @@ async function handleMessage(ws, message, playerVerified) {
         response = await equipColor(
           playerVerified.playerId,
           data.type,
-          data.color
+          data.color,
         );
         CompressAndSend(ws, "equipcolor", response);
         break;
@@ -559,7 +565,7 @@ async function handleMessage(ws, message, playerVerified) {
       case "dailyreward":
         response = await getdailyreward(
           playerVerified.playerId,
-          playerVerified.items
+          playerVerified.items,
         );
         CompressAndSend(ws, "dailyreward", response);
         break;
@@ -578,7 +584,7 @@ async function handleMessage(ws, message, playerVerified) {
         response = await buyItem(
           playerVerified.playerId,
           data.buyid,
-          playerVerified.items
+          playerVerified.items,
         );
         CompressAndSend(ws, "buyitem", response);
         break;
@@ -591,7 +597,7 @@ async function handleMessage(ws, message, playerVerified) {
       case "openbox":
         response = await buyRarityBox(
           playerVerified.playerId,
-          playerVerified.items
+          playerVerified.items,
         );
         CompressAndSend(ws, "openbox", response);
         break;
@@ -634,12 +640,12 @@ async function handleMessage(ws, message, playerVerified) {
 
       default:
         ws.close(1007, "error");
-       //  console.log(error)
+        //  console.log(error)
         break;
     }
   } catch (error) {
     ws.close(1007, "error");
-   //  console.log(error)
+    //  console.log(error)
   }
 }
 
@@ -701,7 +707,7 @@ wss.on("connection", async (ws, req) => {
       // Existing session is on ANOTHER server → publish an invalidation event
       await redisClient.publish(
         `server:${existingSid}`,
-        JSON.stringify({ type: "disconnect", uid: username })
+        JSON.stringify({ type: "disconnect", uid: username }),
       );
     }
   }
@@ -787,7 +793,7 @@ server.on("upgrade", async (request, socket, head) => {
       wss.emit("connection", ws, request);
     });
   } catch (error) {
-   // console.log(error)
+    // console.log(error)
     socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
     socket.destroy();
   }
@@ -835,25 +841,23 @@ async function watchServerConfig() {
           case "ItemShop":
             await UpdateItemShopCached(change.fullDocument);
             broadcast("shopupdate");
-            break
+            break;
 
           case "config":
             await UpdateConfigData(change.fullDocument);
             broadcast("configupdate", global.config);
-            break
+            break;
 
           case "maintenance":
             await UpdateMaintenance(
               change.fullDocument.status,
-              change.fullDocument.public_message
+              change.fullDocument.public_message,
             );
             if (change.fullDocument.status === "true") {
               closeAllClients(4001, "maintenance");
             }
-            break
-          }
-
-
+            break;
+        }
       } catch (err) {
         console.error("Error processing change:", err);
       }
@@ -876,7 +880,7 @@ setupHighscores();
 function broadcast(message, updatedData) {
   const msg = JSON.stringify({ update: message, updatedData });
   connectedPlayers.forEach(
-    (ws) => ws.readyState === WebSocket.OPEN && ws.send(msg)
+    (ws) => ws.readyState === WebSocket.OPEN && ws.send(msg),
   );
 }
 
@@ -923,14 +927,6 @@ function randomNumber(minDigits = 4, maxDigits = 15) {
 }
 
 async function run() {
-
-  const create = 
-   await CreateAccount(
-              randomNumber(),
-              "passdata",
-              "US",
-              "0"
-            );
- // console.log(create);
+  const create = await CreateAccount(randomNumber(), "passdata", "US", "0");
+  // console.log(create);
 }
-
