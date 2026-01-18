@@ -50,7 +50,7 @@ module.exports = {
 
   async DoesUserNameExist(nameToCheck) {
     const nameExists = await userCollection.findOne(
-      { "account.nickname": nameToCheck },
+      { "account.username": nameToCheck },
       {
         collation: { locale: "en", strength: 2 },
         hint: "account.username_1",
@@ -60,3 +60,4 @@ module.exports = {
     return nameExists;
   },
 };
+
