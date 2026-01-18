@@ -84,7 +84,7 @@ async function getUserInventory(userId) {
 
         promises.push(
             await battlePassCollection.findOne(
-                { userId },
+                 getUserIdPrefix(userId),
                 {
                     projection: {
                         ss_passtier: 1,
