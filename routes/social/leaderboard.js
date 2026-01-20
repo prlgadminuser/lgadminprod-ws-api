@@ -2,7 +2,7 @@ const { userCollection } = require('../../idbconfig');
 const LZString = require("lz-string");
 const { getUserIdPrefix } = require('../../utils/utils');
 
-const limit = 50
+const limit = 100
 const UpdateInterval = 1 * 1000 * 60 // minutes between highscore updates
 
 const updateUserDocumentsPlaces = true
@@ -90,4 +90,5 @@ module.exports = {
   gethighscores,
   UpdateInterval
 };
+
 
