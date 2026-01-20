@@ -2,20 +2,13 @@ const { userCollection } = require('../../idbconfig');
 const LZString = require("lz-string");
 const { getUserIdPrefix } = require('../../utils/utils');
 
-const limit = 100
+const limit = 50
 const UpdateInterval = 1 * 1000 * 60 // minutes between highscore updates
-
 
 const updateUserDocumentsPlaces = true
 
-const now = Date.now();
-
-// ... other imports ...
-
 const updateHighscores = async () => {
   try {
-    const limit = 50;
-    const now = Date.now();
 
     // Single query: get top 50 with ALL needed fields
     const highscores = await userCollection
@@ -97,5 +90,4 @@ module.exports = {
   gethighscores,
   UpdateInterval
 };
-
 
