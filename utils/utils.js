@@ -1,10 +1,9 @@
 const { ObjectId } = require("mongodb");
-const { userItemsCollection, userCollection } = require("../idbconfig");
+const { userItemsCollection, userCollection, tokenkey } = require("../idbconfig");
 
 module.exports = {
-
   getUserIdPrefix(userId) {
-    return { _id: new ObjectId(userId) }
+    return { _id: new ObjectId(userId) };
   },
 
   async SaveUserGrantedItems(userId, rewarditems, local_owned_items, session) {
@@ -35,8 +34,8 @@ module.exports = {
       },
       {
         hint: "player_item_unique",
-        projection: { userid: 1, _id: 0 }, // Optionally return only the matching itemid
-      }
+        //  projection: { userid: 1, _id: 0 }, // Optionally return only the matching itemid
+      },
     );
 
     return OwnsOneOrMoreOfferItems;
@@ -54,10 +53,38 @@ module.exports = {
       {
         collation: { locale: "en", strength: 2 },
         hint: "account.username_1",
-      }
+      },
     );
 
     return nameExists;
   },
-};
 
+  async CreateEncryptedPassword(password, saltLevel) {
+    const encryptedpassword = await bcrypt.hash(password, saltLevel);
+
+    return encryptedpassword;
+  },
+
+  async isPasswordCorrect(enteredPassword, hashedPassword) {
+    const isCorrect = await bcrypt.compare(
+      enteredPassword,
+      hashedPassword,
+    );
+
+    return isCorrect;
+  },
+
+
+   createToken(userId) {
+    const token = jwt.sign(userId.toString(), tokenkey);
+
+    return token
+  },
+
+  IsTokenValid(token) {
+    const isValid = jwt.verify(token, tokenkey);
+
+    return isValid
+  },
+
+};

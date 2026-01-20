@@ -1,5 +1,5 @@
-const { userCollection, tokenkey } = require("./..//idbconfig");
-const { jwt, bcrypt } = require("./..//index");
+const { isPasswordCorrect, createToken } = require("../utils/utils");
+const { userCollection} = require("./..//idbconfig");
 
 const GenerateNewToken = false;
 
@@ -25,22 +25,26 @@ async function Login(username, password) {
       return { status: "Invalid username or password" };
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.account.password);
+    const passwordMatch = isPasswordCorrect(password, user.account.password);
 
     if (!passwordMatch) {
       return { status: "Invalid username or password" };
     }
 
-    const token = GenerateNewToken
-      ? jwt.sign( username, tokenkey)
-      : user.account.token;
+    let token
 
     if (GenerateNewToken) {
+      token = createToken(user._id);
+
       await userCollection.updateOne(
         { "account.username": username },
-        { $set: { token } }
+        { $set: { token } },
       );
+    } else {
+      token = user.account.token;
     }
+
+
 
     return { token: token };
   } catch (error) {

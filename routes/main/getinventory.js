@@ -104,9 +104,6 @@ async function getUserInventory(userId) {
 
         // Get current timestamps
         const currentTimestampInGMT = new Date().getTime();
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
-        const currentTimestamp0am = currentDate.getTime();
 
 
         const season_passtier = bpuserRow ? bpuserRow.ss_passtier || 0 : 0;
@@ -131,8 +128,10 @@ async function getUserInventory(userId) {
             lastnameupdate: userRow.account.nameupdate || 0,
 
             items: userInventory,
+            
             coins: userRow.currency.coins,
             boxes: userRow.currency.boxes,
+
             sp: userRow.stats.sp,
 
             seasondata: {
@@ -167,7 +166,6 @@ async function getUserInventory(userId) {
             in_app_purchases: RealMoneyPurchasesEnabled ? OFFERKEYS : "disabled" ,
 
             server_timestamp: currentTimestampInGMT,
-            server_nexttime: currentTimestamp0am,
         };
   
         // Return the constructed object
@@ -184,5 +182,3 @@ async function getUserInventory(userId) {
 module.exports = {
     getUserInventory,
 };
-
-

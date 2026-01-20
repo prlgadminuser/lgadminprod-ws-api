@@ -1,7 +1,6 @@
 // verifyToken.js
 const { tokenkey, userCollection } = require('../../idbconfig');
-const { jwt } = require('../../index');
-const { getUserIdPrefix } = require('../../utils/utils');
+const { getUserIdPrefix, IsTokenValid } = require('../../utils/utils');
 
 async function verifyToken(token, source) {
      // Directly assign tokenparam to token if token is passed directly
@@ -11,7 +10,7 @@ async function verifyToken(token, source) {
 
     try {
         // Verify the JWT token
-        const decodedToken = jwt.verify(token, process.env.TOKEN_KEY || tokenkey);
+        const decodedToken = IsTokenValid(token);
         const userId = decodedToken
 
            

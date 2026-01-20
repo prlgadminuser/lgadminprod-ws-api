@@ -1,9 +1,7 @@
 
 const { ObjectId } = require('mongodb');
-const { tokenkey, userCollection } = require('../../idbconfig');
-const { jwt } = require('../../index');
+const { userCollection } = require('../../idbconfig');
 const { getUserInventory } = require('../main/getinventory');
-const { getUserIdPrefix } = require('../../utils/utils');
 
 async function verifyPlayer(token) {
 
@@ -15,7 +13,7 @@ async function verifyPlayer(token) {
 
   try {
     // 1. Verify the token to ensure it's a valid, unexpired token.
-    const decodedToken = jwt.verify(token, process.env.TOKEN_KEY || tokenkey);
+    const decodedToken = isTokenValid(token);
 
     const userId = decodedToken;
     if (!userId) {

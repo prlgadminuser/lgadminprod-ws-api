@@ -5,7 +5,7 @@ const oneDay = 86400000
 const DaysOfCooldown = 7
 const cooldownPeriod = DaysOfCooldown * oneDay; // 24 hours in milliseconds
 
-async function updateUserName(userId, newname) {
+async function updatePassword(userId, currentPassword, currentUsername) {
     try {
         const newName = newname;
 

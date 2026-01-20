@@ -4,12 +4,10 @@ const {
   usernameRegex,
   passwordRegex,
   tokenkey,
-  client,
 } = require("./..//idbconfig");
-const { jwt, bcrypt } = require("./..//index");
 const { webhook } = require("./..//discordwebhook");
 const { CheckUserIp } = require("./security");
-const { DoesUserNameExist, getUserIdPrefix } = require("../utils/utils");
+const { DoesUserNameExist, getUserIdPrefix, CreateEncryptedPassword, createToken } = require("../utils/utils");
 
 const allow_bad_words = false;
 const allowVPNS = false
@@ -52,7 +50,7 @@ async function CreateAccount(username, password, user_country, userIp) {
     // Check if username already exists
     const existingUser = await DoesUserNameExist(username)
     if (existingUser) {
-      return { status: "Name already taken. Choose another one." };
+      return { status: "This name is already taken. Choose another one." };
     }
     
 
@@ -67,7 +65,7 @@ async function CreateAccount(username, password, user_country, userIp) {
 
 
     // Hash password and create token
-    const hashedPassword = await bcrypt.hash(password, 1); // Increased salt rounds for better security
+    const hashedPassword = CreateEncryptedPassword(password, 1)// Increased salt rounds for better security
     const currentTimestamp = Date.now(); // Ensure this is an integer
 
     // Prepare account details
@@ -130,7 +128,7 @@ async function CreateAccount(username, password, user_country, userIp) {
 
     const userId = success.insertedId
 
-    const token = jwt.sign(userId.toString(), tokenkey);
+    const token = createToken(userId);
 
       if (token)  {
 
