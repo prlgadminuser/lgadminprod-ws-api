@@ -1,6 +1,8 @@
- 
- const { userCollection } = require('./../idbconfig');
+const { userCollection } = require("../../idbconfig");
 
+ 
+
+ const userLimit = 3
 
 async function searchplayers(text) {
   if (text.length < 4 || text.length > 16) {
@@ -15,22 +17,22 @@ async function searchplayers(text) {
     const users = await userCollection
     .find(
       {
-        "account.nickname": {
+        "account.username": {
           $gte: text,     // case doesn't matter due to collation
           $lt: nextPrefix
         }
       },
       
-        { projection: { _id: 0, nickname: "$account.nickname", username: "$account.username", stats: "$stats.sp" },
+        { projection: { _id: 0, userId: "$_id", name: "$account.username", sp: "$stats.sp" },
         collation: { locale: "en", strength: 2 },
-        hint: { "account.nickname": 1 }
+        hint: { "account.username": 1 }
       }
     )
-    .limit(3)
+    .limit(userLimit)
     .toArray()
-   // .explain("executionStats");
+   //.explain("executionStats");
 
-   // console.log(JSON.stringify(users));
+   //console.log(JSON.stringify(users));
     return users;
   } catch (error) {
     console.error("Search error:", error);

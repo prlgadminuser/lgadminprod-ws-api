@@ -143,6 +143,7 @@ const { equipWeapon } = require("./routes/main/updateLoadout");
 const { buyWeapon } = require("./routes/main/buyWeapon");
 const { buyRarityBox } = require("./routes/main/buyraritybox");
 const { getUserProfile } = require("./routes/social/getprofile");
+const { searchplayers } = require("./routes/social/searchplayers");
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
@@ -927,6 +928,7 @@ function randomNumber(minDigits = 4, maxDigits = 15) {
 }
 
 async function run() {
-  const create = await CreateAccount(randomNumber(), "passdata", "US", "0");
-  // console.log(create);
+ //const create = await CreateAccount(randomNumber(), "passdata", "US", "0");
+ const playeresult = await searchplayers("36168")
+  console.log(playeresult)
 }

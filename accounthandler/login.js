@@ -25,7 +25,7 @@ async function Login(username, password) {
       return { status: "Invalid username or password" };
     }
 
-    const passwordMatch = isPasswordCorrect(password, user.account.password);
+    const passwordMatch = await isPasswordCorrect(password, user.account.password);
 
     if (!passwordMatch) {
       return { status: "Invalid username or password" };
@@ -34,12 +34,7 @@ async function Login(username, password) {
     let token
 
     if (GenerateNewToken) {
-      token = createToken(user._id);
-
-      await userCollection.updateOne(
-        { "account.username": username },
-        { $set: { token } },
-      );
+      token = await createToken(user._id);
     } else {
       token = user.account.token;
     }

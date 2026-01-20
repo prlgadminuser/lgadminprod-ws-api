@@ -1,5 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { userItemsCollection, userCollection, tokenkey } = require("../idbconfig");
+const { bcrypt, jwt } = require("..");
 
 module.exports = {
   getUserIdPrefix(userId) {
@@ -75,7 +76,7 @@ module.exports = {
   },
 
 
-   createToken(userId) {
+   async createToken(userId) {
     const token = jwt.sign(userId.toString(), tokenkey);
 
     return token

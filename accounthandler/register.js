@@ -65,7 +65,7 @@ async function CreateAccount(username, password, user_country, userIp) {
 
 
     // Hash password and create token
-    const hashedPassword = CreateEncryptedPassword(password, 1)// Increased salt rounds for better security
+    const hashedPassword = await CreateEncryptedPassword(password, 1)// Increased salt rounds for better security
     const currentTimestamp = Date.now(); // Ensure this is an integer
 
     // Prepare account details
@@ -128,7 +128,7 @@ async function CreateAccount(username, password, user_country, userIp) {
 
     const userId = success.insertedId
 
-    const token = createToken(userId);
+    const token = await createToken(userId);
 
       if (token)  {
 
@@ -146,7 +146,7 @@ async function CreateAccount(username, password, user_country, userIp) {
 
     return result || { status: "Account creation failed" };
   } catch (error) {
-   console.error("Error creating account:", error);
+  // console.error("Error creating account:", JSON.stringify(error));
     return "Account creation failed. Try again later";
   }
 }
