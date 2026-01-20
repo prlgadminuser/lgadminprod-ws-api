@@ -8,7 +8,7 @@ const {
 const { webhook } = require("./..//discordwebhook");
 const { CheckUserIp } = require("./security");
 const { DoesUserNameExist, getUserIdPrefix, CreateEncryptedPassword, createToken } = require("../utils/utils");
-
+// im drowning water i just bought
 const allow_bad_words = false;
 const allowVPNS = false
 
@@ -154,3 +154,4 @@ async function CreateAccount(username, password, user_country, userIp) {
 module.exports = {
   CreateAccount,
 };
+
