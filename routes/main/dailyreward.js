@@ -9,7 +9,7 @@ const COIN_FALLBACK = { min: 5, max: 10 };
 const REWARDS_POOL = [
   { type: "coins", min: 5, max: 10, chance: 100 },
   // { type: "boxes", min: 1, max: 2, chance: 8 },
-  { type: "item", value: rarityConfig.rare1.customItems, chance: 90 },
+  { type: "item", value: rarityConfig.rare1.customItems, chance: 0 },
 ];
 
 // === HELPERS ===

@@ -82,7 +82,7 @@ module.exports = {
     return token
   },
 
-  IsTokenValid(token) {
+    IsTokenValid(token) {
     const isValid = jwt.verify(token, tokenkey);
 
     return isValid
