@@ -42,7 +42,7 @@ async function updateUserName(userId, newname) {
             return { status: "cooldown" };
         }
         
-        const nameTaken = DoesUserNameExist(newname)
+        const nameTaken = await DoesUserNameExist(newname)
 
         if (nameTaken) {
             return { status: "taken" };
@@ -69,3 +69,4 @@ async function updateUserName(userId, newname) {
 module.exports = {
    updateUserName 
 };
+
