@@ -1,5 +1,5 @@
 const { userCollection, nicknameRegex, badWords } = require('../..//idbconfig'); 
-const { getUserIdPrefix, DoesUserNameExist } = require('../../utils/utils');
+const { getUserIdPrefix, DoesUserNameExist, IsNameAllowed } = require('../../utils/utils');
 
 const oneDay = 86400000
 const DaysOfCooldown = 7
@@ -15,11 +15,7 @@ async function updateUserName(userId, newname) {
         }
 
         // Verify newNickname against the nicknameRegex
-        if (!nicknameRegex.test(newName)) {
-            return { status: "not allowed" };
-        }
-
-        if (badWords.test(newName)) {
+        if (!IsNameAllowed(newname)) {
             return { status: "not allowed" };
         }
 
@@ -69,4 +65,3 @@ async function updateUserName(userId, newname) {
 module.exports = {
    updateUserName 
 };
-

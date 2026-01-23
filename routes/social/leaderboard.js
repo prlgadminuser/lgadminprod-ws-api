@@ -5,7 +5,11 @@ const { getUserIdPrefix } = require('../../utils/utils');
 const limit = 50
 const UpdateInterval = 1 * 1000 * 60 // minutes between highscore updates
 
+
 const updateUserDocumentsPlaces = true
+
+
+// ... other imports ...
 
 const updateHighscores = async () => {
   try {
@@ -90,6 +94,4 @@ module.exports = {
   gethighscores,
   UpdateInterval
 };
-
-
 

@@ -1,6 +1,15 @@
 const { ObjectId } = require("mongodb");
-const { userItemsCollection, userCollection, tokenkey } = require("../idbconfig");
+const {
+  userItemsCollection,
+  userCollection,
+  ClansCollection,
+  tokenkey,
+  usernameRegex,
+  badWords,
+} = require("../idbconfig");
 const { bcrypt, jwt } = require("..");
+
+const allow_bad_words = false;
 
 module.exports = {
   getUserIdPrefix(userId) {
@@ -22,7 +31,7 @@ module.exports = {
       session,
     });
 
-    if (result) rewarditems.forEach((item) => local_owned_items.add(item));
+    //if (result) rewarditems.forEach((item) => local_owned_items.add(item));
 
     return result;
   },
@@ -43,7 +52,7 @@ module.exports = {
   },
 
   async DoesUserIdExist(userId) {
-    const userIdExist = await userCollection.findOne(getUserIdPrefix(userId));
+    const userIdExist = await userCollection.findOne({ _id: new ObjectId(userId)});
 
     return userIdExist;
   },
@@ -67,25 +76,40 @@ module.exports = {
   },
 
   async isPasswordCorrect(enteredPassword, hashedPassword) {
-    const isCorrect = await bcrypt.compare(
-      enteredPassword,
-      hashedPassword,
-    );
+    const isCorrect = await bcrypt.compare(enteredPassword, hashedPassword);
 
     return isCorrect;
   },
 
-
-   async createToken(userId) {
+  async createToken(userId) {
     const token = jwt.sign(userId.toString(), tokenkey);
 
-    return token
+    return token;
   },
 
-    IsTokenValid(token) {
+  IsTokenValid(token) {
     const isValid = jwt.verify(token, tokenkey);
 
-    return isValid
+    return isValid;
   },
 
+  async IsNameAllowed(nameToCheck) {
+    if (!usernameRegex.test(nameToCheck)) {
+      return false;
+    }
+
+    if (!allow_bad_words && badWords.test(nameToCheck)) {
+      return false;
+    }
+
+    return true;
+  },
+
+  
+
+  async DoesClanExist(clanId) {
+    const DoesClanExist = await ClansCollection.findOne({ _id: new ObjectId(clanId)});
+
+    return DoesClanExist;
+  },
 };
