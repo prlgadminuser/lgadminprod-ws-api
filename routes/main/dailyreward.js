@@ -1,7 +1,7 @@
 const { rarityConfig } = require("../../boxrarityconfig");
 const { SaveUserGrantedItems } = require("../../utils/utils");
 const { userCollection, client } = require("../..//idbconfig");
-const { getUserIdPrefix } = require('../../utils/utils');
+const { getUserIdPrefix } = require("../../utils/utils");
 
 // === CONFIGURATION ===
 const REWARDS_PER_CLAIM = 3;
@@ -15,9 +15,19 @@ const REWARDS_POOL = [
 // === HELPERS ===
 const hoursSince = (timestamp) => (Date.now() - timestamp) / (1000 * 60 * 60);
 const canCollectDaily = (lastCollected) => hoursSince(lastCollected) >= 24;
-
-const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const randomInt = (min, max) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 const randomFromArray = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+const isStreakAlive = (lastCollected) => {
+  if (!lastCollected) return false;
+
+  const now = Date.now();
+  const last = new Date(lastCollected).getTime();
+  const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+
+  return now - last < TWO_DAYS_MS;
+};
 
 // === REWARD SELECTION ===
 function selectRandomReward(pool, ownedItemsSet, alreadyGrantedThisClaim) {
@@ -38,10 +48,12 @@ function selectRandomReward(pool, ownedItemsSet, alreadyGrantedThisClaim) {
 
         // Filter out items the user already owns OR received in this claim
         const available = reward.value.filter(
-          (item) => !ownedItemsSet.has(item) && !alreadyGrantedThisClaim.has(item)
+          (item) =>
+            !ownedItemsSet.has(item) && !alreadyGrantedThisClaim.has(item),
         );
 
-        if (available.length === 0) return ["coins", randomInt(COIN_FALLBACK.min, COIN_FALLBACK.max)];
+        if (available.length === 0)
+          return ["coins", randomInt(COIN_FALLBACK.min, COIN_FALLBACK.max)];
 
         const selected = randomFromArray(available);
         alreadyGrantedThisClaim.add(selected); // Mark as granted this session
@@ -63,20 +75,25 @@ async function getdailyreward(userId, owneditems) {
   const alreadyGrantedThisClaim = new Set(); // Track items given in this claim
 
   // Check user existence and cooldown
-  const user = await userCollection.findOne(
-     getUserIdPrefix(userId),
-    { projection: { "inventory.daily_reward.last_collected_at": 1 } }
-  );
+  const user = await userCollection.findOne(getUserIdPrefix(userId), {
+    projection: { "inventory.daily_reward.last_collected_at": 1 },
+  });
+
+  const lastCollected = user.inventory.daily_reward.last_collected_at;
 
   if (!user) throw new Error("User not found.");
-  if (!canCollectDaily(user.inventory.daily_reward.last_collected_at || 0)) {
+  if (!canCollectDaily(lastCollected)) {
     throw new Error("You can only collect rewards once every 24 hours.");
   }
 
   // Generate rewards
   const rewards = [];
   for (let i = 0; i < REWARDS_PER_CLAIM; i++) {
-    const reward = selectRandomReward(REWARDS_POOL, ownedItemsSet, alreadyGrantedThisClaim);
+    const reward = selectRandomReward(
+      REWARDS_POOL,
+      ownedItemsSet,
+      alreadyGrantedThisClaim,
+    );
     if (reward) rewards.push(reward);
   }
 
@@ -85,6 +102,12 @@ async function getdailyreward(userId, owneditems) {
     $set: { "inventory.daily_reward.last_collected_at": Date.now() },
     $inc: { "currency.coins": 0, "currency.boxes": 0 }, // Initialize for increment
   };
+
+  if (isStreakAlive(lastCollected)) {
+    update.$inc["inventory.daily_reward.streak"] = 1;
+  } else {
+    update.$set["inventory.daily_reward.streak"] = 1; // reset streak
+  }
 
   const itemsToGrant = [];
 
@@ -110,11 +133,9 @@ async function getdailyreward(userId, owneditems) {
         await SaveUserGrantedItems(userId, itemsToGrant, owneditems, session);
       }
 
-      await userCollection.updateOne(
-         getUserIdPrefix(userId),
-        update,
-        { session }
-      );
+      await userCollection.updateOne(getUserIdPrefix(userId), update, {
+        session,
+      });
     });
   } finally {
     await session.endSession();
