@@ -36,7 +36,7 @@ async function getStreakDailyReward(username) {
         projection: {
           _id: 0,
           //  username: 1,
-          "daily_rewards.last_collected": 1,
+          "daily_rewards.last_collected_at": 1,
           "daily_rewards.reward_day": 1,
           "daily_rewards.streak": 1,
         },
@@ -46,7 +46,7 @@ async function getStreakDailyReward(username) {
     if (!user) throw new Error("User not found");
 
     const rewards = user.daily_rewards || {};
-    const lastCollected = rewards.last_collected || 0;
+    const lastCollected = rewards.last_collected_at || 0;
 
     if (!More_Than_1_Day_passed(lastCollected)) {
       throw new Error("Reward already collected. Try again later.");
@@ -69,7 +69,7 @@ async function getStreakDailyReward(username) {
         [reward.field]: boostedAmount,
       },
       $set: {
-        "daily_rewards.last_collected": Date.now(),
+        "daily_rewards.last_collected_at": Date.now(),
         "daily_rewards.reward_day": nextDay,
         "daily_rewards.streak": currentStreak,
       },

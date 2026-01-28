@@ -65,11 +65,11 @@ async function getdailyreward(userId, owneditems) {
   // Check user existence and cooldown
   const user = await userCollection.findOne(
      getUserIdPrefix(userId),
-    { projection: { "inventory.last_collected": 1 } }
+    { projection: { "inventory.daily_reward.last_collected_at": 1 } }
   );
 
   if (!user) throw new Error("User not found.");
-  if (!canCollectDaily(user.inventory.last_collected || 0)) {
+  if (!canCollectDaily(user.inventory.daily_reward.last_collected_at || 0)) {
     throw new Error("You can only collect rewards once every 24 hours.");
   }
 
@@ -82,7 +82,7 @@ async function getdailyreward(userId, owneditems) {
 
   // Prepare DB updates
   const update = {
-    $set: { "inventory.last_collected": Date.now() },
+    $set: { "inventory.daily_reward.last_collected_at": Date.now() },
     $inc: { "currency.coins": 0, "currency.boxes": 0 }, // Initialize for increment
   };
 

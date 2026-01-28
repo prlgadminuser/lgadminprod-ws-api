@@ -80,7 +80,8 @@ async function CreateAccount(username, password, user_country, userIp) {
 
     const inventory = {
       daily_reward: {
-        last_collected: 0,
+        last_collected_at: 0,
+        streak: 0
       }, // Ensure last_collected is an integer
     };
 
