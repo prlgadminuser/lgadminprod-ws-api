@@ -143,7 +143,7 @@ async function getUserInventory(userId) {
 
             weapons: userRow.inventory.weapons,
            // weapondata: userWeaponData,
-            loadout: userRow.inventory.loadout,
+            loadout: userRow.equipped.loadout,
             last_collected: userRow.inventory.last_collected || 0,
             hat: userRow.equipped.hat || 0,
             top: userRow.equipped.top || 0,

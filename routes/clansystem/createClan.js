@@ -1,10 +1,12 @@
 const { ClansCollection, userCollection } = require("../../idbconfig");
-const { DoesClanExist } = require("../../utils/utils");
+const { DoesClanExist, getUserIdPrefix } = require("../../utils/utils");
 
 const clanCreationPrice = {
   price: 500,
   currency: "coins",
 };
+
+const ValidScoreRequirementRanges = new Set([0,1000,2000,3000,4000,5000]);
 
 const ValidJoinTypes = new Set(["Open", "InviteOnly", "Closed"]);
 
@@ -20,10 +22,10 @@ async function CreateClan(userId, joinType) {
   try {
     const isUserAlreadyinAnyClan = await ClansCollection.findOne(
       {
-        "clanMembers.userId": userId,
+        "members.userId": userId,
       },
       {
-        hint: "clanMembers.userId_1",
+        hint: "members.userId_1",
       },
     );
 
@@ -62,13 +64,24 @@ async function CreateClan(userId, joinType) {
       joined_at: Date.now(),
     };
 
-    const clanData = {
-      clanName: "New Clan", // ← should come from parameter in real code
-      clanTag: "NEW", // ← should come from parameter or be generated
+
+    const clanMetadata = {
+      name: "New Clan", // ← should come from parameter in real code
+      tag: "NEW", // ← should come from parameter r be generated
+      description: "No description",
       joinType: joinType,
-      clanMembers: [ownerMemberData],
+    };
+
+    const clanInfo = {
       created_at: Date.now(),
       country_code: "XX",
+    };
+
+    const clanData = {
+
+      metadata: clanMetadata,
+      members: [ownerMemberData],
+      info: clanInfo
     };
 
     const result = await ClansCollection.insertOne(clanData);

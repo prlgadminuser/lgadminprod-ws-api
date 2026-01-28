@@ -17,10 +17,10 @@ async function RemovePlayerFromClan(clanId, userId, requestedBy = null) {
     const IsUserInClan = await ClansCollection.findOne(
       {
         _id: new ObjectId(clanId),
-        "clanMembers.userId": userId,
+        "members.userId": userId,
       },
       {
-        hint: "clanMembers.userId_1",
+        hint: "members.userId_1",
       },
     );
 
@@ -31,10 +31,10 @@ async function RemovePlayerFromClan(clanId, userId, requestedBy = null) {
     const updateResult = await ClansCollection.updateOne(
       getUserIdPrefix(clanId),
       {
-        $pull: { clanMembers: { userId: userId } },
+        $pull: { members: { userId: userId } },
       },
       {
-        hint: "clanMembers.userId_1",
+        hint: "members.userId_1",
       },
     );
 

@@ -8,53 +8,50 @@ const count_profile_views = true;
 const ignore_user_already_viewed_profile = false
 
 async function getUserProfile(userId, selfId) {
-
   try {
     // Fetch user data from the database
-    const userRow = await userCollection.findOne(
-       getUserIdPrefix(userId),
-      {
-        projection: {
-          _id: 0, 
-          "account.username": 1,
-          "equipped.hat": 1,
-          "equipped.top": 1,
-          "equipped.banner": 1,
-          "equipped.pose": 1,
-          "equipped.color": 1,
-          "equipped.hat_color": 1,
-          "equipped.top_color": 1,
-          "equipped.banner_color": 1,
-          "account.created_at": 1,
-          "stats.kills": 1,
-          "stats.damage": 1,
-          "stats.wins": 1,
-          "stats.sp": 1,
-          "stats.p_views": 1,
-          "stats.place": 1,
-          "inventory.loadout": 1,
-        },
+    const userRow = await userCollection.findOne(getUserIdPrefix(userId), {
+      projection: {
+        _id: 0,
+        "account.username": 1,
+        "equipped.hat": 1,
+        "equipped.top": 1,
+        "equipped.banner": 1,
+        "equipped.pose": 1,
+        "equipped.color": 1,
+        "equipped.hat_color": 1,
+        "equipped.top_color": 1,
+        "equipped.banner_color": 1,
+        "account.created_at": 1,
+        "stats.kills": 1,
+        "stats.damage": 1,
+        "stats.wins": 1,
+        "stats.sp": 1,
+        "stats.p_views": 1,
+        "stats.place": 1,
+        "equipped.loadout": 1,
+      },
 
-        //hint: "playerProfileIndex",
-       //  hint: "account.username_1",
-      }
-    );
+      //hint: "playerProfileIndex",
+      //  hint: "account.username_1",
+    });
 
     if (!userRow) {
       throw new Error("User not found");
     }
 
-    
-    if (count_profile_views && selfId !== userId) TryIncreaseProfileViews(selfId, userId)
-
+    if (count_profile_views && selfId !== userId)
+      TryIncreaseProfileViews(selfId, userId);
 
     let displayString = null;
 
     if (joined_date_displaymode === 2) {
-      const joinedTimestamp = userRow.account.created_at
+      const joinedTimestamp = userRow.account.created_at;
       const currentTime = new Date().getTime();
       const timeSinceJoined = currentTime - joinedTimestamp;
-      const daysSinceJoined = Math.floor(timeSinceJoined / (1000 * 60 * 60 * 24));
+      const daysSinceJoined = Math.floor(
+        timeSinceJoined / (1000 * 60 * 60 * 24),
+      );
       const monthsSinceJoined = Math.floor(daysSinceJoined / 30);
       const yearsSinceJoined = Math.floor(monthsSinceJoined / 12);
       if (yearsSinceJoined > 0) {
@@ -64,28 +61,28 @@ async function getUserProfile(userId, selfId) {
       } else {
         displayString = `${daysSinceJoined} day${daysSinceJoined > 1 ? "s" : ""}`;
       }
-
     } else if (joined_date_displaymode === 1) {
-      const joinedTimestamp = userRow.account.created_at
+      const joinedTimestamp = userRow.account.created_at;
       const currentTime = new Date().getTime();
       const timeSinceJoined = currentTime - joinedTimestamp;
-      const daysSinceJoined = Math.floor(timeSinceJoined / (1000 * 60 * 60 * 24));
-      displayString = daysSinceJoined === 0 ? "0" : daysSinceJoined
+      const daysSinceJoined = Math.floor(
+        timeSinceJoined / (1000 * 60 * 60 * 24),
+      );
+      displayString = daysSinceJoined === 0 ? "0" : daysSinceJoined;
     }
 
-    let leaderboard_rank
+    let leaderboard_rank;
 
     if (userRow.stats.place) {
-
       const expirationTime = userRow.stats.place.updated + UpdateInterval;
 
       if (Date.now() > expirationTime) {
-// If the current time is past the expiration time, the score is stale/invalid.
-    leaderboard_rank = 0;
-} else {
-// Otherwise, the score is still valid.
-    leaderboard_rank = userRow.stats.place.place;
-}
+        // If the current time is past the expiration time, the score is stale/invalid.
+        leaderboard_rank = 0;
+      } else {
+        // Otherwise, the score is still valid.
+        leaderboard_rank = userRow.stats.place.place;
+      }
     } else {
       leaderboard_rank = 0;
     }
@@ -93,11 +90,10 @@ async function getUserProfile(userId, selfId) {
     // Return the user profile data as a string joined with `:`
 
     const formattedLoadout = [
-    userRow.inventory.loadout.slot1,
-    userRow.inventory.loadout.slot2,
-    userRow.inventory.loadout.slot3,
-    ].join(":")
-
+      userRow.equipped.loadout.slot1,
+      userRow.equipped.loadout.slot2,
+      userRow.equipped.loadout.slot3,
+    ].join(":");
 
     return [
       userRow.account.username,
@@ -119,14 +115,11 @@ async function getUserProfile(userId, selfId) {
       formattedLoadout,
       leaderboard_rank,
     ].join("$");
-
   } catch (error) {
-  //  console.log(error)
+    //  console.log(error)
     throw new Error("An error occurred while fetching user profile");
   }
 }
-
-
 
 async function TryIncreaseProfileViews(selfid, userid) {
   const document = `p_view=${selfid}$${userid}`;
@@ -134,18 +127,15 @@ async function TryIncreaseProfileViews(selfid, userid) {
   const InsertViewEntry = await userSocialCollection.updateOne(
     { _id: document },
     { $setOnInsert: { _id: document } },
-    { upsert: true }
+    { upsert: true },
   );
 
   if (InsertViewEntry.upsertedCount > 0) {
-    await userCollection.updateOne(
-       getUserIdPrefix(userid),
-      { $inc: { "stats.p_views": 1 } }
-    );
+    await userCollection.updateOne(getUserIdPrefix(userid), {
+      $inc: { "stats.p_views": 1 },
+    });
   }
 }
-
-
 
 module.exports = {
   getUserProfile,

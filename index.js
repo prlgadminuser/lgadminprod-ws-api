@@ -144,6 +144,10 @@ const { buyWeapon } = require("./routes/main/buyWeapon");
 const { buyRarityBox } = require("./routes/main/buyraritybox");
 const { getUserProfile } = require("./routes/social/getprofile");
 const { searchplayers } = require("./routes/social/searchplayers");
+const { CreateClan } = require("./routes/clansystem/createClan");
+const { TryToAddPlayerToClan } = require("./routes/clansystem/addPlayer");
+const { RemovePlayerFromClan } = require("./routes/clansystem/removePlayer");
+const { FetchClanData } = require("./routes/clansystem/fetchClan");
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
@@ -928,7 +932,12 @@ function randomNumber(minDigits = 4, maxDigits = 15) {
 }
 
 async function run() {
- //const create = await CreateAccount(randomNumber(), "passdata", "US", "0");
- const playeresult = await searchplayers("36168")
-  console.log(playeresult)
+
+ // CreateClan("696fed6cf57bfb9d56810da4", "Closed")
+ //await TryToAddPlayerToClan("6973e04aad03edffea47ea23", "696fed6cf57bfb9d56810da4")
+ //await RemovePlayerFromClan("6973e04aad03edffea47ea23", "696fed6cf57bfb9d56810da4")
+ const response = await FetchClanData("6973e04aad03edffea47ea23")
+ console.log(response)
 }
+
+run()

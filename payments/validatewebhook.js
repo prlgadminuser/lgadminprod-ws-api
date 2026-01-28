@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { userCollection } = require('../idbconfig');
+const { DoesUserIdExist } = require('../utils/utils');
 
 const XSOLLA_WEBHOOK_SECRET = process.env.XSOLLA_WEBHOOK_SECRET
 
@@ -63,9 +64,7 @@ try {
         }
 
         // Check if user exists in your DB
-        const user = await userCollection.findOne({
-          "account.username": userId 
-        });
+        const user = DoesUserIdExist()
 
         if (user) {
           //console.log('User validated successfully:', userId);

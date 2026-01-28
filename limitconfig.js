@@ -5,7 +5,7 @@ const friendUpdatesTime = 30000
 const ws_message_size_limit = 200
 const api_message_size_limit = 520
 const pingInterval = 60000;
-const maxClients = 50; // max connected players for websocket
+const maxClients = 20; // max connected players for websocket
 
 
 const WS_MSG_SIZE_LIMIT = {
@@ -92,5 +92,4 @@ module.exports = {
   allowedOrigins,
   friendUpdatesTime,
   WS_MSG_SIZE_LIMIT
-
 }

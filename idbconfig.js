@@ -13,6 +13,7 @@ const DB_name = process.env.DB_NAME
 
 const nicknameRegex = /^(?!.*[&<>\/\\\s:$.]).{4,16}$/;
 const usernameRegex = /^(?!.*[&<>\/\\\s:$.]).{4,16}$/;
+const clanRegex = /^(?!.*[&<>\/\\\s:$.]).{4,16}$/;
 const passwordRegex = /^(?!.*[&<>\/\\\s:$.]).{4,20}$/;
 
 const badWords = /\b(undefined|null|liquem|nigga|nigger|niga|fuck|ass|bitch|hure|schlampe|hitler|whore)\b/i;
@@ -37,6 +38,7 @@ const battlePassCollection = db.collection("battlepass_users");
 const loginRewardsCollection = db.collection("onetime_rewards");
 const shopcollection = db.collection("serverconfig");
 const PaymentCollection = db.collection("payments")
+const ClansCollection = db.collection("users_clans")
 
  // never run this!!!!!
 
@@ -103,4 +105,5 @@ module.exports = {
    userItemsCollection,
    userWeaponsCollection,
    userQuestCollection,
+   ClansCollection
 }

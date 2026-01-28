@@ -1,7 +1,7 @@
 const { userCollection } = require("../idbconfig");
 const OFFERS = require("./offers");
 
-async function awardBuyer(userid, offerid) {
+async function awardBuyer(userId, offerid) {
   const offer = OFFERS[offerid];
   if (!offer) {
     return false;
@@ -14,14 +14,14 @@ async function awardBuyer(userid, offerid) {
 
       case "coins_1000":
         result = await userCollection.updateOne(
-          { "account.username": userid },
+          getUserIdPrefix(userId),
           { $inc: { "currency.coins": 1000 } }
         );
         break;
 
       case "coins_5000":
         result = await userCollection.updateOne(
-          { "account.username": userid },
+           getUserIdPrefix(userId),
           { $inc: { "currency.coins": 5000 } }
         );
         break;

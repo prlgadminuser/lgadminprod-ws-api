@@ -6,7 +6,7 @@ const {
   getUserIdPrefix,
 } = require("../../utils/utils");
 
-async function TryToAddPlayerToClan(clanId, userId, requestedBy = null) {
+async function RemovePlayerFromClan(clanId, userId, requestedBy = null) {
   try {
     const userExists = await DoesUserIdExist(userId);
     if (!userExists) {
@@ -18,7 +18,7 @@ async function TryToAddPlayerToClan(clanId, userId, requestedBy = null) {
       throw new Error("Clan does not exist");
     }
 
-    const IsUserAlreadyInClan = await ClansCollection.findOne(
+    const IsUserInClan = await ClansCollection.findOne(
       {
         _id: new ObjectId(clanId),
         "members.userId": userId,
@@ -28,20 +28,19 @@ async function TryToAddPlayerToClan(clanId, userId, requestedBy = null) {
       },
     );
 
-    if (IsUserAlreadyInClan) {
-      throw new Error("Member is already in the clan");
+    if (!IsUserInClan) {
+      throw new Error("user is not in the clan");
     }
 
-    const newMember = {
-      userId: userId,
-      role: "member", // default role
-      joined_at: Date.now(),
-    };
-
     const updateResult = await ClansCollection.updateOne(
-      getUserIdPrefix(clanId),
       {
-        $push: { members: newMember },
+        _id: new ObjectId(clanId),
+        "members.userId": userId,
+      },
+      {
+        $set: {
+          "members.$.role": "owner",
+        },
       },
       {
         hint: "members.userId_1",
@@ -56,5 +55,5 @@ async function TryToAddPlayerToClan(clanId, userId, requestedBy = null) {
 }
 
 module.exports = {
-  TryToAddPlayerToClan,
+  RemovePlayerFromClan,
 };

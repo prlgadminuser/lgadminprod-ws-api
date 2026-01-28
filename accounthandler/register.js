@@ -7,10 +7,9 @@ const {
 } = require("./..//idbconfig");
 const { webhook } = require("./..//discordwebhook");
 const { CheckUserIp } = require("./security");
-const { DoesUserNameExist, getUserIdPrefix, CreateEncryptedPassword, createToken } = require("../utils/utils");
-// im drowning water i just bought
-const allow_bad_words = false;
-const allowVPNS = false
+const { DoesUserNameExist, getUserIdPrefix, CreateEncryptedPassword, createToken, IsNameAllowed } = require("../utils/utils");
+
+const allowVPNS = true
 
 async function CreateAccount(username, password, user_country, userIp) {
 
@@ -31,14 +30,8 @@ async function CreateAccount(username, password, user_country, userIp) {
       return { status: "Name and password cannot be the same" };
     }
 
-    if (!usernameRegex.test(username)) {
+    if (!IsNameAllowed(username)) {
       return { status: "Name not allowed" };
-    }
-
-    if (!allow_bad_words) {
-      if (badWords.test(username)) {
-        return { status: "Name contains inappropriate words" };
-      }
     }
 
     if (!passwordRegex.test(password)) {
@@ -81,21 +74,23 @@ async function CreateAccount(username, password, user_country, userIp) {
     };
 
     const currency = {
-      coins: Number(start_coins), // Ensure coins is an integer
+      coins: start_coins, // Ensure coins is an integer
       boxes: 0, // Ensure boxes is an integer
     };
 
     const inventory = {
+      daily_reward: {
+        last_collected: 0,
+      }, // Ensure last_collected is an integer
+    };
+
+    const equipped = {
       loadout: {
         slot1: "1", // Ensure loadout values are strings
         slot2: "2",
         slot3: "3",
         gadget: "1"
       },
-      last_collected: 0, // Ensure last_collected is an integer
-    };
-
-    const equipped = {
       hat: "0", // Ensure hat is a string
       top: "0", // Ensure top is a string
       banner: "0", // Ensure banner is a string
@@ -154,4 +149,3 @@ async function CreateAccount(username, password, user_country, userIp) {
 module.exports = {
   CreateAccount,
 };
-

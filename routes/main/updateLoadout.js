@@ -33,7 +33,7 @@ async function equipWeapon(userId, slot, weaponid) {
 
     await userCollection.updateOne(
       getUserIdPrefix(userId),
-      { $set: { [`inventory.loadout.slot${slot}`]: weaponid } } 
+      { $set: { [`equipped.loadout.slot${slot}`]: weaponid } } 
     );
 
     return { message: "Weapon equipped successfully.", weaponid }; 
@@ -56,7 +56,7 @@ async function equipGadget(userId, gadgetid) {
 
     await userCollection.updateOne(
        getUserIdPrefix(userId),
-      { $set: { [`inventory.loadout.gadget`]: gadgetid } } 
+      { $set: { [`equipped.loadout.gadget`]: gadgetid } } 
     );
 
     return { message: "Gadget equipped successfully.", gadgetid }; 
