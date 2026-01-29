@@ -207,14 +207,11 @@ const server = http.createServer(async (req, res) => {
       }
 
       try {
-        console.log(ip)
         await apiRateLimiter.consume(ip);
       } catch {
         res.writeHead(400, { "Content-Type": "text/plain" });
         return res.end("Too many requests. Try again later");
       }
-
-      console.log(origin)
 
       if (!origin || origin.length > 50 || !allowedOrigins.includes(origin)) {
         res.writeHead(400, { "Content-Type": "text/plain" });
@@ -945,3 +942,4 @@ async function run() {
 
 
 run()
+
