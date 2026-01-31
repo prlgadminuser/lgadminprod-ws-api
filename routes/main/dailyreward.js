@@ -4,12 +4,12 @@ const { userCollection, client } = require("../..//idbconfig");
 const { getUserIdPrefix } = require("../../utils/utils");
 
 // === CONFIGURATION ===
-const REWARDS_PER_CLAIM = 1000;
+const REWARDS_PER_CLAIM = 1;
 const COIN_FALLBACK = { min: 5, max: 10 };
 const REWARDS_POOL = [
-  { type: "coins", min: 5, max: 10, chance: 80 },
+  { type: "coins", min: 5, max: 10, chance: 100 },
   // { type: "boxes", min: 1, max: 2, chance: 8 },
-  { type: "item", value: rarityConfig.rare1.customItems, chance: 20 },
+  //{ type: "item", value: rarityConfig.rare1.customItems, chance: 20 },
 ];
 
 // === HELPERS ===
@@ -148,6 +148,7 @@ async function getdailyreward(userId, owneditems) {
 }
 
 module.exports = { getdailyreward };
+
 
 
 
