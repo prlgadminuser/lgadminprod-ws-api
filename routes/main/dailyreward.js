@@ -4,7 +4,7 @@ const { userCollection, client } = require("../..//idbconfig");
 const { getUserIdPrefix } = require("../../utils/utils");
 
 // === CONFIGURATION ===
-const REWARDS_PER_CLAIM = 3;
+const REWARDS_PER_CLAIM = 300000;
 const COIN_FALLBACK = { min: 5, max: 10 };
 const REWARDS_POOL = [
   { type: "coins", min: 5, max: 10, chance: 100 },
@@ -148,3 +148,4 @@ async function getdailyreward(userId, owneditems) {
 }
 
 module.exports = { getdailyreward };
+
