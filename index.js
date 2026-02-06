@@ -754,9 +754,9 @@ wss.on("connection", async (ws, req) => {
 
     const playerId = ws.playerVerified?.playerId;
     if (playerId) {
-      connectedPlayers.delete(playerId);
+      connectedPlayers.delete(username);
       connectedClientsCount--;
-      await removeSession(playerId); // Remove session on disconnect
+      await removeSession(username); // Remove session on disconnect
     }
   });
 });
@@ -942,4 +942,5 @@ async function run() {
 
 
 run()
+
 
