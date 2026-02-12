@@ -936,11 +936,12 @@ async function run() {
  // CreateClan("696fed6cf57bfb9d56810da4", "Closed")
  //await TryToAddPlayerToClan("6973e04aad03edffea47ea23", "696fed6cf57bfb9d56810da4")
  //await RemovePlayerFromClan("6973e04aad03edffea47ea23", "696fed6cf57bfb9d56810da4")
- const response = await FetchClanData("6973e04aad03edffea47ea23")
- console.log(response)
+// const response = await FetchClanData("6973e04aad03edffea47ea23")
+// console.log(response)
 }
 
 
-run()
+//run()
+
 
 
