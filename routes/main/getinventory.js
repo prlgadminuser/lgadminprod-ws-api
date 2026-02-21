@@ -13,21 +13,20 @@ const { rarityPercentages } = require("../../boxrarityconfig");
 const { OFFERKEYS } = require("../../payments/offers");
 const { getUserIdPrefix } = require("../../utils/utils");
 
+const PlayerItemsSortingDirection = 1
+
 async function getPlayerItems(userId) {
   const itemDocuments = await userItemsCollection
     .find(
       { userid: userId },
       { projection: { _id: 0, itemid: 1, time: 1 } }, // Project only the itemId field and exclude the _id
     )
-    .sort({ time: 1 })
+
     .limit(100)
-    //.hint("player_item_unique")
+    .hint("player_item_unique")
     .toArray();
 
-  //itemDocuments.sort((a, b) => b.time - a.time); //descending
-
-
- // itemDocuments.sort((a, b) => a.time - b.time); //ascending // prefered version
+  PlayerItemsSortingDirection === "1" ? itemDocuments.sort((a, b) => a.time - b.time) : itemDocuments.sort((a, b) => b.time - a.time)
 
   const itemsArray = itemDocuments.map((doc) => doc.itemid);
 
