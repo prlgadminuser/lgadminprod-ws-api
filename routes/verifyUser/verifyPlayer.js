@@ -51,7 +51,7 @@ async function verifyPlayer(token) {
       items: new Set(inventory.items),
     };
   } catch (error) {
-   console.log(error)
+ //  console.log(error)
     throw new Error("Token verification failed");
   }
 }

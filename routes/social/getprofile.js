@@ -14,14 +14,7 @@ async function getUserProfile(userId, selfId) {
       projection: {
         _id: 0,
         "account.username": 1,
-        "equipped.hat": 1,
-        "equipped.top": 1,
-        "equipped.banner": 1,
-        "equipped.pose": 1,
-        "equipped.color": 1,
-        "equipped.hat_color": 1,
-        "equipped.top_color": 1,
-        "equipped.banner_color": 1,
+        "equipped": 1,
         "account.created_at": 1,
         "stats.kills": 1,
         "stats.damage": 1,
@@ -29,7 +22,6 @@ async function getUserProfile(userId, selfId) {
         "stats.sp": 1,
         "stats.p_views": 1,
         "stats.place": 1,
-        "equipped.loadout": 1,
       },
 
       //hint: "playerProfileIndex",

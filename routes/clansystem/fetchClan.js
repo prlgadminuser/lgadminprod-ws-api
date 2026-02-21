@@ -4,16 +4,13 @@ const { getUserIdPrefix } = require("../../utils/utils");
 
 async function FetchClanData(clanId) {
   try {
-
-    const clanData = await ClansCollection.findOne(
-         getUserIdPrefix(clanId),
-         { projection: {
-          _id: 0,
-          metadata: 1,
-          info: 1,
-        }, }
-    )
-
+    const clanData = await ClansCollection.findOne(getUserIdPrefix(clanId), {
+      projection: {
+        _id: 0,
+        metadata: 1,
+        info: 1,
+      },
+    });
 
     const clanMemberData = await ClansCollection.aggregate([
       {
@@ -52,16 +49,18 @@ async function FetchClanData(clanId) {
       },
     ]).toArray();
 
+    if (clanData === null) {
+      throw new Error("Clan does not exist");
+    }
 
     const result = {
-        clanData: clanData,
-        clanMemberData: clanMemberData
-    }
+      data: clanData,
+      members: clanMemberData,
+    };
 
     return result; // return the new clan _id
   } catch (err) {
-    console.error("Clan creation failed:", err);
-    throw err;
+      throw new Error("Clan does not exist");
   }
 }
 

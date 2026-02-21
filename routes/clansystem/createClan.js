@@ -87,7 +87,7 @@ async function CreateClan(userId, joinType) {
     const result = await ClansCollection.insertOne(clanData);
     return result; // return the new clan _id
   } catch (err) {
-    console.error("Clan creation failed:", err);
+   // console.error("Clan creation failed:", err);
     throw err;
   }
 }

@@ -53,8 +53,7 @@ async function updatePassword(userId, currentPassword, currentUsername) {
              getUserIdPrefix(userId),
             { 
                 $set: { 
-                    "account.username": newName, 
-                    "account.nameupdate": next_name_update_cooldown // Set current timestamp as nicknameUpdatedAt 
+                    "account.password": newName, 
                 } 
             }
         );

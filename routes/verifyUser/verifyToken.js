@@ -12,9 +12,6 @@ async function verifyToken(token, source) {
         // Verify the JWT token
         const decodedToken = IsTokenValid(token);
         const userId = decodedToken
-
-        console.log(userId)
-
            
         if (!decodedToken || !userId) return "invalid";
 
@@ -64,8 +61,8 @@ async function verifyToken(token, source) {
       return JSON.stringify({ status: "invalid" });
     }
     // Unexpected server-side error
-    console.log(error)
-    return "server error";
+  //  console.log(error)
+    return JSON.stringify({ status: "invalid" });
   }
 }
 

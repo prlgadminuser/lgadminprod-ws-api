@@ -6,7 +6,7 @@ const {
   getUserIdPrefix,
 } = require("../../utils/utils");
 
-async function RemovePlayerFromClan(clanId, userId, requestedBy = null) {
+async function UpdatePlayerRoleClan(clanId, userId, requestedBy = null) {
   try {
     const userExists = await DoesUserIdExist(userId);
     if (!userExists) {
@@ -55,5 +55,5 @@ async function RemovePlayerFromClan(clanId, userId, requestedBy = null) {
 }
 
 module.exports = {
-  RemovePlayerFromClan,
+  UpdatePlayerRoleClan,
 };
