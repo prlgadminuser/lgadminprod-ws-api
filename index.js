@@ -708,7 +708,7 @@ if (existingSid) {
 // 4) Local duplicate cleanup
 const oldWs = connectedPlayers.get(username);
 if (oldWs) {
-  oldWs.close(4001, "Reassigned Connecton");
+  oldWs.close(4001, "Reassigned Connection");
   connectedPlayers.delete(username);
 }
 
@@ -934,6 +934,7 @@ async function run() {
 
 
 //run()
+
 
 
 
