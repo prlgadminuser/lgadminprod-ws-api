@@ -690,26 +690,30 @@ wss.on("connection", async (ws, req) => {
   const username = playerVerified.playerId;
 
   // First check if the player is already connected locally
-  let existingSid;
-    // Check Redis for existing session
-    existingSid = await checkExistingSession(username);
+// 1) Claim ownership globally FIRST
+await addSession(username);  // Redis SET
 
+// 2) Now read previous owner
+const existingSid = await checkExistingSession(username);
 
-  if (existingSid) {
-    
-    
-      // Existing session is on ANOTHER server → publish an invalidation event
-      await redisClient.publish(
-        `server:${existingSid}`,
-        JSON.stringify({ type: "disconnect", uid: username }),
-      );
-  }
+// 3) Enforce ownership
+if (existingSid) {
+  // remote kick
+  await redisClient.publish(
+    `server:${existingSid}`,
+    JSON.stringify({ type: "disconnect", uid: username })
+  );
+}
 
-  // Add the new session
-  await addSession(username);
+// 4) Local duplicate cleanup
+const oldWs = connectedPlayers.get(username);
+if (oldWs) {
+  oldWs.close(4001, "Reassigned Connecton");
+  connectedPlayers.delete(username);
+}
 
-  // Update local state
-  connectedPlayers.set(username, ws);
+// 5) Accept new
+connectedPlayers.set(username, ws);
   connectedClientsCount++;
 
   // Add session for this server
@@ -930,6 +934,7 @@ async function run() {
 
 
 //run()
+
 
 
 
