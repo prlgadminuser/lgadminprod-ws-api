@@ -691,10 +691,19 @@ wss.on("connection", async (ws, req) => {
 
   // First check if the player is already connected locally
 // 1) Claim ownership globally FIRST
-await addSession(username);  // Redis SET
+
 
 // 2) Now read previous owner
-const existingSid = await checkExistingSession(username);
+const existingSid = await redisClient.eval(
+  `
+  local old = redis.call("GET", KEYS[1])
+  redis.call("SET", KEYS[1], ARGV[1])
+  return old
+  `,
+  1,
+  `wsapiuser:${username}`,
+  SERVER_INSTANCE_ID
+);
 
 // 3) Enforce ownership
 if (existingSid) {
@@ -934,6 +943,7 @@ async function run() {
 
 
 //run()
+
 
 
 
