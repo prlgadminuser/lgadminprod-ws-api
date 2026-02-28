@@ -691,30 +691,18 @@ wss.on("connection", async (ws, req) => {
 
   // First check if the player is already connected locally
   let existingSid;
-  if (connectedPlayers.has(username)) {
-    existingSid = SERVER_INSTANCE_ID; // Local session exists
-  } else {
     // Check Redis for existing session
     existingSid = await checkExistingSession(username);
-  }
+
 
   if (existingSid) {
-    if (existingSid === SERVER_INSTANCE_ID) {
-      // Existing session is on THIS server → kick local connection
-      const existingConnection = connectedPlayers.get(username);
-      if (existingConnection) {
-        existingConnection.send("code:double");
-        existingConnection.close(1001, "Reassigned connection");
-        //await new Promise((resolve) => existingConnection.once("close", resolve));
-        connectedPlayers.delete(username);
-      }
-    } else {
+    
+    
       // Existing session is on ANOTHER server → publish an invalidation event
       await redisClient.publish(
         `server:${existingSid}`,
         JSON.stringify({ type: "disconnect", uid: username }),
       );
-    }
   }
 
   // Add the new session
@@ -942,6 +930,7 @@ async function run() {
 
 
 //run()
+
 
 
 
