@@ -5,6 +5,15 @@ const { getUserIdPrefix } = require("../../utils/utils");
 
 // ================= DROP COUNT SYSTEM =================
 // Drop count now also defines allowed rarities
+
+const RARITY_ORDER = {
+  common: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+};
+
+
 const DROP_COUNT_TABLE = [
   {
     count: 5,   // normal box
@@ -97,7 +106,7 @@ const LOOTBOX_POOL = [
   {
     rarity: "legendary",
     drops: [
-      { type: "currency", name: "coins",    min: 60,  max: 120, chance: 40 },
+      { type: "currency", name: "coins",    min: 60,  max: 120, chance: 50 },
      // { type: "currency", name: "diamonds", min: 8,   max: 15,  chance: 60 },
       { type: "item", itemPool: rarityConfig.rare2?.customItems || [], chance: 50 },
     ],
@@ -149,6 +158,26 @@ function rollRarity(rarityWeights) {
   }
 
   return entries[0][0];
+}
+
+function sortRewardsByRarity(rewards) {
+  return rewards.sort((a, b) => {
+    const rarityA = a[a.length - 1]; // last element is rarity
+    const rarityB = b[b.length - 1];
+
+    const rarityDiff =
+      (RARITY_ORDER[rarityA] || 0) -
+      (RARITY_ORDER[rarityB] || 0);
+
+    if (rarityDiff !== 0) return rarityDiff;
+
+    // If same rarity, push higher currency amounts later
+    if (a[0] === "currency" && b[0] === "currency") {
+      return a[2] - b[2]; // smaller first, bigger last
+    }
+
+    return 0;
+  });
 }
 
 // ================= SINGLE BOX =================
@@ -237,9 +266,8 @@ async function generateLootBoxes(amount, userId, owneditems) {
       alreadyGrantedThisClaim
     );
 
-    boxes[`box${i}`] = {
-      drops: dropCount,
-      rewards,
+    boxes[`${i}`] = {
+      rewards: sortRewardsByRarity(rewards),
     };
 
     for (const reward of rewards) {

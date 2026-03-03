@@ -11,8 +11,13 @@ const { bcrypt, jwt } = require("..");
 
 const allow_bad_words = false;
 
+
+
+
 module.exports = {
+
   getUserIdPrefix(userId) {
+    if (userId.length ==! 24) return false
     return { _id: new ObjectId(userId) };
   },
 

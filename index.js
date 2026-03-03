@@ -141,13 +141,13 @@ const { getdailyreward } = require("./routes/main/dailyreward");
 const { buyItem } = require("./routes/shop/buyitem");
 const { equipWeapon } = require("./routes/main/updateLoadout");
 const { buyWeapon } = require("./routes/main/buyWeapon");
-const { buyRarityBox } = require("./routes/main/buyraritybox");
 const { getUserProfile } = require("./routes/social/getprofile");
 const { searchplayers } = require("./routes/social/searchplayers");
 const { CreateClan } = require("./routes/clansystem/createClan");
 const { TryToAddPlayerToClan } = require("./routes/clansystem/addPlayer");
 const { RemovePlayerFromClan } = require("./routes/clansystem/removePlayer");
 const { FetchClanData } = require("./routes/clansystem/fetchClan");
+const { generateLootBoxes } = require("./routes/main/generateBoxes");
 
 function CompressAndSend(ws, type, message) {
   const json_message = JSON.stringify({ type: type, data: message });
@@ -690,34 +690,38 @@ wss.on("connection", async (ws, req) => {
   const username = playerVerified.playerId;
 
   // First check if the player is already connected locally
-// 1) Claim ownership globally FIRST
+  let existingSid;
+  if (connectedPlayers.has(username)) {
+    existingSid = SERVER_INSTANCE_ID; // Local session exists
+  } else {
+    // Check Redis for existing session
+    existingSid = await checkExistingSession(username);
+  }
 
+  if (existingSid) {
+    if (existingSid === SERVER_INSTANCE_ID) {
+      // Existing session is on THIS server → kick local connection
+      const existingConnection = connectedPlayers.get(username);
+      if (existingConnection) {
+        existingConnection.send("code:double");
+        existingConnection.close(1001, "Reassigned connection");
+        //await new Promise((resolve) => existingConnection.once("close", resolve));
+        connectedPlayers.delete(username);
+      }
+    } else {
+      // Existing session is on ANOTHER server → publish an invalidation event
+      await redisClient.publish(
+        `server:${existingSid}`,
+        JSON.stringify({ type: "disconnect", uid: username }),
+      );
+    }
+  }
 
-// 2) Now read previous owner
-const existingSid = await redisClient.eval(
-  `
-  local old = redis.call("GET", KEYS[1])
-  redis.call("SET", KEYS[1], ARGV[1])
-  return old
-  `,
-  1,
-  `wsapiuser:${username}`,
-  SERVER_INSTANCE_ID
-);
+  // Add the new session
+  await addSession(username);
 
-// 3) Enforce ownership
-if (existingSid) {
-  // remote kick
-  await redisClient.publish(
-    `server:${existingSid}`,
-    JSON.stringify({ type: "disconnect", uid: username })
-  );
-}
-
-// 4) Local duplicate cleanup
-
-// 5) Accept new
-connectedPlayers.set(username, ws);
+  // Update local state
+  connectedPlayers.set(username, ws);
   connectedClientsCount++;
 
   // Add session for this server
@@ -934,14 +938,12 @@ async function run() {
  //await RemovePlayerFromClan("6973e04aad03edffea47ea23", "696fed6cf57bfb9d56810da4")
 // const response = await FetchClanData("6973e04aad03edffea47ea23")
 // console.log(response)
+// const response = await generateLootBoxes(1, "6979edb137603a32c3a42f31", new Set() )
+//console.log(JSON.stringify(response))
 }
 
 
 //run()
-
-
-
-
 
 
 
