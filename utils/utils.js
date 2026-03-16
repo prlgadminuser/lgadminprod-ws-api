@@ -6,6 +6,7 @@ const {
   tokenkey,
   usernameRegex,
   badWords,
+  usersBoughtShopOffersCollection,
 } = require("../idbconfig");
 const { bcrypt, jwt } = require("..");
 
@@ -36,7 +37,7 @@ module.exports = {
       session,
     });
 
-    //if (result) rewarditems.forEach((item) => local_owned_items.add(item));
+    if (result) rewarditems.forEach((item) => local_owned_items.add(item));
 
     return result;
   },
@@ -55,6 +56,42 @@ module.exports = {
 
     return OwnsOneOrMoreOfferItems;
   },
+
+  async SaveUserBoughtShopOffer(userId, shopofferid_bought, session) {
+
+    const baseTimestamp = Date.now();
+
+    const doc = {
+      userid: userId,
+      offerid: shopofferid_bought,
+      boughtAt: baseTimestamp + index,
+    };
+
+    const result = await usersBoughtShopOffersCollection.insertOne(doc, { session });
+
+    //if (result) rewarditems.forEach((item) => local_owned_items.add(item));
+
+    return result;
+  },
+
+
+  async HasUserAlreadyClaimedShopOffer(userId, shopofferid_bought) {
+
+    const baseTimestamp = Date.now();
+
+    const doc = {
+      userid: userId,
+      offerid: shopofferid_bought,
+    //  boughtAt: baseTimestamp + index,
+    };
+
+    const exists = await usersBoughtShopOffersCollection.findOne(doc);
+
+    //if (result) rewarditems.forEach((item) => local_owned_items.add(item));
+
+    return exists;
+  },
+
 
   async DoesUserIdExist(userId) {
     const userIdExist = await userCollection.findOne({ _id: new ObjectId(userId)});

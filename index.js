@@ -645,12 +645,12 @@ async function handleMessage(ws, message, playerVerified) {
 
       default:
         ws.close(1007, "error");
-        //  console.log(error)
+       console.log(error)
         break;
     }
   } catch (error) {
     ws.close(1007, "error");
-    //  console.log(error)
+      console.log(error)
   }
 }
 
@@ -940,6 +940,7 @@ async function run() {
 // console.log(response)
 //const response = await generateLootBoxes(100, "69a724a3882b7a0a67f67d3d", new Set() )
 //console.log(JSON.stringify(response))
+
   
  // for (var i = 0; i < 10; i++) await CreateAccount(randomNumber(), "goat", "DE")
  

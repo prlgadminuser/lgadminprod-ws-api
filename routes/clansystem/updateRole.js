@@ -6,6 +6,7 @@ const {
   getUserIdPrefix,
 } = require("../../utils/utils");
 
+
 async function UpdatePlayerRoleClan(clanId, userId, requestedBy = null) {
   try {
     const userExists = await DoesUserIdExist(userId);

@@ -13,113 +13,38 @@ const RARITY_ORDER = {
   legendary: 4,
 };
 
-
 const DROP_COUNT_TABLE = [
-  {
-    count: 5,   // normal box
-    chance: 85,
-    rarities: {
-      common: 65,
-      rare: 25,
-      epic: 8,
-      legendary: 2,
-    },
-  },
-
-  {
-    count: 6,
-    chance: 7,
-    rarities: {
-      common: 55,
-      rare: 30,
-      epic: 12,
-      legendary: 3,
-    },
-  },
-
-  {
-    count: 7,
-    chance: 4,
-    rarities: {
-      common: 40,
-      rare: 35,
-      epic: 18,
-      legendary: 7,
-    },
-  },
-
-  {
-    count: 8,
-    chance: 2,
-    rarities: {
-      rare: 45,        // ❌ common removed
-      epic: 35,
-      legendary: 20,
-    },
-  },
-
-  {
-    count: 9,
-    chance: 1.5,
-    rarities: {
-      epic: 60,        // ❌ common + rare removed
-      legendary: 40,
-    },
-  },
-
-  {
-    count: 10,  // ultra rare box
-    chance: 0.5,
-    rarities: {
-      legendary: 100,  // ❌ everything else removed
-    },
-  },
+  { count: 5, chance: 85, rarities: { common: 65, rare: 25, epic: 8, legendary: 2 } },
+  { count: 6, chance: 7, rarities: { common: 55, rare: 30, epic: 12, legendary: 3 } },
+  { count: 7, chance: 4, rarities: { common: 40, rare: 35, epic: 18, legendary: 7 } },
+  { count: 8, chance: 2, rarities: { rare: 45, epic: 35, legendary: 20 } },
+  { count: 9, chance: 1.5, rarities: { epic: 60, legendary: 40 } },
+  { count: 10, chance: 0.5, rarities: { legendary: 100 } },
 ];
-// ================= LOOT POOL =================
 
 const LOOTBOX_POOL = [
-  {
-    rarity: "common",
-    drops: [
-      { type: "currency", name: "coins", min: 5, max: 15, chance: 100 },
-    ],
-  },
-
-  {
-    rarity: "rare",
-    drops: [
-      { type: "currency", name: "coins",    min: 15, max: 30, chance: 60 },
-      { type: "currency", name: "diamonds", min: 2,  max: 5,  chance: 40 },
+  { rarity: "common", drops: [{ type: "currency", name: "coins", min: 5, max: 15, chance: 100 }] },
+  { rarity: "rare", drops: [
+      { type: "currency", name: "coins", min: 15, max: 30, chance: 60 },
+     // { type: "currency", name: "diamonds", min: 2, max: 5, chance: 40 },
       { type: "item", itemPool: rarityConfig.rare1?.customItems || [], chance: 50 },
-    ],
-  },
-
-  {
-    rarity: "epic",
-    drops: [
-      { type: "currency", name: "coins",    min: 30, max: 60, chance: 50 },
-      { type: "currency", name: "diamonds", min: 4,  max: 8,  chance: 50 },
+  ]},
+  { rarity: "epic", drops: [
+      { type: "currency", name: "coins", min: 30, max: 60, chance: 50 },
+   //   { type: "currency", name: "diamonds", min: 4, max: 8, chance: 50 },
       { type: "item", itemPool: rarityConfig.rare2?.customItems || [], chance: 50 },
-    ],
-  },
-
-  {
-    rarity: "legendary",
-    drops: [
-      { type: "currency", name: "coins",    min: 60,  max: 120, chance: 50 },
-     // { type: "currency", name: "diamonds", min: 8,   max: 15,  chance: 60 },
+  ]},
+  { rarity: "legendary", drops: [
+      { type: "currency", name: "coins", min: 60, max: 120, chance: 50 },
       { type: "item", itemPool: rarityConfig.rare2?.customItems || [], chance: 50 },
-    ],
-  },
+  ]},
 ];
-
 // ================= HELPERS =================
 
 const randomInt = (min, max) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
 
-const randomFromArray = (arr) =>
-  arr[Math.floor(Math.random() * arr.length)];
+const randomFromArray = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 function weightedRoll(pool) {
   const total = pool.reduce((s, r) => s + r.chance, 0);
@@ -149,7 +74,7 @@ function rollDropProfile() {
 
 function rollRarity(rarityWeights) {
   const entries = Object.entries(rarityWeights);
-  const total = entries.reduce((s,[,w]) => s + w, 0);
+  const total = entries.reduce((s, [, w]) => s + w, 0);
   let roll = Math.random() * total;
 
   for (const [rarity, weight] of entries) {
@@ -166,8 +91,7 @@ function sortRewardsByRarity(rewards) {
     const rarityB = b[b.length - 1];
 
     const rarityDiff =
-      (RARITY_ORDER[rarityA] || 0) -
-      (RARITY_ORDER[rarityB] || 0);
+      (RARITY_ORDER[rarityA] || 0) - (RARITY_ORDER[rarityB] || 0);
 
     if (rarityDiff !== 0) return rarityDiff;
 
@@ -189,11 +113,10 @@ function generateSingleBox(ownedItemsSet, alreadyGrantedThisClaim) {
   const dropCount = profile.count;
 
   for (let i = 0; i < dropCount; i++) {
-
     // filter by allowed rarities from drop profile
-      const rarityName = rollRarity(profile.rarities);
+    const rarityName = rollRarity(profile.rarities);
 
-  const rarityGroup = LOOTBOX_POOL.find(r => r.rarity === rarityName);
+    const rarityGroup = LOOTBOX_POOL.find((r) => r.rarity === rarityName);
 
     if (!rarityGroup || !rarityGroup.drops || rarityGroup.drops.length === 0) {
       rewards.push(["currency", "coins", randomInt(5, 15), "common"]);
@@ -205,12 +128,7 @@ function generateSingleBox(ownedItemsSet, alreadyGrantedThisClaim) {
     // ===== CURRENCY =====
     if (dropDef.type === "currency") {
       const amount = randomInt(dropDef.min, dropDef.max);
-      rewards.push([
-        "currency",
-        dropDef.name,
-        amount,
-        rarityGroup.rarity
-      ]);
+      rewards.push(["currency", dropDef.name, amount, rarityGroup.rarity]);
       continue;
     }
 
@@ -224,9 +142,8 @@ function generateSingleBox(ownedItemsSet, alreadyGrantedThisClaim) {
       }
 
       const available = pool.filter(
-        item =>
-          !ownedItemsSet.has(item) &&
-          !alreadyGrantedThisClaim.has(item)
+        (item) =>
+          !ownedItemsSet.has(item) && !alreadyGrantedThisClaim.has(item),
       );
 
       if (available.length === 0) {
@@ -249,7 +166,7 @@ function generateSingleBox(ownedItemsSet, alreadyGrantedThisClaim) {
 
 // ================= MAIN API =================
 
-async function generateLootBoxes(amount, userId, owneditems) {
+async function generateLootBoxes(amount, userId, owneditems, additionalUpdate = {}) {
   if (!Number.isInteger(amount) || amount <= 0)
     throw new Error("Invalid lootbox amount.");
 
@@ -263,7 +180,7 @@ async function generateLootBoxes(amount, userId, owneditems) {
   for (let i = 1; i <= amount; i++) {
     const { dropCount, rewards } = generateSingleBox(
       ownedItemsSet,
-      alreadyGrantedThisClaim
+      alreadyGrantedThisClaim,
     );
 
     boxes[`${i}`] = {
@@ -290,7 +207,9 @@ async function generateLootBoxes(amount, userId, owneditems) {
 
   // ================= DB UPDATE =================
 
-  const update = { $inc: {} };
+  let update = additionalUpdate;
+
+ if (!update.$inc) update.$inc = {}
 
   for (const [currency, amount] of Object.entries(currencyToGrant)) {
     update.$inc[`currency.${currency}`] = amount;
@@ -306,37 +225,26 @@ async function generateLootBoxes(amount, userId, owneditems) {
       }
 
       if (Object.keys(update.$inc).length > 0) {
-        await userCollection.updateOne(
-          getUserIdPrefix(userId),
-          update,
-          { session }
-        );
+        await userCollection.updateOne(getUserIdPrefix(userId), update, {
+          session,
+        });
       }
     });
   } catch (err) {
+    // console.log(JSON.stringify(err))
 
-   // console.log(JSON.stringify(err))
-
-   throw new Error("Boxes rewards failed inserting transaction in database")
-
+    throw new Error("Boxes rewards failed inserting transaction in database");
   } finally {
     await session.endSession();
   }
 
- const response =   {
-  time: Date.now(),
+  const response = {
+    time: Date.now(),
     boxes,
-  //  summary: {
-   //   items: itemsToGrant.length,
-   //   currency: currencyToGrant,
-   // },
   };
 
-  return response
+  return response;
 }
-
-
-
 
 function generateDropTableDescription(dropTable) {
   const lines = [];
@@ -354,7 +262,7 @@ function generateDropTableDescription(dropTable) {
 
     lines.push(
       `📦 ${count}-Drop Box (${chance}% chance)\n` +
-      `   Rarities: ${rarityText}\n`
+        `   Rarities: ${rarityText}\n`,
     );
   }
 
@@ -366,6 +274,5 @@ function capitalize(str) {
 }
 
 //console.log(generateDropTableDescription(DROP_COUNT_TABLE))
-
 
 module.exports = { generateLootBoxes };

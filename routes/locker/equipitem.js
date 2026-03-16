@@ -33,7 +33,7 @@ async function equipItem(userId, itemtype, itemid, owneditems) {
 
     // Verify the user owns the item
     if (!owneditems.has(itemid)) {
-      throw new Error("Item is not valid or not owned.");
+      throw new Error(`Item ${itemid} is not valid or not owned.`);
     }
 
     // Equip item

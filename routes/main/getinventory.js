@@ -26,7 +26,7 @@ async function getPlayerItems(userId) {
     .hint("player_item_unique")
     .toArray();
 
-  PlayerItemsSortingDirection === "1" ? itemDocuments.sort((a, b) => a.time - b.time) : itemDocuments.sort((a, b) => b.time - a.time)
+  PlayerItemsSortingDirection === 1 ? itemDocuments.sort((a, b) => a.time - b.time) : itemDocuments.sort((a, b) => b.time - a.time)
 
   const itemsArray = itemDocuments.map((doc) => doc.itemid);
 
