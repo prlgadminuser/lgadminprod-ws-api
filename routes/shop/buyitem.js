@@ -3,6 +3,7 @@ const {
   userCollection,
   shopcollection,
   userItemsCollection,
+  usersBoughtShopOffersCollection,
   client,
 } = require("../..//idbconfig");
 const { getUserIdPrefix } = require('../../utils/utils');
@@ -37,6 +38,7 @@ async function buyItem(userId, offerKey, owneditems) {
       { projection: { [`currency.${currency}`]: 1 } }
     );
 
+
     if (!userRow) throw new Error("User not found.");
 
     if ((userRow.currency?.[currency] || 0) < price) {
@@ -52,6 +54,7 @@ async function buyItem(userId, offerKey, owneditems) {
       }
     }
 
+
     const updateFields = {};
 
     if (price > 0) {
@@ -64,7 +67,7 @@ async function buyItem(userId, offerKey, owneditems) {
     for (const reward of currencyRewards) {
       updateFields.$inc = {
         ...(updateFields.$inc || {}),
-        [`currency.${reward.id}`]: reward.amount
+        [`currency.${reward.id}`]: Number(reward.amount)
       };
     }
 
@@ -77,6 +80,13 @@ async function buyItem(userId, offerKey, owneditems) {
         if (itemRewards.length > 0) {
           await SaveUserGrantedItems(userId, itemRewards, owneditems, session);
         }
+
+
+       // if (currencyRewards.length) {
+
+        //  await 
+
+       // } // This means that we have to store an boughtid in a collection so the user only can get the offer once
 
         if (Object.keys(updateFields).length > 0) {
           await userCollection.updateOne(
