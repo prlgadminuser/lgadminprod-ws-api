@@ -32,9 +32,7 @@ async function buyItem(userId, offerKey, owneditems) {
     const currencyRewards = rewards
       .filter(r => r.type === "currency");
 
-    const userRow = isOfferFree ? "currency" = {
-     currency: 0,
-    } : await userCollection.findOne(
+    const userRow = isOfferFree ? true : await userCollection.findOne(
       getUserIdPrefix(userId),
       { projection: { [`currency.${currency}`]: 1 } }
     );
