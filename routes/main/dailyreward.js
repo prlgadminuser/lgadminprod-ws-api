@@ -31,7 +31,7 @@ async function getdailyreward(userId, owneditems) {
   const lastCollected = user.inventory.daily_reward.last_collected_at;
 
   if (!user) throw new Error("User not found.");
-  //if (!canCollectDaily(lastCollected)) {  throw new Error("You can only collect rewards once every 24 hours.");}
+  if (!canCollectDaily(lastCollected)) {  throw new Error("You can only collect rewards once every 24 hours.");}
 
 
   const update = {
