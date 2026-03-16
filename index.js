@@ -938,13 +938,12 @@ async function run() {
  //await RemovePlayerFromClan("6973e04aad03edffea47ea23", "696fed6cf57bfb9d56810da4")
 // const response = await FetchClanData("6973e04aad03edffea47ea23")
 // console.log(response)
-// const response = await generateLootBoxes(1, "6979edb137603a32c3a42f31", new Set() )
+//const response = await generateLootBoxes(100, "69a724a3882b7a0a67f67d3d", new Set() )
 //console.log(JSON.stringify(response))
+  
+ // for (var i = 0; i < 10; i++) await CreateAccount(randomNumber(), "goat", "DE")
+ 
 }
 
 
 //run()
-
-
-
-
