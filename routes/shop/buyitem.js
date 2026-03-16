@@ -1,4 +1,3 @@
-
 const { SaveUserGrantedItems, UserOwnsAnyItemsOfArray } = require("../../utils/utils");
 const {
   userCollection,
@@ -11,80 +10,86 @@ const { getUserIdPrefix } = require('../../utils/utils');
 
 async function buyItem(userId, offerKey, owneditems) {
   try {
-    //  const shopData = await shopcollection.findOne(
-    //   { _id: "ItemShop" },
-    //   { projection: { [`items.${offerKey}`]: 1 } }
-    // );
 
     const shopData = global.cached_shopdata;
-
-    // If the offer is not found, throw an error
     const selectedOffer = shopData?.offers?.[offerKey];
+    const currency = selectedOffer.pricing.currency;
+    const price = parseInt(selectedOffer.pricing.price, 10);
+    const isOfferFree = price === 0
 
     if (!selectedOffer) throw new Error("Offer is not existing.");
 
-    // we cache shopdata so in case shopdata fails at updating we prevent that a player can buy an expired item
-    if (Date.now() > selectedOffer.data.expires_at) throw new Error("Offer is expired.");
-
-    if (!selectedOffer) throw new Error("Offer is not valid.");
-  
-    // Get the currency field from the offer
-    const items = selectedOffer.items;
-    const currency = selectedOffer.pricing.currency; // Default to "coins" if currency is not specified
-    const price = parseInt(selectedOffer.pricing.price, 10);
-
-
-      const userRow = await userCollection.findOne(
-       getUserIdPrefix(userId),
-      { projection: { [`currency.${currency}`]: 1 } } // Fetch user's balance dynamically
-    );
-
-    if (!userRow) {
-      throw new Error("User not found.");
+    if (Date.now() > selectedOffer.data.expires_at) {
+      throw new Error("Offer is expired.");
     }
 
-   if ((userRow.currency[currency] || 0) < price) {
+    const rewards = selectedOffer.rewards || [];
+
+    const itemRewards = rewards
+      .filter(r => r.type === "item")
+      .map(r => r.id);
+
+    const currencyRewards = rewards
+      .filter(r => r.type === "currency");
+
+    const userRow = isOfferFree ? "currency" = {
+     currency: 0,
+    } : await userCollection.findOne(
+      getUserIdPrefix(userId),
+      { projection: { [`currency.${currency}`]: 1 } }
+    );
+
+    if (!userRow) throw new Error("User not found.");
+
+    if ((userRow.currency?.[currency] || 0) < price) {
       throw new Error(`Not enough ${currency} to buy the offer.`);
     }
 
-    const OwnsOneOrMoreOfferItems = await UserOwnsAnyItemsOfArray(userId, items)
+    if (itemRewards.length > 0) {
+      const OwnsOneOrMoreOfferItems =
+        await UserOwnsAnyItemsOfArray(userId, itemRewards);
 
-    if (OwnsOneOrMoreOfferItems) {
-      throw new Error("You already own one or more items from this offer.");
+      if (OwnsOneOrMoreOfferItems) {
+        throw new Error("You already own one or more items from this offer.");
+      }
     }
 
-    let updateFields = {};
+    const updateFields = {};
 
-    if (selectedOffer.type === "boxes") {
-      updateFields = {
-        $inc: { "currency.boxes": quantity }, // Increment the 'boxes' field by the quantity
+    if (price > 0) {
+      updateFields.$inc = {
+        ...(updateFields.$inc || {}),
+        [`currency.${currency}`]: -price
       };
     }
 
-    if (price > 0) {
-      updateFields = {
-        ...updateFields,
-        $inc: { [`currency.${currency}`]: -price }, // Deduct the correct currency
+    for (const reward of currencyRewards) {
+      updateFields.$inc = {
+        ...(updateFields.$inc || {}),
+        [`currency.${reward.id}`]: reward.amount
       };
     }
 
     const session = client.startSession();
 
     try {
+
       await session.withTransaction(async () => {
-        
-      await SaveUserGrantedItems(userId, items, owneditems, session)
+
+        if (itemRewards.length > 0) {
+          await SaveUserGrantedItems(userId, itemRewards, owneditems, session);
+        }
 
         if (Object.keys(updateFields).length > 0) {
           await userCollection.updateOne(
-             getUserIdPrefix(userId),
+            getUserIdPrefix(userId),
             updateFields,
             { session }
           );
         }
+
       });
-    } catch (error) {
-      throw error;
+
     } finally {
       await session.endSession();
     }
@@ -92,6 +97,7 @@ async function buyItem(userId, offerKey, owneditems) {
     return {
       message: `Offer bought successfully.`,
     };
+
   } catch (error) {
     throw new Error(
       error || "An error occurred while processing your request."
