@@ -691,12 +691,17 @@ wss.on("connection", async (ws, req) => {
 
   // First check if the player is already connected locally
  // 1. Kick any duplicate on THIS server immediately
-    if (connectedPlayers.has(username)) {
-      kickPlayerNewConnection(username);
-    }
+   const existing = connectedPlayers.get(username);
+
+if (existing && existing.readyState === WebSocket.OPEN) {
+  try {
+    existing.send("code:double");
+    existing.close(4009, "duplicate connection");
+  } catch {}
+}
 
     // 2. Enforce single session across ALL servers (atomic Lua)
-    await addSession(username);
+  //  await addSession(username);
 
   // Update local state
   connectedPlayers.set(username, ws);
@@ -732,9 +737,14 @@ wss.on("connection", async (ws, req) => {
 
     const playerId = ws.playerVerified?.playerId;
     if (playerId) {
-      connectedPlayers.delete(username);
+      const current = connectedPlayers.get(username);
+
+  // ONLY delete if this socket is still the active one
+  if (current && current === ws) {
+    connectedPlayers.delete(username);
+  }
       connectedClientsCount--;
-      await removeSession(username); // Remove session on disconnect
+    //  await removeSession(username); // Remove session on disconnect
     }
   });
 });
