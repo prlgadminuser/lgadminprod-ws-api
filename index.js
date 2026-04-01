@@ -701,7 +701,7 @@ if (existing && existing.readyState === WebSocket.OPEN) {
 }
 
     // 2. Enforce single session across ALL servers (atomic Lua)
-  //  await addSession(username);
+  await addSession(username);
 
   // Update local state
   connectedPlayers.set(username, ws);
@@ -742,9 +742,9 @@ if (existing && existing.readyState === WebSocket.OPEN) {
   // ONLY delete if this socket is still the active one
   if (current && current === ws) {
     connectedPlayers.delete(username);
+    connectedClientsCount--;
   }
-      connectedClientsCount--;
-    //  await removeSession(username); // Remove session on disconnect
+      await removeSession(username); // Remove session on disconnect
     }
   });
 });
