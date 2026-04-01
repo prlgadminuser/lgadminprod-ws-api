@@ -15,7 +15,8 @@ const redisClient = new Redis(rediskey);
 const sub = new Redis(rediskey);
 //sub.subscribe(`server:${serverId}`); better scalable
 redisClient.on("connect", () => console.log("Redis command client connected."));
-redisClient.on("error", (err) => console.error("Redis command client error:", err));
+redisClient.on("error", (err) => console.error("Redis command client error:", err)) 
+ // process.exit(1); }
 
 
 sub.subscribe(`server:${SERVER_INSTANCE_ID}`, (err) => {
