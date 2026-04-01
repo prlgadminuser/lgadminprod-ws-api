@@ -220,10 +220,8 @@ async function checkExistingSession(username) {
     return null;
   }
 
-  const heartbeatKey = `${SERVER_HEARTBEAT_PREFIX}${parsed.sid}`;
-  const isExistingServerAlive = await redisClient.exists(heartbeatKey);
   
-  return isExistingServerAlive ? parsed.sid : null;
+  return parsed ? parsed.sid : null;
 }
 
 
