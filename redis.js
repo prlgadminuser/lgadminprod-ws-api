@@ -41,8 +41,8 @@ redisClient.on("connect", () => console.log("Redis command client connected."));
 redisClient.on("error", (err) => console.error("Redis command client error:", err)) 
  // process.exit(1); }
 
- pub.on("connect", () => console.log("✅ Redis publish client connected."));
-pub.on("error", (err) => console.error("Redis publish client error:", err));
+ //pub.on("connect", () => console.log("✅ Redis publish client connected."));
+//pub.on("error", (err) => console.error("Redis publish client error:", err));
 
 
 sub.subscribe(`server:${SERVER_INSTANCE_ID}`, (err) => {
