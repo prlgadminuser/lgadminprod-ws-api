@@ -1,7 +1,6 @@
 "use strict";
 
 require("dotenv").config();
-
 const LZString = require("lz-string");
 
 const connectedPlayers = new Map();
@@ -125,6 +124,7 @@ const {
   removeSession,
   addSession,
   redisClient,
+  kickPlayerNewConnection,
 } = require("./redis");
 const { configDotenv } = require("dotenv");
 const { CheckUserIp } = require("./accounthandler/security");
