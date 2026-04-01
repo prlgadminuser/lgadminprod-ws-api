@@ -13,10 +13,36 @@ const heartbeatKey = `${SERVER_HEARTBEAT_PREFIX}${SERVER_INSTANCE_ID}`;
 
 const redisClient = new Redis(rediskey);
 const sub = new Redis(rediskey);
+//const pub = redisClient.duplicate();
+
+const luaEnforceSession = `
+local key = KEYS[1]
+local newSid = ARGV[1]
+local username = ARGV[2]
+
+local oldSid = redis.call('GET', key)
+
+-- If there is an old session on a DIFFERENT server → publish kick to that server
+if oldSid and oldSid ~= newSid then
+  local kickChannel = 'server:' .. oldSid
+  local kickMsg = cjson.encode({
+    type = "disconnect",
+    uid = username
+  })
+  redis.call('PUBLISH', kickChannel, kickMsg)
+end
+
+-- Always set this as the new active session (new connection wins)
+redis.call('SET', key, newSid)
+return oldSid or ""
+`;
 //sub.subscribe(`server:${serverId}`); better scalable
 redisClient.on("connect", () => console.log("Redis command client connected."));
 redisClient.on("error", (err) => console.error("Redis command client error:", err)) 
  // process.exit(1); }
+
+ pub.on("connect", () => console.log("✅ Redis publish client connected."));
+pub.on("error", (err) => console.error("Redis publish client error:", err));
 
 
 sub.subscribe(`server:${SERVER_INSTANCE_ID}`, (err) => {
@@ -193,13 +219,17 @@ function startHeartbeat() {
 }
 
 async function addSession(username) {
+  // This is the NEW atomic version — replaces your old simple SET
   const userKey = `${USER_PREFIX}${username}`;
-  const sessionValue = JSON.stringify({ 
-    sid: SERVER_INSTANCE_ID, 
-    time: Date.now() 
-  });
+  const newSid = SERVER_INSTANCE_ID;
 
-  await redisClient.set(userKey, sessionValue);
+  try {
+    await redisClient.eval(luaEnforceSession, 1, userKey, newSid, username);
+    console.log(`🔒 Single session enforced for ${username} on server ${newSid} (new connection wins)`);
+  } catch (err) {
+    console.error(`Session enforcement failed for ${username}:`, err);
+    throw err;
+  }
 }
 
 async function removeSession(username) {
@@ -209,23 +239,12 @@ async function removeSession(username) {
 
 async function checkExistingSession(username) {
   const userKey = `${USER_PREFIX}${username}`;
-  const sessionValue = await redisClient.get(userKey);
-
-  if (!sessionValue) return null;
-
-  let parsed;
-  try {
-    parsed = JSON.parse(sessionValue);
-  } catch {
-    return null;
-  }
-
-  
-  return parsed ? parsed.sid : null;
+  const sid = await redisClient.get(userKey);
+  return sid || null; // now returns plain string SID (no JSON parsing)
 }
 
 
 startHeartbeat()
 
 
-module.exports = { sub, addSession, removeSession, checkExistingSession, redisClient };
+module.exports = { sub, addSession, removeSession, checkExistingSession, redisClient, kickPlayerNewConnection };
