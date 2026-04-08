@@ -34,7 +34,7 @@ async function getUserProfile(userId, selfId) {
     }
 
     const accountCreatedTimestamp = userRow.account.created_at;
-    const accountCreatedYear = new Date(accountCreatedTimestamp).getFullYear
+    const accountCreatedYear = new Date(accountCreatedTimestamp).getFullYear()
 
     let leaderboard_rank;
 
