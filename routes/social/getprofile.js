@@ -3,9 +3,11 @@ const { userCollection, userSocialCollection } = require('../..//idbconfig');
 const { getUserIdPrefix } = require('../../utils/utils');
 const { UpdateInterval } = require('./leaderboard');
 
-const joined_date_displaymode = 1;
 const count_profile_views = true;
 const ignore_user_already_viewed_profile = false
+
+
+
 
 async function getUserProfile(userId, selfId) {
   try {
@@ -23,7 +25,6 @@ async function getUserProfile(userId, selfId) {
         "stats.p_views": 1,
         "stats.place": 1,
       },
-
       //hint: "playerProfileIndex",
       //  hint: "account.username_1",
     });
@@ -32,36 +33,8 @@ async function getUserProfile(userId, selfId) {
       throw new Error("User not found");
     }
 
-    if (count_profile_views && selfId !== userId)
-      TryIncreaseProfileViews(selfId, userId);
-
-    let displayString = null;
-
-    if (joined_date_displaymode === 2) {
-      const joinedTimestamp = userRow.account.created_at;
-      const currentTime = new Date().getTime();
-      const timeSinceJoined = currentTime - joinedTimestamp;
-      const daysSinceJoined = Math.floor(
-        timeSinceJoined / (1000 * 60 * 60 * 24),
-      );
-      const monthsSinceJoined = Math.floor(daysSinceJoined / 30);
-      const yearsSinceJoined = Math.floor(monthsSinceJoined / 12);
-      if (yearsSinceJoined > 0) {
-        displayString = `${yearsSinceJoined} year${yearsSinceJoined > 1 ? "s" : ""}`;
-      } else if (monthsSinceJoined > 0) {
-        displayString = `${monthsSinceJoined} month${monthsSinceJoined > 1 ? "s" : ""}`;
-      } else {
-        displayString = `${daysSinceJoined} day${daysSinceJoined > 1 ? "s" : ""}`;
-      }
-    } else if (joined_date_displaymode === 1) {
-      const joinedTimestamp = userRow.account.created_at;
-      const currentTime = new Date().getTime();
-      const timeSinceJoined = currentTime - joinedTimestamp;
-      const daysSinceJoined = Math.floor(
-        timeSinceJoined / (1000 * 60 * 60 * 24),
-      );
-      displayString = daysSinceJoined === 0 ? "0" : daysSinceJoined;
-    }
+    const accountCreatedTimestamp = userRow.account.created_at;
+    const accountCreatedYear = new Date(accountCreatedTimestamp).getFullYear
 
     let leaderboard_rank;
 
@@ -85,6 +58,7 @@ async function getUserProfile(userId, selfId) {
       userRow.equipped.loadout.slot1,
       userRow.equipped.loadout.slot2,
       userRow.equipped.loadout.slot3,
+      userRow.equipped.loadout.gadget
     ].join(":");
 
     return [
@@ -101,10 +75,8 @@ async function getUserProfile(userId, selfId) {
       userRow.stats.kills,
       userRow.stats.damage,
       userRow.stats.wins,
-      userRow.stats.p_views,
-      // Display the join date if requested
-      displayString || null,
       formattedLoadout,
+      accountCreatedYear,
       leaderboard_rank,
     ].join("$");
   } catch (error) {
@@ -112,6 +84,23 @@ async function getUserProfile(userId, selfId) {
     throw new Error("An error occurred while fetching user profile");
   }
 }
+
+module.exports = {
+  getUserProfile,
+};
+
+
+
+
+
+
+
+
+
+
+
+
+ // if (count_profile_views && selfId !== userId) TryIncreaseProfileViews(selfId, userId);
 
 async function TryIncreaseProfileViews(selfid, userid) {
   const document = `p_view=${selfid}$${userid}`;
@@ -128,7 +117,3 @@ async function TryIncreaseProfileViews(selfid, userid) {
     });
   }
 }
-
-module.exports = {
-  getUserProfile,
-};

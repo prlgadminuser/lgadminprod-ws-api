@@ -47,7 +47,7 @@ async function getdailyreward(userId, owneditems) {
     update.$set["inventory.daily_reward.streak"] = 1; // reset streak
   }
 
-  const boxes_amount = 10000
+  const boxes_amount = 1
 
 
  const rewards = await generateLootBoxes(boxes_amount, userId, owneditems, update)

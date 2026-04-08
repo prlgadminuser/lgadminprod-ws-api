@@ -27,16 +27,18 @@ const LOOTBOX_POOL = [
   { rarity: "rare", drops: [
       { type: "currency", name: "coins", min: 15, max: 30, chance: 60 },
      // { type: "currency", name: "diamonds", min: 2, max: 5, chance: 40 },
-     // { type: "item", itemPool: rarityConfig.rare1?.customItems || [], chance: 50 },
+      { type: "item", itemPool: rarityConfig.hats?.customItems || [], chance: 25 },
+        { type: "item", itemPool: rarityConfig.tops?.customItems || [], chance: 15 },
   ]},
   { rarity: "epic", drops: [
       { type: "currency", name: "coins", min: 30, max: 60, chance: 50 },
    //   { type: "currency", name: "diamonds", min: 4, max: 8, chance: 50 },
-      { type: "item", itemPool: rarityConfig.rare2?.customItems || [], chance: 50 },
+      { type: "item", itemPool: rarityConfig.hats?.customItems || [], chance: 20 },
+        { type: "item", itemPool: rarityConfig.tops?.customItems || [], chance: 20 },
+            { type: "item", itemPool: rarityConfig.banners?.customItems || [], chance: 10 },
   ]},
   { rarity: "legendary", drops: [
-      { type: "currency", name: "coins", min: 60, max: 120, chance: 50 },
-      { type: "item", itemPool: rarityConfig.rare2?.customItems || [], chance: 50 },
+       { type: "item", itemPool: rarityConfig.legendary?.customItems || [], chance: 100 },
   ]},
 ];
 // ================= HELPERS =================

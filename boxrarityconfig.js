@@ -2,17 +2,7 @@
 
 
 const rarityConfig = {
-    normal: {
-        threshold: 0.6,
-        coinsRange: [15, 30], 
-        itemCount: 0, 
-        customItems: null, 
-    },
-
-    rare1: {
-        threshold: 0.80,
-        coinsRange: [20, 40],
-        itemCount: 2,
+    hats: {
         customItems: [
             'HAT:gang_mask','HAT:hot_angel','HAT:gang_mask_glow',
                 'HAT:factory','HAT:star_grey','HAT:star_purple',
@@ -30,10 +20,7 @@ const rarityConfig = {
         ],
     },
 
-    rare2: {
-        threshold: 0.90,
-        coinsRange: [25, 50],
-        itemCount: 2,
+    tops: {
         customItems: [
               'TOP:gang','TOP:hot_angel','TOP:factory',
                 'TOP:star_grey','TOP:star_purple','TOP:star_bw',
@@ -48,31 +35,38 @@ const rarityConfig = {
         ],
     },
 
-    rare3: {
-        threshold: 0.96,
-        coinsRange: [30, 60],
-        itemCount: 2,
+    banners: {
         customItems: [
-            "I001", "I002", "I003", "I004", "I005", "I007", "I008", "I009",
-            "I010",
+             "BANNER:broken_dream",
+  "BANNER:beam",
+  "BANNER:dark",
+  "BANNER:fire",
+  "BANNER:gears",
+  "BANNER:ninja",
+  "BANNER:island",
+  "BANNER:spectra",
+  "BANNER:chemical",
+  "BANNER:sea",
         ],
     },
 
-    rare4: {
-        threshold: 0.9995,
-        coinsRange: [40, 70],
-        itemCount: 2,
+    poses: {
         customItems: [
-            "P001", "P002", "P003", "P004", "P005", "P006", "P007", "P008"
+            "POSE:rush",
+  "POSE:mind",
+  "POSE:ninja",
+  "POSE:itch",
+  "POSE:jump",
+  "POSE:rocket",
+  "POSE:space",
+  "POSE:losingIt",
         ],
     },
 
     legendary: {
-        threshold: 1,
-        coinsRange: [130, 200],
-        itemCount: 2, 
         customItems: [
-            "A029", "I011"
+             "HAT:chrono",
+               "BANNER:chrono",
         ],
     },
 };
@@ -97,7 +91,6 @@ function calculateRarityPercentages() {
 // Call calculateRarityPercentages to log the percentages at runtime
 const rarityPercentages = calculateRarityPercentages(); 
 
-console.log(rarityPercentages)
 
 module.exports = {
     rarityPercentages,
