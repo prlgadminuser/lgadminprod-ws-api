@@ -23,12 +23,6 @@ const DROP_COUNT_TABLE = [
   { count: 10, chance: 0.5, rarities: { legendary: 100 } },
 ];
 
-// Pre-compute totals once (max performance)
-const TOTAL_DROP_CHANCE = DROP_COUNT_TABLE.reduce((sum, entry) => sum + entry.chance, 0);
-
-// Pre-build fast lookup for rarity groups
-const RARITY_GROUPS = new Map(LOOTBOX_POOL.map((group) => [group.rarity, group]));
-
 const LOOTBOX_POOL = [
   { rarity: "common", drops: [{ type: "currency", name: "coins", min: 5, max: 15, chance: 100 }] },
   {
@@ -56,6 +50,13 @@ const LOOTBOX_POOL = [
     drops: [{ type: "item", itemPool: rarityConfig.legendary?.customItems || [], chance: 100 }],
   },
 ];
+
+// Pre-compute totals once (max performance)
+const TOTAL_DROP_CHANCE = DROP_COUNT_TABLE.reduce((sum, entry) => sum + entry.chance, 0);
+
+
+// Pre-build fast lookup for rarity groups
+const RARITY_GROUPS = new Map(LOOTBOX_POOL.map((group) => [group.rarity, group]));
 
 // ================= OPTIMIZED HELPERS (production-max) =================
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
