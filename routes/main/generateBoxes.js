@@ -33,9 +33,10 @@ const LOOTBOX_POOL = [
   { rarity: "epic", drops: [
       { type: "currency", name: "coins", min: 30, max: 60, chance: 50 },
    //   { type: "currency", name: "diamonds", min: 4, max: 8, chance: 50 },
-      { type: "item", itemPool: rarityConfig.hats?.customItems || [], chance: 20 },
-        { type: "item", itemPool: rarityConfig.tops?.customItems || [], chance: 20 },
-            { type: "item", itemPool: rarityConfig.banners?.customItems || [], chance: 10 },
+      { type: "item", itemPool: rarityConfig.hats?.customItems || [], chance: 5 },
+        { type: "item", itemPool: rarityConfig.tops?.customItems || [], chance: 5 },
+            { type: "item", itemPool: rarityConfig.banners?.customItems || [], chance: 20 },
+             { type: "item", itemPool: rarityConfig.poses?.customItems || [], chance: 20 },
   ]},
   { rarity: "legendary", drops: [
        { type: "item", itemPool: rarityConfig.legendary?.customItems || [], chance: 100 },
