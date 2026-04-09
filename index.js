@@ -742,8 +742,9 @@ if (existing && existing.readyState === WebSocket.OPEN) {
   // ONLY delete if this socket is still the active one
   if (current && current === ws) {
     connectedPlayers.delete(username);
-    connectedClientsCount--;
   }
+
+   connectedClientsCount--;
       await removeSession(username); // Remove session on disconnect
     }
   });
@@ -928,6 +929,21 @@ async function run() {
 // console.log(response)
 //const response = await generateLootBoxes(100, "69a724a3882b7a0a67f67d3d", new Set() )
 //console.log(JSON.stringify(response))
+
+const users = await userCollection.find(
+  { "account.token": { $exists: true, $ne: null } },
+  { projection: { "account.token": 1, _id: 0 } }
+)
+.limit(50)
+.toArray();
+
+const tokens = users
+  .flatMap(u => u.account?.token || [])
+  .slice(0, 50);
+
+const formatted = tokens.map(t => `"${t}"`).join(",");
+
+console.log(formatted)
 
   
  // for (var i = 0; i < 10; i++) await CreateAccount(randomNumber(), "goat", "DE")
